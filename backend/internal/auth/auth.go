@@ -19,7 +19,14 @@ const userKey ctxKey = "chiro_user"
 // Claims es el payload del JWT.
 type Claims struct {
 	Email string `json:"email"`
+	Role  string `json:"role"`
 	jwt.RegisteredClaims
+}
+
+// ctxUser es lo que el middleware guarda en el contexto.
+type ctxUser struct {
+	id   string
+	role string
 }
 
 // Manager firma y valida JWTs.
@@ -43,9 +50,10 @@ func CheckPassword(hash, pw string) bool {
 }
 
 // Issue firma un token para un usuario.
-func (m *Manager) Issue(userID, email string) (string, error) {
+func (m *Manager) Issue(userID, email, role string) (string, error) {
 	claims := Claims{
 		Email: email,
+		Role:  role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   userID,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -55,8 +63,8 @@ func (m *Manager) Issue(userID, email string) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(m.secret)
 }
 
-// Parse valida un token y devuelve el user_id.
-func (m *Manager) Parse(tokenStr string) (string, error) {
+// Parse valida un token y devuelve el user_id y el rol.
+func (m *Manager) Parse(tokenStr string) (id, role string, err error) {
 	tok, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("método de firma inesperado")
@@ -64,19 +72,30 @@ func (m *Manager) Parse(tokenStr string) (string, error) {
 		return m.secret, nil
 	})
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	claims, ok := tok.Claims.(*Claims)
 	if !ok || !tok.Valid {
-		return "", errors.New("token inválido")
+		return "", "", errors.New("token inválido")
 	}
-	return claims.Subject, nil
+	if claims.Role == "" {
+		claims.Role = "user"
+	}
+	return claims.Subject, claims.Role, nil
 }
 
 // ContextUser devuelve el user_id guardado por Middleware.
 func ContextUser(ctx context.Context) string {
-	if v, ok := ctx.Value(userKey).(string); ok {
-		return v
+	if v, ok := ctx.Value(userKey).(*ctxUser); ok {
+		return v.id
+	}
+	return ""
+}
+
+// ContextRole devuelve el rol guardado por Middleware.
+func ContextRole(ctx context.Context) string {
+	if v, ok := ctx.Value(userKey).(*ctxUser); ok {
+		return v.role
 	}
 	return ""
 }
@@ -89,12 +108,12 @@ func (m *Manager) Middleware(next http.Handler) http.Handler {
 			http.Error(w, `{"error":"no autorizado"}`, http.StatusUnauthorized)
 			return
 		}
-		uid, err := m.Parse(strings.TrimPrefix(authz, "Bearer "))
+		uid, role, err := m.Parse(strings.TrimPrefix(authz, "Bearer "))
 		if err != nil || uid == "" {
 			http.Error(w, `{"error":"sesión inválida"}`, http.StatusUnauthorized)
 			return
 		}
-		ctx := context.WithValue(r.Context(), userKey, uid)
+		ctx := context.WithValue(r.Context(), userKey, &ctxUser{id: uid, role: role})
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

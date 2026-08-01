@@ -96,6 +96,20 @@ type User struct {
 	UserID string `json:"user_id"`
 	Email  string `json:"email"`
 	Name   string `json:"name"`
+	Role   string `json:"role"`
+	Status string `json:"status"`
+}
+
+// AdminUser es un usuario visto por el panel de administración.
+type AdminUser struct {
+	UserID    string `json:"user_id"`
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	Role      string `json:"role"`
+	Status    string `json:"status"`
+	CreatedAt int64  `json:"created_at"`
+	Expenses  int    `json:"expenses"`
+	Loans     int    `json:"loans"`
 }
 
 // AuthResponse es la respuesta de register/login.

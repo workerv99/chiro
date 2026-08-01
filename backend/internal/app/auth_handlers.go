@@ -55,14 +55,14 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// Semilla por defecto (port de SEED del proyecto original): cuentas y categorías.
 	seedDefaults(r.Context(), a, uid)
 
-	token, err := a.Auth.Issue(uid, req.Email)
+	token, err := a.Auth.Issue(uid, req.Email, "user")
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, "error al firmar token")
 		return
 	}
 	writeJSON(w, http.StatusOK, model.AuthResponse{
 		Token: token,
-		User:  model.User{UserID: uid, Email: req.Email, Name: req.Name},
+		User:  model.User{UserID: uid, Email: req.Email, Name: req.Name, Role: "user", Status: "active"},
 	})
 }
 
@@ -72,9 +72,10 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	email := strings.ToLower(strings.TrimSpace(req.Email))
-	var uid, name, hash string
+	var uid, name, hash, role, status string
 	err := a.Store.Pool().QueryRow(r.Context(),
-		`SELECT user_id, name, password_hash FROM users WHERE email=$1`, email).Scan(&uid, &name, &hash)
+		`SELECT user_id, name, password_hash, role, status FROM users WHERE email=$1`, email).
+		Scan(&uid, &name, &hash, &role, &status)
 	if err != nil {
 		writeErr(w, http.StatusUnauthorized, "email o contraseña incorrectos")
 		return
@@ -83,27 +84,34 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusUnauthorized, "email o contraseña incorrectos")
 		return
 	}
-	token, err := a.Auth.Issue(uid, email)
+	if status == "disabled" {
+		writeErr(w, http.StatusForbidden, "cuenta deshabilitada")
+		return
+	}
+	if role == "" {
+		role = "user"
+	}
+	token, err := a.Auth.Issue(uid, email, role)
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, "error al firmar token")
 		return
 	}
 	writeJSON(w, http.StatusOK, model.AuthResponse{
 		Token: token,
-		User:  model.User{UserID: uid, Email: email, Name: name},
+		User:  model.User{UserID: uid, Email: email, Name: name, Role: role, Status: status},
 	})
 }
 
 func (a *App) handleMe(w http.ResponseWriter, r *http.Request) {
 	uid := auth.ContextUser(r.Context())
-	var email, name string
+	var email, name, role, status string
 	err := a.Store.Pool().QueryRow(r.Context(),
-		`SELECT email, name FROM users WHERE user_id=$1`, uid).Scan(&email, &name)
+		`SELECT email, name, role, status FROM users WHERE user_id=$1`, uid).Scan(&email, &name, &role, &status)
 	if err != nil {
 		writeErr(w, http.StatusUnauthorized, "sesión inválida")
 		return
 	}
-	writeJSON(w, http.StatusOK, model.User{UserID: uid, Email: email, Name: name})
+	writeJSON(w, http.StatusOK, model.User{UserID: uid, Email: email, Name: name, Role: role, Status: status})
 }
 
 // seedDefaults crea cuentas y categorías por defecto (port de utils/dbSchema SEED).

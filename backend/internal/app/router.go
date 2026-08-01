@@ -25,7 +25,16 @@ func (a *App) Handler(origins []string) http.Handler {
 	// ── Protegido ──────────────────────────────────────────────────────────────
 	r.Group(func(pr chi.Router) {
 		pr.Use(a.Auth.Middleware)
+		pr.Use(a.requireActive)
 		pr.Get("/api/auth/me", a.handleMe)
+
+		// ── Administración (solo rol admin) ────────────────────────────────────
+		pr.Route("/api/admin", func(ar chi.Router) {
+			ar.Use(a.requireAdmin)
+			ar.Get("/users", a.handleAdminListUsers)
+			ar.Get("/users/{id}", a.handleAdminGetUser)
+			ar.Put("/users/{id}", a.handleAdminUpdateUser)
+		})
 
 		// Recursos genéricos (CRUD + soft-delete).
 		for _, res := range []resource{

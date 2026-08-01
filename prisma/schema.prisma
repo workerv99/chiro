@@ -1,0 +1,253 @@
+// Chiro — esquema gestionado por Prisma (Vercel Postgres).
+// El runtime sigue siendo el backend Go (pgx); Prisma se usa solo como
+// herramienta de schema (db push / Studio). Espejo de backend/internal/
+// migrate/migrations/001_init.sql: tablas con soft-delete y updated_at
+// (BigInt ms) para sincronización LWW por registro.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("PRISMA_DATABASE_URL")
+}
+
+// ── Enums (en el SQL original eran CHECK; en DB nueva Prisma crea tipos enum) ─
+
+enum ExpenseType {
+  income
+  expense
+}
+
+enum Role {
+  user
+  admin
+}
+
+enum AccountStatus {
+  active
+  disabled
+}
+
+enum BillFrequency {
+  daily
+  weekly
+  monthly
+  yearly
+}
+
+enum LoanFrequency {
+  monthly
+  biweekly
+  weekly
+}
+
+enum InterestType {
+  simple
+  compound
+}
+
+// ── Usuario ───────────────────────────────────────────────────────────────────
+
+model User {
+  user_id       String        @id
+  email         String        @unique
+  name          String        @default("")
+  password_hash String
+  role          Role          @default(user)
+  status        AccountStatus @default(active)
+  created_at    BigInt        @default(0)
+
+  @@map("users")
+}
+
+// ── Tablas sincronizables ─────────────────────────────────────────────────────
+
+model Account {
+  user_id      String
+  account_id   String
+  name         String
+  currency     String  @default("USD")
+  account_type String  @default("asset")
+  updated_at   BigInt  @default(0)
+  deleted      Int     @default(0)
+
+  @@id([user_id, account_id])
+  @@map("account")
+}
+
+model Category {
+  user_id     String
+  category_id String
+  name        String
+  color       String      @default("#007AFF")
+  icon        String?
+  type        ExpenseType @default(expense)
+  updated_at  BigInt      @default(0)
+  deleted     Int         @default(0)
+
+  @@id([user_id, category_id])
+  @@map("category")
+}
+
+model Expense {
+  user_id                String
+  expense_id             String
+  description            String
+  amount                 Float
+  date                   DateTime    @db.Date
+  category_id            String?
+  account_id             String?
+  destination_account_id String?
+  transfer_pair_id       String?
+  notes                  String?
+  type                   ExpenseType @default(expense)
+  updated_at             BigInt      @default(0)
+  deleted                Int         @default(0)
+
+  @@id([user_id, expense_id])
+  @@index([user_id, date])
+  @@index([user_id, category_id])
+  @@index([user_id, account_id])
+  @@index([user_id, transfer_pair_id])
+  @@map("expense")
+}
+
+model Person {
+  user_id    String
+  person_id  String
+  name       String
+  notes      String?
+  updated_at BigInt @default(0)
+  deleted    Int    @default(0)
+
+  @@id([user_id, person_id])
+  @@map("person")
+}
+
+model Loan {
+  user_id        String
+  loan_id        String
+  person_id      String
+  description    String
+  amount         Float
+  date           DateTime      @db.Date
+  is_paid        Int           @default(0)
+  interest_rate  Float         @default(0)
+  interest_type  InterestType  @default(simple)
+  months         Int           @default(1)
+  frequency      LoanFrequency @default(monthly)
+  first_due_date DateTime?     @db.Date
+  updated_at     BigInt        @default(0)
+  deleted        Int           @default(0)
+
+  @@id([user_id, loan_id])
+  @@index([user_id, person_id])
+  @@map("loan")
+}
+
+model Installment {
+  user_id        String
+  installment_id String
+  loan_id        String
+  number         Int
+  due_date       DateTime  @db.Date
+  amount         Float
+  paid_date      DateTime? @db.Date
+  paid_amount    Float     @default(0)
+  updated_at     BigInt    @default(0)
+  deleted        Int       @default(0)
+
+  @@id([user_id, installment_id])
+  @@index([user_id, loan_id])
+  @@map("installment")
+}
+
+model Payment {
+  user_id    String
+  payment_id String
+  loan_id    String
+  amount     Float
+  date       DateTime @db.Date
+  notes      String?
+  updated_at BigInt   @default(0)
+  deleted    Int      @default(0)
+
+  @@id([user_id, payment_id])
+  @@map("payment")
+}
+
+model Budget {
+  user_id     String
+  budget_id   String
+  category_id String
+  amount      Float
+  month       Int
+  year        Int
+  updated_at  BigInt @default(0)
+  deleted     Int    @default(0)
+
+  @@id([user_id, budget_id])
+  @@index([user_id, year, month])
+  @@map("budget")
+}
+
+model PiggyBank {
+  user_id        String
+  piggy_bank_id  String
+  name           String
+  target_amount  Float   @default(0)
+  current_amount Float   @default(0)
+  color          String  @default("#007AFF")
+  notes          String?
+  account_id     String?
+  updated_at     BigInt  @default(0)
+  deleted        Int     @default(0)
+
+  @@id([user_id, piggy_bank_id])
+  @@map("piggy_bank")
+}
+
+model Bill {
+  user_id     String
+  bill_id     String
+  name        String
+  amount      Float
+  category_id String?
+  account_id  String?
+  type        ExpenseType   @default(expense)
+  frequency   BillFrequency @default(monthly)
+  next_date   DateTime      @db.Date
+  active      Int           @default(1)
+  notes       String?
+  updated_at  BigInt        @default(0)
+  deleted     Int           @default(0)
+
+  @@id([user_id, bill_id])
+  @@index([user_id, next_date])
+  @@map("bill")
+}
+
+model Tag {
+  user_id    String
+  tag_id     String
+  name       String
+  color      String @default("#8E8E93")
+  updated_at BigInt @default(0)
+  deleted    Int    @default(0)
+
+  @@id([user_id, tag_id])
+  @@map("tag")
+}
+
+model ExpenseTag {
+  user_id    String
+  expense_id String
+  tag_id     String
+  updated_at BigInt @default(0)
+  deleted    Int    @default(0)
+
+  @@id([user_id, expense_id, tag_id])
+  @@map("expense_tag")
+}

@@ -1,6 +1,10 @@
 package app
 
-import "net/http"
+import (
+	"net/http"
+
+	"chiro/internal/auth"
+)
 
 // CORS permite los orígenes configurados (o todos en desarrollo).
 func CORS(origins []string) func(http.Handler) http.Handler {
@@ -43,6 +47,32 @@ func securityHeaders(next http.Handler) http.Handler {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "no-referrer")
 		w.Header().Set("Cache-Control", "no-store")
+		next.ServeHTTP(w, r)
+	})
+}
+
+// requireActive rechaza cuentas deshabilitadas. Verifica el estado en la DB
+// en cada petición: un disable aplica aunque el JWT siga vigente.
+func (a *App) requireActive(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var status string
+		err := a.Store.Pool().QueryRow(r.Context(),
+			`SELECT status FROM users WHERE user_id=$1`, auth.ContextUser(r.Context())).Scan(&status)
+		if err != nil || status != "active" {
+			writeErr(w, http.StatusForbidden, "cuenta deshabilitada")
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// requireAdmin exige rol admin (leído del JWT por el middleware de auth).
+func (a *App) requireAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if auth.ContextRole(r.Context()) != "admin" {
+			writeErr(w, http.StatusForbidden, "se requiere rol admin")
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }
