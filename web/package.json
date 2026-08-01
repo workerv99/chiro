@@ -1,0 +1,27 @@
+{
+  "name": "chiro-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@sveltejs/adapter-static": "^3.0.10",
+    "@sveltejs/kit": "^2.16.0",
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "eslint": "^10.8.0",
+    "eslint-plugin-svelte": "^3.22.0",
+    "globals": "^17.8.0",
+    "svelte": "^5.19.0",
+    "svelte-check": "^4.7.4",
+    "typescript": "^5.7.0",
+    "typescript-svelte-plugin": "^0.3.52",
+    "vite": "^6.0.0"
+  }
+}

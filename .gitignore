@@ -1,0 +1,31 @@
+# Node / SvelteKit
+node_modules/
+web/.svelte-kit/
+web/build/
+web/.vercel/
+web/package-lock.json
+web/pnpm-lock.yaml
+
+# Go
+backend/bin/
+backend/*.exe
+*.test
+
+# Env
+.env
+*.env.local
+.env.*.local
+
+# Vercel
+.vercel
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
