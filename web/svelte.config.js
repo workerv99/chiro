@@ -9,7 +9,8 @@ export default {
       fallback: 'index.html'
     }),
     prerender: {
-      handleHttpError: 'ignore'
+      handleHttpError: 'ignore',
+      handleUnseenRoutes: 'ignore'
     }
   }
 };
