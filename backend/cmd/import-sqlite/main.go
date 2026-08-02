@@ -53,7 +53,10 @@ func main() {
 	}
 
 	ctx := context.Background()
-	cfg := config.Load()
+	cfg, err := config.Load(false)
+	if err != nil {
+		log.Fatalf("chiro: %v", err)
+	}
 	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
 	if err != nil {
 		log.Fatalf("chiro: pool: %v", err)

@@ -24,7 +24,10 @@ import (
 )
 
 func main() {
-	cfg := config.Load()
+	cfg, err := config.Load(false)
+	if err != nil {
+		log.Fatalf("chiro: %v", err)
+	}
 	email := strings.ToLower(strings.TrimSpace(os.Getenv("ADMIN_EMAIL")))
 	password := os.Getenv("ADMIN_PASSWORD")
 	if email == "" || len(password) < 6 {

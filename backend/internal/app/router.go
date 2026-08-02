@@ -4,15 +4,19 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	chimw "github.com/go-chi/chi/v5/middleware"
 
+	"chiro/internal/config"
 	"chiro/internal/store"
 )
 
 // Handler construye el router HTTP completo de la API.
-func (a *App) Handler(origins []string) http.Handler {
+func (a *App) Handler(cfg config.Config) http.Handler {
 	r := chi.NewRouter()
-	r.Use(CORS(origins))
+	r.Use(chimw.Recoverer)
+	r.Use(CORS(cfg.CORSOrigins))
 	r.Use(securityHeaders)
+	r.Use(rateLimit(cfg))
 
 	r.Get("/api/health", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})

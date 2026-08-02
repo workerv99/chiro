@@ -15,7 +15,10 @@ import (
 )
 
 func main() {
-	cfg := config.Load()
+	cfg, err := config.Load(true)
+	if err != nil {
+		log.Fatalf("chiro: %v", err)
+	}
 	h, err := server.Handler()
 	if err != nil {
 		log.Fatalf("chiro: error de arranque: %v", err)
