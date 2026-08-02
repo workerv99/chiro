@@ -109,7 +109,18 @@
   function refreshDue() {
     if (section === 'bills') dueBills().then((d) => (due = d ?? [])).catch(() => {});
   }
+
+  function focusInit(node) {
+    node.focus();
+  }
+
+  function onKeydown(e) {
+    if (e.key === 'Escape' && showForm) showForm = false;
+  }
 </script>
+
+<svelte:head><title>{i18n.t('config.title')} · Chiro</title></svelte:head>
+<svelte:window onkeydown={onKeydown} />
 
 <div class="page-head">
   <h1 class="headline">{i18n.t('config.title')}</h1>
@@ -117,7 +128,7 @@
 
 <div class="tabs" role="tablist">
   {#each tabs as tab (tab.id)}
-    <button class="tab" class:active={section === tab.id} onclick={() => (section = tab.id)}>{tab.label}</button>
+    <button class="tab" class:active={section === tab.id} role="tab" aria-selected={section === tab.id} onclick={() => (section = tab.id)}>{tab.label}</button>
   {/each}
 </div>
 
@@ -157,7 +168,7 @@
   {:else}
     {#each items() as item (item.key)}
       <a class="row" href="#" onclick={(e) => { e.preventDefault(); openEdit(item); }}>
-        <div class="cat-dot" style="background:{item.color || '#5B7CF6'}"></div>
+        <div class="cat-dot" style="background:{item.color || 'var(--indigo)'}"></div>
         <div class="row-body">
           <div class="row-title">{item.label}</div>
           <div class="row-sub">{item.sub}</div>
@@ -170,52 +181,52 @@
 
 {#if showForm}
   <div class="overlay" onclick={() => (showForm = false)}>
-    <div class="sheet" onclick={(e) => e.stopPropagation()}>
-      <h2 class="title" style="margin-bottom:16px">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="cfg-form-title" onclick={(e) => e.stopPropagation()}>
+      <h2 class="title" id="cfg-form-title" style="margin-bottom:16px">
         {editing ? i18n.t('config.editItem') : i18n.t('common.add')}
       </h2>
       <div class="form-field">
-        <label>{i18n.t('config.name')}</label>
-        <input bind:value={name} />
+        <label for="cfg-name">{i18n.t('config.name')}</label>
+        <input id="cfg-name" bind:value={name} use:focusInit />
       </div>
       {#if section === 'accounts'}
         <div class="form-field">
-          <label>{i18n.t('config.currency')}</label>
-          <input bind:value={extra} placeholder="USD" />
+          <label for="cfg-currency">{i18n.t('config.currency')}</label>
+          <input id="cfg-currency" bind:value={extra} placeholder="USD" />
         </div>
       {:else if section === 'categories'}
         <div class="form-field">
-          <label>{i18n.t('config.type')}</label>
-          <select bind:value={extra}>
+          <label for="cfg-type">{i18n.t('config.type')}</label>
+          <select id="cfg-type" bind:value={extra}>
             <option value="expense">{i18n.t('common.expense')}</option>
             <option value="income">{i18n.t('common.income')}</option>
           </select>
         </div>
       {:else if section === 'tags'}
         <div class="form-field">
-          <label>{i18n.t('config.color')}</label>
-          <input bind:value={extra} type="color" />
+          <label for="cfg-color">{i18n.t('config.color')}</label>
+          <input id="cfg-color" bind:value={extra} type="color" />
         </div>
       {:else if section === 'piggy'}
         <div class="grid2">
           <div class="form-field">
-            <label>{i18n.t('config.target')}</label>
-            <input bind:value={extra} inputmode="decimal" />
+            <label for="cfg-target">{i18n.t('config.target')}</label>
+            <input id="cfg-target" bind:value={extra} inputmode="decimal" />
           </div>
           <div class="form-field">
-            <label>{i18n.t('config.current')}</label>
-            <input bind:value={extra2} inputmode="decimal" />
+            <label for="cfg-current">{i18n.t('config.current')}</label>
+            <input id="cfg-current" bind:value={extra2} inputmode="decimal" />
           </div>
         </div>
       {:else if section === 'bills'}
         <div class="form-field">
-          <label>{i18n.t('config.amount')}</label>
-          <input bind:value={extra} inputmode="decimal" />
+          <label for="cfg-amount">{i18n.t('config.amount')}</label>
+          <input id="cfg-amount" bind:value={extra} inputmode="decimal" />
         </div>
       {:else if section === 'persons'}
         <div class="form-field">
-          <label>{i18n.t('config.notes')}</label>
-          <input bind:value={extra} />
+          <label for="cfg-notes">{i18n.t('config.notes')}</label>
+          <input id="cfg-notes" bind:value={extra} />
         </div>
       {/if}
       {#if err}

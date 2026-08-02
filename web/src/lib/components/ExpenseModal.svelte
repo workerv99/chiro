@@ -24,6 +24,14 @@
     else selectedTags = [...selectedTags, id];
   }
 
+  function focusInit(node) {
+    node.focus();
+  }
+
+  function onKeydown(e) {
+    if (e.key === 'Escape') onClose();
+  }
+
   async function save() {
     err = '';
     if (!description.trim()) return (err = i18n.t('expenses.descriptionRequired'));
@@ -75,10 +83,12 @@
   }
 </script>
 
+<svelte:window onkeydown={onKeydown} />
+
 <div class="overlay" onclick={onClose}>
-  <div class="sheet" onclick={(e) => e.stopPropagation()}>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="em-title" onclick={(e) => e.stopPropagation()}>
     <div class="handle"></div>
-    <h2 class="title" style="margin-bottom:16px">
+    <h2 class="title" id="em-title" style="margin-bottom:16px">
       {expense ? i18n.t('expenses.editExpense') : i18n.t('expenses.newExpense')}
     </h2>
 
@@ -89,25 +99,25 @@
     </div>
 
     <div class="form-field">
-      <label>{i18n.t('expenses.description')}</label>
-      <input bind:value={description} placeholder={i18n.t('expenses.descriptionPlaceholder')} />
+      <label for="em-desc">{i18n.t('expenses.description')}</label>
+      <input id="em-desc" bind:value={description} placeholder={i18n.t('expenses.descriptionPlaceholder')} use:focusInit />
     </div>
 
     <div class="grid2">
       <div class="form-field">
-        <label>{i18n.t('expenses.amount')}</label>
-        <input bind:value={amount} inputmode="decimal" placeholder={i18n.t('expenses.amountPlaceholder')} />
+        <label for="em-amount">{i18n.t('expenses.amount')}</label>
+        <input id="em-amount" bind:value={amount} inputmode="decimal" placeholder={i18n.t('expenses.amountPlaceholder')} />
       </div>
       <div class="form-field">
-        <label>{i18n.t('expenses.date')}</label>
-        <input bind:value={date} placeholder={i18n.t('expenses.datePlaceholder')} />
+        <label for="em-date">{i18n.t('expenses.date')}</label>
+        <input id="em-date" bind:value={date} placeholder={i18n.t('expenses.datePlaceholder')} />
       </div>
     </div>
 
     {#if type !== 'transfer'}
       <div class="form-field">
-        <label>{i18n.t('expenses.category')}</label>
-        <select bind:value={categoryId}>
+        <label for="em-cat">{i18n.t('expenses.category')}</label>
+        <select id="em-cat" bind:value={categoryId}>
           <option value="">{i18n.t('expenses.noCategory')}</option>
           {#each cats as c (c.category_id)}
             <option value={c.category_id}>{c.name}</option>
@@ -119,8 +129,8 @@
     {#if type === 'transfer'}
       <div class="grid2">
         <div class="form-field">
-          <label>{i18n.t('expenses.accountFrom')}</label>
-          <select bind:value={accountId}>
+          <label for="em-from">{i18n.t('expenses.accountFrom')}</label>
+          <select id="em-from" bind:value={accountId}>
             <option value="">—</option>
             {#each S.db.accounts as a (a.account_id)}
               <option value={a.account_id}>{a.name}</option>
@@ -128,8 +138,8 @@
           </select>
         </div>
         <div class="form-field">
-          <label>{i18n.t('expenses.accountTo')}</label>
-          <select bind:value={destAccountId}>
+          <label for="em-to">{i18n.t('expenses.accountTo')}</label>
+          <select id="em-to" bind:value={destAccountId}>
             <option value="">—</option>
             {#each S.db.accounts as a (a.account_id)}
               <option value={a.account_id}>{a.name}</option>
@@ -140,8 +150,8 @@
       <p class="meta">{i18n.t('expenses.transferHint')}</p>
     {:else}
       <div class="form-field">
-        <label>{i18n.t('expenses.account')}</label>
-        <select bind:value={accountId}>
+        <label for="em-account">{i18n.t('expenses.account')}</label>
+        <select id="em-account" bind:value={accountId}>
           <option value="">{i18n.t('expenses.noAccount')}</option>
           {#each S.db.accounts as a (a.account_id)}
             <option value={a.account_id}>{a.name}</option>
@@ -151,8 +161,8 @@
     {/if}
 
     <div class="form-field">
-      <label>{i18n.t('expenses.notes')}</label>
-      <textarea bind:value={notes} rows="2" placeholder={i18n.t('expenses.notesPlaceholder')}></textarea>
+      <label for="em-notes">{i18n.t('expenses.notes')}</label>
+      <textarea id="em-notes" bind:value={notes} rows="2" placeholder={i18n.t('expenses.notesPlaceholder')}></textarea>
     </div>
 
     {#if S.db.tags.length > 0}
@@ -163,6 +173,7 @@
             <button
               class="tag-chip"
               class:active={selectedTags.includes(tg.tag_id)}
+              aria-pressed={selectedTags.includes(tg.tag_id)}
               style={selectedTags.includes(tg.tag_id) ? `color:${tg.color};border-color:${tg.color};background:${tg.color}22` : ''}
               onclick={() => toggleTag(tg.tag_id)}
             >{tg.name}</button>

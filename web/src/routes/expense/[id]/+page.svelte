@@ -17,6 +17,8 @@
   });
 </script>
 
+<svelte:head><title>{i18n.t('expenses.editExpense')} · Chiro</title></svelte:head>
+
 <div class="page-head">
   <a class="back-link" href="/">← {i18n.t('expenses.title')}</a>
   <h1 class="headline">{i18n.t('expenses.editExpense')}</h1>

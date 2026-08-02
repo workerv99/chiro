@@ -53,13 +53,17 @@
         <div class="brand-name">Chiro</div>
       </div>
       {#each routes as r (r.href)}
-        <a href={r.href} class={page.url.pathname === r.href ? 'active' : ''}>
+        <a
+          href={r.href}
+          class={page.url.pathname === r.href ? 'active' : ''}
+          aria-current={page.url.pathname === r.href ? 'page' : undefined}
+        >
           <span class="nav-pill">{r.label}</span>
         </a>
       {/each}
       <div class="spacer"></div>
       {#if S.user}
-        <a href="#" onclick={(e) => { e.preventDefault(); logout(); goto('/login'); }}>
+        <a class="nav-logout" href="#" onclick={(e) => { e.preventDefault(); logout(); goto('/login'); }}>
           <span class="nav-pill">{i18n.t('common.logout')}</span>
         </a>
       {/if}

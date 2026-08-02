@@ -61,6 +61,8 @@
   }
 </script>
 
+<svelte:head><title>{loan ? loan.person_name : i18n.t('loans.title')} · Chiro</title></svelte:head>
+
 {#if loading || !loan}
   <p class="meta" style="padding:24px;text-align:center">{i18n.t('common.loading')}</p>
 {:else}
@@ -93,12 +95,12 @@
   <div class="card" style="padding:16px;margin-top:14px">
     <div class="grid2" style="align-items:end">
       <div class="form-field">
-        <label>{i18n.t('loans.paymentAmount')}</label>
-        <input bind:value={payAmount} inputmode="decimal" />
+        <label for="pay-amount">{i18n.t('loans.paymentAmount')}</label>
+        <input id="pay-amount" bind:value={payAmount} inputmode="decimal" />
       </div>
       <div class="form-field">
-        <label>{i18n.t('loans.paymentDate')}</label>
-        <input bind:value={payDate} placeholder={i18n.t('expenses.datePlaceholder')} />
+        <label for="pay-date">{i18n.t('loans.paymentDate')}</label>
+        <input id="pay-date" bind:value={payDate} placeholder={i18n.t('expenses.datePlaceholder')} />
       </div>
     </div>
     <div class="inline-flex" style="margin-top:8px;flex-wrap:wrap">
@@ -115,7 +117,7 @@
     <h3 class="card-title" style="padding:12px 16px 0">{i18n.t('loans.schedule')}</h3>
     {#each schedule as s (s.number)}
       <div class="row">
-        <div class="cat-dot" style="background:{s.is_paid ? '#22c55e' : s.is_overdue ? '#f43f5e' : '#e2e8f0'}"></div>
+        <div class="cat-dot" style="background:{s.is_paid ? 'var(--green)' : s.is_overdue ? 'var(--red)' : 'var(--ink-dim)'}"></div>
         <div class="row-body">
           <div class="row-title">{i18n.t('loans.installmentN')} {s.number}</div>
           <div class="row-sub">{toDisplay(s.due_date)}</div>

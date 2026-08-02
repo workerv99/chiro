@@ -148,7 +148,10 @@ p {
 }
 
 .nav-pill {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
   padding: 7px 13px;
   border-radius: 999px;
   font-size: 0.88rem;
@@ -257,8 +260,8 @@ a.active .nav-pill {
 }
 
 .icon-btn {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -382,6 +385,9 @@ a.active .nav-pill {
 }
 
 .tag-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
   padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid var(--border);
@@ -422,6 +428,10 @@ a.active .nav-pill {
 
 /* Buttons */
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
   padding: 10px 16px;
   border-radius: 11px;
   font-weight: 700;
@@ -461,6 +471,7 @@ a.active .nav-pill {
 }
 
 .btn-small {
+  min-height: 36px;
   padding: 5px 10px;
   font-size: 0.78rem;
   border-radius: 9px;
@@ -497,9 +508,11 @@ a.active .nav-pill {
 
 .bar-fill {
   height: 100%;
+  width: 100%;
   border-radius: 999px;
   background: var(--indigo);
-  transition: width 0.3s;
+  transform-origin: left;
+  transition: transform 0.3s;
 }
 
 .bar-fill.over {
@@ -614,6 +627,9 @@ a.active .nav-pill {
 }
 
 .chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
   padding: 8px 14px;
   border-radius: 999px;
   border: 1px solid var(--border);
@@ -639,6 +655,9 @@ a.active .nav-pill {
 }
 
 .tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
   padding: 7px 12px;
   border-radius: 10px;
   font-size: 0.82rem;
@@ -709,6 +728,9 @@ a.active .nav-pill {
 }
 
 .budget-row {
+  display: block;
+  width: 100%;
+  text-align: left;
   padding: 14px 16px;
   border-top: 1px solid var(--border);
   cursor: pointer;
@@ -720,6 +742,42 @@ a.active .nav-pill {
 
 .budget-row:hover {
   background: rgba(255, 255, 255, 0.02);
+}
+
+@media (max-width: 640px) {
+  .nav {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    gap: 2px;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    border-bottom: none;
+    border-top: 1px solid var(--border);
+  }
+  .nav .brand,
+  .nav .spacer,
+  .nav-logout {
+    display: none;
+  }
+  .nav > a:not(.nav-logout) {
+    flex: 1;
+    min-width: 0;
+  }
+  .nav-pill {
+    width: 100%;
+    min-height: 44px;
+    padding: 6px 2px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 @media (max-width: 520px) {

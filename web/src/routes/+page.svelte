@@ -49,6 +49,8 @@
   }
 </script>
 
+<svelte:head><title>{i18n.t('expenses.title')} · Chiro</title></svelte:head>
+
 <div class="page-head">
   <div>
     <h1 class="headline">{i18n.t('expenses.title')}</h1>
@@ -56,9 +58,9 @@
 </div>
 
 <div class="month-nav">
-  <button class="icon-btn" onclick={() => shift(-1)}>‹</button>
-  <div class="month-label" role="button" onclick={today}>{monthLabel(year, month)}</div>
-  <button class="icon-btn" onclick={() => shift(1)}>›</button>
+  <button class="icon-btn" onclick={() => shift(-1)} aria-label={i18n.t('common.prevMonth')}>‹</button>
+  <button class="month-label" onclick={today} title={i18n.t('common.goToday')}>{monthLabel(year, month)}</button>
+  <button class="icon-btn" onclick={() => shift(1)} aria-label={i18n.t('common.nextMonth')}>›</button>
 </div>
 
 <div class="summary-cards">

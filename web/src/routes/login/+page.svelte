@@ -33,6 +33,8 @@
   }
 </script>
 
+<svelte:head><title>{mode === 'login' ? i18n.t('auth.login') : i18n.t('auth.register')} · Chiro</title></svelte:head>
+
 <div class="login-wrap">
   <div class="login-card">
     <div class="login-brand">
@@ -49,22 +51,22 @@
     <form onsubmit={(e) => { e.preventDefault(); submit(); }}>
       {#if mode === 'register'}
         <div class="form-field">
-          <label>{i18n.t('auth.name')}</label>
-          <input bind:value={name} placeholder="Chiro" />
+          <label for="login-name">{i18n.t('auth.name')}</label>
+          <input id="login-name" bind:value={name} placeholder="Chiro" autocomplete="name" />
         </div>
       {/if}
       <div class="form-field">
-        <label>{i18n.t('auth.email')}</label>
-        <input bind:value={email} type="email" placeholder={i18n.t('auth.emailPlaceholder')} />
+        <label for="login-email">{i18n.t('auth.email')}</label>
+        <input id="login-email" bind:value={email} type="email" placeholder={i18n.t('auth.emailPlaceholder')} autocomplete="email" />
       </div>
       <div class="form-field">
-        <label>{i18n.t('auth.password')}</label>
-        <input bind:value={password} type="password" placeholder={i18n.t('auth.passwordPlaceholder')} />
+        <label for="login-password">{i18n.t('auth.password')}</label>
+        <input id="login-password" bind:value={password} type="password" placeholder={i18n.t('auth.passwordPlaceholder')} autocomplete={mode === 'login' ? 'current-password' : 'new-password'} />
       </div>
       {#if err}
-        <p class="error-text">{err}</p>
+        <p class="error-text" role="alert">{err}</p>
       {/if}
-      <button class="btn btn-primary" type="submit" disabled={S.busy}>
+      <button class="btn btn-primary login-submit" type="submit" disabled={S.busy}>
         {mode === 'login' ? i18n.t('auth.login') : i18n.t('auth.register')}
       </button>
     </form>
@@ -122,5 +124,8 @@
     color: var(--indigo);
     border-color: var(--indigo);
     background: var(--indigo-tint);
+  }
+  .login-submit {
+    width: 100%;
   }
 </style>

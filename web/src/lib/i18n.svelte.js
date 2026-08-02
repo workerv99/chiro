@@ -5,7 +5,8 @@ export const messages = {
     common: {
       save: 'Guardar', cancel: 'Cancelar', delete: 'Eliminar', add: 'Añadir', loading: 'Cargando…',
       logout: 'Cerrar sesión', pay: 'Pagar', skip: 'Saltar', expense: 'Gasto', income: 'Ingreso',
-      transfer: 'Transferencia', required: 'Completa todos los campos'
+      transfer: 'Transferencia', required: 'Completa todos los campos',
+      prevMonth: 'Mes anterior', nextMonth: 'Mes siguiente', goToday: 'Volver al mes actual'
     },
     summary: { income: 'Ingresos', expense: 'Gastos', balance: 'Balance' },
     expenses: {
@@ -60,7 +61,8 @@ export const messages = {
     common: {
       save: 'Save', cancel: 'Cancel', delete: 'Delete', add: 'Add', loading: 'Loading…',
       logout: 'Log out', pay: 'Pay', skip: 'Skip', expense: 'Expense', income: 'Income',
-      transfer: 'Transfer', required: 'Fill in all fields'
+      transfer: 'Transfer', required: 'Fill in all fields',
+      prevMonth: 'Previous month', nextMonth: 'Next month', goToday: 'Back to current month'
     },
     summary: { income: 'Income', expense: 'Expenses', balance: 'Balance' },
     expenses: {

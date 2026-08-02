@@ -28,14 +28,16 @@
   );
 </script>
 
+<svelte:head><title>{i18n.t('stats.title')} · Chiro</title></svelte:head>
+
 <div class="page-head">
   <h1 class="headline">{i18n.t('stats.title')}</h1>
 </div>
 
 <div class="month-nav">
-  <button class="icon-btn" onclick={() => (month = month === 1 ? (year -= 1, 12) : month - 1)}>‹</button>
+  <button class="icon-btn" onclick={() => (month = month === 1 ? (year -= 1, 12) : month - 1)} aria-label={i18n.t('common.prevMonth')}>‹</button>
   <div class="month-label">{year}-{String(month).padStart(2, '0')}</div>
-  <button class="icon-btn" onclick={() => (month = month === 12 ? (year += 1, 1) : month + 1)}>›</button>
+  <button class="icon-btn" onclick={() => (month = month === 12 ? (year += 1, 1) : month + 1)} aria-label={i18n.t('common.nextMonth')}>›</button>
 </div>
 
 {#if loading}
@@ -50,7 +52,7 @@
         <div class="bar-row">
           <div class="bar-label">{c.category_name}</div>
           <div class="bar-track">
-            <div class="bar-fill" style="width:{Math.max(4, (c.total / maxCat) * 100)}%;background:{c.category_color}"></div>
+            <div class="bar-fill" style="transform:scaleX({Math.max(0.04, c.total / maxCat)});background:{c.category_color}"></div>
           </div>
           <div class="bar-value">{money(c.total)}</div>
         </div>

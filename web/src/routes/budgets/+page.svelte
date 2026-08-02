@@ -67,7 +67,18 @@
   function catName(id) {
     return S.db.categories.find((c) => c.category_id === id)?.name || '—';
   }
+
+  function focusInit(node) {
+    node.focus();
+  }
+
+  function onKeydown(e) {
+    if (e.key === 'Escape' && showForm) showForm = false;
+  }
 </script>
+
+<svelte:head><title>{i18n.t('budgets.title')} · Chiro</title></svelte:head>
+<svelte:window onkeydown={onKeydown} />
 
 <div class="page-head">
   <h1 class="headline">{i18n.t('budgets.title')}</h1>
@@ -75,9 +86,9 @@
 </div>
 
 <div class="month-nav">
-  <button class="icon-btn" onclick={() => (month = month === 1 ? (year -= 1, 12) : month - 1)}>‹</button>
+  <button class="icon-btn" onclick={() => (month = month === 1 ? (year -= 1, 12) : month - 1)} aria-label={i18n.t('common.prevMonth')}>‹</button>
   <div class="month-label">{year}-{String(month).padStart(2, '0')}</div>
-  <button class="icon-btn" onclick={() => (month = month === 12 ? (year += 1, 1) : month + 1)}>›</button>
+  <button class="icon-btn" onclick={() => (month = month === 12 ? (year += 1, 1) : month + 1)} aria-label={i18n.t('common.nextMonth')}>›</button>
 </div>
 
 {#if list.length === 0}
@@ -88,14 +99,14 @@
 {:else}
   <div class="card list-card">
     {#each list as b (b.budget_id)}
-      <div class="budget-row" onclick={() => openEdit(b)}>
+      <button class="budget-row" onclick={() => openEdit(b)}>
         <div class="row-body">
           <div class="row-title">{b.category_name || catName(b.category_id)}</div>
           <div class="bar-track" style="margin-top:6px">
             <div
               class="bar-fill"
               class:over={b.spent > b.amount}
-              style="width:{pct(b.spent, b.amount)}%;background:{b.category_color || '#5b7cf6'}"
+              style="transform:scaleX({pct(b.spent, b.amount) / 100});background:{b.category_color || 'var(--indigo)'}"
             ></div>
           </div>
           <div class="row-sub" style="margin-top:4px">
@@ -105,20 +116,20 @@
             {/if}
           </div>
         </div>
-      </div>
+      </button>
     {/each}
   </div>
 {/if}
 
 {#if showForm}
   <div class="overlay" onclick={() => (showForm = false)}>
-    <div class="sheet" onclick={(e) => e.stopPropagation()}>
-      <h2 class="title" style="margin-bottom:16px">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="bud-form-title" onclick={(e) => e.stopPropagation()}>
+      <h2 class="title" id="bud-form-title" style="margin-bottom:16px">
         {editing ? i18n.t('budgets.editBudget') : i18n.t('budgets.newBudget')}
       </h2>
       <div class="form-field">
-        <label>{i18n.t('budgets.category')}</label>
-        <select bind:value={catId}>
+        <label for="bud-cat">{i18n.t('budgets.category')}</label>
+        <select id="bud-cat" bind:value={catId}>
           <option value="">{i18n.t('budgets.allCategories')}</option>
           {#each S.db.categories.filter((c) => c.type === 'expense') as c (c.category_id)}
             <option value={c.category_id}>{c.name}</option>
@@ -126,8 +137,8 @@
         </select>
       </div>
       <div class="form-field">
-        <label>{i18n.t('budgets.amount')}</label>
-        <input bind:value={amount} inputmode="decimal" />
+        <label for="bud-amount">{i18n.t('budgets.amount')}</label>
+        <input id="bud-amount" bind:value={amount} inputmode="decimal" use:focusInit />
       </div>
       {#if err}
         <p class="error-text">{err}</p>
