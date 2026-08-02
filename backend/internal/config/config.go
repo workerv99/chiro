@@ -16,6 +16,7 @@ type Config struct {
 	WebDist         string
 	DBMaxConns      int32
 	DBMinConns      int32
+	JWT_TTL_Hours   int    // TTL del access token (horas, default 24)
 	RequireSecret   bool   // si true, JWT_SECRET debe ser seguro
 	TrustedProxies  bool   // si true, se confía en X-Forwarded-For para IP cliente
 	RateLimitPerMin int     // requests/min por IP para endpoints sensibles
@@ -53,6 +54,7 @@ func Load(requireSecret bool) (Config, error) {
 		WebDist:         env("WEB_DIST", "../web/build"),
 		DBMaxConns:      int32(envInt("DB_MAX_CONNS", 10)),
 		DBMinConns:      int32(envInt("DB_MIN_CONNS", 1)),
+		JWT_TTL_Hours:   envInt("JWT_TTL_HOURS", 24),
 		RequireSecret:   requireSecret,
 		TrustedProxies:  envBool("TRUSTED_PROXIES", true),
 		RateLimitPerMin: envInt("RATE_LIMIT_PER_MIN", 20),

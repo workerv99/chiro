@@ -35,8 +35,13 @@ type Manager struct {
 	ttl    time.Duration
 }
 
-func NewManager(secret string) *Manager {
-	return &Manager{secret: []byte(secret), ttl: 30 * 24 * time.Hour}
+// NewManager crea un Manager con el TTL configurado (horas).
+// Default 24h. Un token expirado se puede refrescar hasta 7 días después.
+func NewManager(secret string, ttlHours int) *Manager {
+	if ttlHours <= 0 {
+		ttlHours = 24
+	}
+	return &Manager{secret: []byte(secret), ttl: time.Duration(ttlHours) * time.Hour}
 }
 
 // HashPassword genera el hash bcrypt de una contraseña.

@@ -51,7 +51,7 @@ func Handler() (http.Handler, error) {
 		}
 
 		st := store.New(pool)
-		authMgr := auth.NewManager(cfg.JWTSecret)
+		authMgr := auth.NewManager(cfg.JWTSecret, cfg.JWT_TTL_Hours)
 		handler = withSPA(app.New(st, authMgr).Handler(cfg), cfg)
 	})
 	return handler, initErr
