@@ -143,6 +143,10 @@ func (a *App) handleCreateTransfer(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "description, amount, account_id y destination_account_id requeridos")
 		return
 	}
+	if err := svc.ValidateDate(req.Date); err != nil {
+		writeErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	if req.AccountID == req.DestinationAccountID {
 		writeErr(w, http.StatusBadRequest, "las cuentas deben ser distintas")
 		return

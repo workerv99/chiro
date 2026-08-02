@@ -114,6 +114,51 @@ func (a *App) handleMe(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, model.User{UserID: uid, Email: email, Name: name, Role: role, Status: status})
 }
 
+// handleRefresh renueva un token válido (o expirado <7 días) con la firma
+// actual. No requiere autenticación previa — el token viejo se envía como Bearer.
+func (a *App) handleRefresh(w http.ResponseWriter, r *http.Request) {
+	authz := r.Header.Get("Authorization")
+	if len(authz) < 8 {
+		writeErr(w, http.StatusUnauthorized, "token requerido")
+		return
+	}
+	tokenStr := authz[7:]
+	claims, err := a.Auth.ParseClaims(tokenStr)
+	if err != nil {
+		writeErr(w, http.StatusUnauthorized, "token inválido")
+		return
+	}
+	if claims.ExpiresAt != nil {
+		if time.Until(claims.ExpiresAt.Time) < -7*24*time.Hour {
+			writeErr(w, http.StatusUnauthorized, "token expirado demasiado, inicia sesión de nuevo")
+			return
+		}
+	}
+	newToken, err := a.Auth.Issue(claims.Subject, claims.Email, claims.Role)
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, "error al firmar token")
+		return
+	}
+	var name, role, status string
+	err = a.Store.Pool().QueryRow(r.Context(),
+		`SELECT name, role, status FROM users WHERE user_id=$1`, claims.Subject).Scan(&name, &role, &status)
+	if err != nil {
+		writeErr(w, http.StatusUnauthorized, "sesión inválida")
+		return
+	}
+	if status == "disabled" {
+		writeErr(w, http.StatusForbidden, "cuenta deshabilitada")
+		return
+	}
+	if role == "" {
+		role = "user"
+	}
+	writeJSON(w, http.StatusOK, model.AuthResponse{
+		Token: newToken,
+		User:  model.User{UserID: claims.Subject, Email: claims.Email, Name: name, Role: role, Status: status},
+	})
+}
+
 // seedDefaults crea cuentas y categorías por defecto (port de utils/dbSchema SEED).
 func seedDefaults(ctx context.Context, a *App, uid string) {
 	accounts := []map[string]any{

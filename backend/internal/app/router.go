@@ -25,6 +25,7 @@ func (a *App) Handler(cfg config.Config) http.Handler {
 	// ── Público ────────────────────────────────────────────────────────────────
 	r.Post("/api/auth/register", a.handleRegister)
 	r.Post("/api/auth/login", a.handleLogin)
+	r.Post("/api/auth/refresh", a.handleRefresh)
 
 	// ── Protegido ──────────────────────────────────────────────────────────────
 	r.Group(func(pr chi.Router) {

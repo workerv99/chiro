@@ -174,6 +174,29 @@ func (a *App) handleCreateLoan(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "description, amount y person_id requeridos")
 		return
 	}
+	// Validaciones de campos.
+	if err := svc.ValidateAmountPositive(in.Amount); err != nil {
+		writeErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := svc.ValidateDate(in.Date); err != nil {
+		writeErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := svc.ValidateInterestType(in.InterestType); err != nil {
+		writeErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := svc.ValidateFrequency(in.Frequency); err != nil {
+		writeErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if in.FirstDueDate != nil {
+		if err := svc.ValidateDate(*in.FirstDueDate); err != nil {
+			writeErr(w, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
 	uid := auth.ContextUser(r.Context())
 	// Validar que la persona existe y pertenece al usuario.
 	var exists int
@@ -232,6 +255,18 @@ func (a *App) handleCreateLoan(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleUpdateLoan(w http.ResponseWriter, r *http.Request) {
 	var in loanInput
 	if !readJSON(w, r, &in) {
+		return
+	}
+	if err := svc.ValidateDate(in.Date); err != nil {
+		writeErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := svc.ValidateInterestType(in.InterestType); err != nil {
+		writeErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := svc.ValidateFrequency(in.Frequency); err != nil {
+		writeErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	uid := auth.ContextUser(r.Context())
@@ -384,6 +419,10 @@ func (a *App) installmentAction(w http.ResponseWriter, r *http.Request, kind str
 		}
 		amount = req.Amount
 		if req.Date != "" {
+			if err := svc.ValidateDate(req.Date); err != nil {
+				writeErr(w, http.StatusBadRequest, err.Error())
+				return
+			}
 			date = req.Date
 		}
 	}
