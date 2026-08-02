@@ -20,20 +20,22 @@ func (a *App) handleListPersons(w http.ResponseWriter, r *http.Request) {
 	uid := auth.ContextUser(r.Context())
 	rows, err := a.Store.Pool().Query(r.Context(),
 		`SELECT p.person_id, p.name, p.notes,
-		        CAST(COALESCE((
-		          SELECT SUM(l.amount + l.amount * COALESCE(l.interest_rate,0)/100.0)
-		          FROM loan l WHERE l.user_id=p.user_id AND l.person_id=p.person_id AND l.deleted=0
-		        ),0) AS float8) AS total_loaned,
-		        CAST(COALESCE((
-		          SELECT SUM(GREATEST(0, i.amount - i.paid_amount))
-		          FROM installment i JOIN loan l ON l.user_id=i.user_id AND l.loan_id=i.loan_id
-		          WHERE l.user_id=p.user_id AND l.person_id=p.person_id AND l.deleted=0 AND i.deleted=0
-		        ),0) AS float8) AS total_pending
+		        COALESCE(loan_agg.total_loaned, 0) AS total_loaned,
+		        COALESCE(inst_agg.total_pending, 0) AS total_pending
 		 FROM person p
+		 LEFT JOIN (
+		     SELECT l.person_id, SUM(l.amount + l.amount * COALESCE(l.interest_rate,0)/100.0) AS total_loaned
+		     FROM loan l WHERE l.user_id=$1 AND l.deleted=0 GROUP BY l.person_id
+		 ) loan_agg ON loan_agg.person_id = p.person_id
+		 LEFT JOIN (
+		     SELECT l.person_id, SUM(GREATEST(0, i.amount - i.paid_amount)) AS total_pending
+		     FROM installment i JOIN loan l ON l.user_id=i.user_id AND l.loan_id=i.loan_id
+		     WHERE l.user_id=$1 AND l.deleted=0 AND i.deleted=0 GROUP BY l.person_id
+		 ) inst_agg ON inst_agg.person_id = p.person_id
 		 WHERE p.user_id=$1 AND p.deleted=0
 		 ORDER BY p.name ASC`, uid)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	defer rows.Close()
@@ -41,7 +43,7 @@ func (a *App) handleListPersons(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var p model.PersonWithTotal
 		if err := rows.Scan(&p.PersonID, &p.Name, &p.Notes, &p.TotalLoaned, &p.TotalPending); err != nil {
-			writeErr(w, http.StatusInternalServerError, err.Error())
+			writeServerError(w, r, "error interno del servidor", err)
 			return
 		}
 		out = append(out, p)
@@ -56,6 +58,11 @@ func (a *App) handleDeletePerson(w http.ResponseWriter, r *http.Request) {
 	ts := time.Now().UnixMilli()
 	err := a.Store.ExecAll(r.Context(), func(tx pgx.Tx) error {
 		if _, err := tx.Exec(r.Context(),
+			`UPDATE installment SET deleted=1, updated_at=$3 WHERE user_id=$1 AND loan_id IN (SELECT loan_id FROM loan WHERE user_id=$1 AND person_id=$2)`,
+			uid, id, ts); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(r.Context(),
 			`UPDATE payment SET deleted=1, updated_at=$3 WHERE user_id=$1 AND loan_id IN (SELECT loan_id FROM loan WHERE user_id=$1 AND person_id=$2)`,
 			uid, id, ts); err != nil {
 			return err
@@ -69,7 +76,7 @@ func (a *App) handleDeletePerson(w http.ResponseWriter, r *http.Request) {
 		return err
 	})
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
@@ -83,12 +90,12 @@ func (a *App) handlePersonLoans(w http.ResponseWriter, r *http.Request) {
 		`SELECT l.*, CAST(COALESCE((SELECT SUM(i.paid_amount) FROM installment i WHERE i.user_id=l.user_id AND i.loan_id=l.loan_id AND i.deleted=0),0) AS float8) AS total_paid
 		 FROM loan l WHERE l.user_id=$1 AND l.person_id=$2 AND l.deleted=0 ORDER BY l.date DESC`, uid, pid)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	out, err := rowsToMaps(rows)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, out)
@@ -116,11 +123,15 @@ func (a *App) handleListLoans(w http.ResponseWriter, r *http.Request) {
 
 	sql := `SELECT l.loan_id, l.person_id, COALESCE(p.name,'') AS person_name, l.description, l.amount, to_char(l.date,'YYYY-MM-DD'),
 	               l.is_paid, l.interest_rate, l.interest_type, l.months, l.frequency, to_char(l.first_due_date,'YYYY-MM-DD'),
-	               CAST(COALESCE((SELECT SUM(i.paid_amount) FROM installment i
-	                 WHERE i.user_id=l.user_id AND i.loan_id=l.loan_id AND i.deleted=0),0) AS float8) AS total_paid,
+	               COALESCE(inst_agg.total_paid, 0) AS total_paid,
 	               CAST(l.amount + l.amount * COALESCE(l.interest_rate,0)/100.0 AS float8) AS total_interest,
 	               CAST(l.amount + l.amount * COALESCE(l.interest_rate,0)/100.0 AS float8) AS total_amount
-	        FROM loan l LEFT JOIN person p ON p.user_id = l.user_id AND p.person_id = l.person_id
+	        FROM loan l
+	        LEFT JOIN person p ON p.user_id = l.user_id AND p.person_id = l.person_id
+	        LEFT JOIN (
+	            SELECT i.loan_id, SUM(i.paid_amount) AS total_paid
+	            FROM installment i WHERE i.user_id=$1 AND i.deleted=0 GROUP BY i.loan_id
+	        ) inst_agg ON inst_agg.loan_id = l.loan_id
 	        WHERE l.user_id=$1 AND l.deleted=0 AND COALESCE(p.deleted,0)=0`
 	args := []any{uid}
 	if year > 0 {
@@ -135,7 +146,7 @@ func (a *App) handleListLoans(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := a.Store.Pool().Query(r.Context(), sql, args...)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	defer rows.Close()
@@ -145,7 +156,7 @@ func (a *App) handleListLoans(w http.ResponseWriter, r *http.Request) {
 		if err := rows.Scan(&l.LoanID, &l.PersonID, &l.PersonName, &l.Description, &l.Amount, &l.Date,
 			&l.IsPaid, &l.InterestRate, &l.InterestType, &l.Months, &l.Frequency, &l.FirstDueDate,
 			&l.TotalPaid, &l.TotalInterest, &l.TotalAmount); err != nil {
-			writeErr(w, http.StatusInternalServerError, err.Error())
+			writeServerError(w, r, "error interno del servidor", err)
 			return
 		}
 		out = append(out, l)
@@ -164,6 +175,13 @@ func (a *App) handleCreateLoan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	uid := auth.ContextUser(r.Context())
+	// Validar que la persona existe y pertenece al usuario.
+	var exists int
+	if err := a.Store.Pool().QueryRow(r.Context(),
+		`SELECT COUNT(*) FROM person WHERE user_id=$1 AND person_id=$2 AND deleted=0`, uid, in.PersonID).Scan(&exists); err != nil || exists == 0 {
+		writeErr(w, http.StatusBadRequest, "persona no encontrada")
+		return
+	}
 	freq := orDefault(in.Frequency, "monthly")
 	n := max(1, in.Months)
 	firstDue := ""
@@ -204,7 +222,7 @@ func (a *App) handleCreateLoan(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"loan_id": loanID})
@@ -249,11 +267,11 @@ func (a *App) handleUpdateLoan(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, http.StatusNotFound, "préstamo no encontrado")
 			return
 		}
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	if err := svc.RegenerateSchedule(r.Context(), a.Store, uid, loanID, total, n, firstDue, freq); err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
@@ -266,6 +284,10 @@ func (a *App) handleDeleteLoan(w http.ResponseWriter, r *http.Request) {
 	ts := time.Now().UnixMilli()
 	err := a.Store.ExecAll(r.Context(), func(tx pgx.Tx) error {
 		if _, err := tx.Exec(r.Context(),
+			`UPDATE installment SET deleted=1, updated_at=$3 WHERE user_id=$1 AND loan_id=$2`, uid, loanID, ts); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(r.Context(),
 			`UPDATE payment SET deleted=1, updated_at=$3 WHERE user_id=$1 AND loan_id=$2`, uid, loanID, ts); err != nil {
 			return err
 		}
@@ -274,7 +296,7 @@ func (a *App) handleDeleteLoan(w http.ResponseWriter, r *http.Request) {
 		return err
 	})
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
@@ -291,7 +313,7 @@ func (a *App) handleLoanInstallments(w http.ResponseWriter, r *http.Request) {
 		        amount, to_char(paid_date,'YYYY-MM-DD'), paid_amount
 		 FROM installment WHERE user_id=$1 AND loan_id=$2 AND deleted=0 ORDER BY number ASC`, uid, loanID)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	defer rows.Close()
@@ -301,14 +323,14 @@ func (a *App) handleLoanInstallments(w http.ResponseWriter, r *http.Request) {
 		var i svc.InstallmentIn
 		var paidDate *string
 		if err := rows.Scan(&i.InstallmentID, &i.LoanID, &i.Number, &i.DueDate, &i.Amount, &paidDate, &i.PaidAmount); err != nil {
-			writeErr(w, http.StatusInternalServerError, err.Error())
+			writeServerError(w, r, "error interno del servidor", err)
 			return
 		}
 		i.PaidDate = paidDate
 		insts = append(insts, i)
 	}
 	if err := rows.Err(); err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 
@@ -375,7 +397,7 @@ func (a *App) installmentAction(w http.ResponseWriter, r *http.Request, kind str
 		err = svc.UnpayInstallment(r.Context(), a.Store, uid, id)
 	}
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
@@ -385,7 +407,7 @@ func (a *App) installmentAction(w http.ResponseWriter, r *http.Request, kind str
 func (a *App) handleMigrateLoans(w http.ResponseWriter, r *http.Request) {
 	uid := auth.ContextUser(r.Context())
 	if err := svc.MigrateLoansToInstallments(r.Context(), a.Store, uid); err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})

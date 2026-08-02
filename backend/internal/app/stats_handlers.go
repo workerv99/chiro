@@ -26,32 +26,32 @@ func (a *App) handleStats(w http.ResponseWriter, r *http.Request) {
 
 	yearRows, err := svc.YearSummary(r.Context(), a.Store, uid, year)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	breakdown, err := svc.CategoryBreakdown(r.Context(), a.Store, uid, year, month)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	balances, err := svc.AccountBalances(r.Context(), a.Store, uid)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	lentByMonth, err := svc.LentByMonth(r.Context(), a.Store, uid, year)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	lentInYear, err := svc.LentInYear(r.Context(), a.Store, uid, year)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	outstanding, err := svc.OutstandingTotal(r.Context(), a.Store, uid)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 
@@ -81,7 +81,7 @@ func (a *App) handleBudgetProgress(w http.ResponseWriter, r *http.Request) {
 	}
 	rows, err := svc.BudgetProgress(r.Context(), a.Store, uid, year, month)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, rows)

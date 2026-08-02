@@ -19,13 +19,13 @@ func (a *App) handleDueBills(w http.ResponseWriter, r *http.Request) {
 		`SELECT * FROM bill WHERE user_id=$1 AND deleted=0 AND active=1 AND next_date <= $2 ORDER BY next_date ASC`,
 		uid, limit)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	defer rows.Close()
 	out, err := rowsToMaps(rows)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, out)
@@ -69,7 +69,7 @@ func (a *App) handlePayBill(w http.ResponseWriter, r *http.Request) {
 		return err
 	})
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
@@ -99,7 +99,7 @@ func (a *App) handleSkipBill(w http.ResponseWriter, r *http.Request) {
 		`UPDATE bill SET next_date=$3, updated_at=$4 WHERE user_id=$1 AND bill_id=$2 AND deleted=0`,
 		uid, id, next, time.Now().UnixMilli())
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})

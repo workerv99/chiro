@@ -44,12 +44,12 @@ func (a *App) handleListExpenses(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := a.Store.Pool().Query(r.Context(), sql, args...)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	out, err := rowsToMaps(rows)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, out)
@@ -115,7 +115,7 @@ func (a *App) saveExpenseWithTags(w http.ResponseWriter, r *http.Request, row ma
 		return nil
 	})
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	out := store.Normalize(row, uid)
@@ -174,7 +174,7 @@ func (a *App) handleCreateTransfer(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"transfer_pair_id": pairID})
@@ -224,7 +224,7 @@ func (a *App) handleDeleteExpense(w http.ResponseWriter, r *http.Request) {
 		return err
 	})
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
@@ -238,12 +238,12 @@ func (a *App) handleGetExpense(w http.ResponseWriter, r *http.Request) {
 	rows, err := a.Store.Pool().Query(r.Context(),
 		`SELECT * FROM expense WHERE user_id=$1 AND expense_id=$2 AND deleted=0`, uid, id)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	out, err := rowsToMaps(rows)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	if len(out) == 0 {
@@ -256,14 +256,14 @@ func (a *App) handleGetExpense(w http.ResponseWriter, r *http.Request) {
 		`SELECT t.tag_id FROM tag t JOIN expense_tag et ON et.user_id=t.user_id AND et.tag_id=t.tag_id
 		 WHERE et.user_id=$1 AND et.expense_id=$2 AND et.deleted=0 AND t.deleted=0 ORDER BY t.name ASC`, uid, id)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	tags := make([]any, 0)
 	for tagRows.Next() {
 		var tagID string
 		if err := tagRows.Scan(&tagID); err != nil {
-			writeErr(w, http.StatusInternalServerError, err.Error())
+			writeServerError(w, r, "error interno del servidor", err)
 			return
 		}
 		tags = append(tags, tagID)
@@ -288,7 +288,7 @@ func (a *App) handleMonthSummary(w http.ResponseWriter, r *http.Request) {
 	}
 	sum, err := svc.MonthSummary(r.Context(), a.Store, uid, year, month)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, sum)

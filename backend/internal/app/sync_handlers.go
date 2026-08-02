@@ -2,6 +2,7 @@ package app
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"chiro/internal/auth"
@@ -18,6 +19,10 @@ type syncRequest struct {
 // handleSync aplica el merge LWW por registro y devuelve lo que cambió.
 // Port de utils/sync.ts: "último que guarda gana" por fila, sin pérdida salvo
 // edición concurrente del MISMO registro.
+//
+// Soporta paginación via ?limit=N. El pull se acota a `limit` filas por tabla
+// y devuelve `next_since` con el maximo `updated_at` visto. El cliente puede
+// hacer pull incremental hasta que no haya más cambios.
 func (a *App) handleSync(w http.ResponseWriter, r *http.Request) {
 	uid := auth.ContextUser(r.Context())
 	var req syncRequest
@@ -41,20 +46,37 @@ func (a *App) handleSync(w http.ResponseWriter, r *http.Request) {
 	if since <= 0 {
 		since = 1
 	}
+	limit := 500
+	if v := r.URL.Query().Get("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 5000 {
+			limit = n
+		}
+	}
 	pulled := map[string][]map[string]any{}
+	maxSince := since
 	for _, t := range store.Tablas {
-		rows, err := a.Store.ListChanged(r.Context(), t.Table, uid, since)
+		rows, err := a.Store.ListChangedLimit(r.Context(), t.Table, uid, since, limit)
 		if err != nil {
-			writeErr(w, http.StatusInternalServerError, err.Error())
+			writeServerError(w, r, "error interno del servidor", err)
 			return
 		}
 		if len(rows) > 0 {
 			pulled[t.Table] = rows
+			// Actualizar el cursor con el maximo updated_at de esta tabla.
+			for _, row := range rows {
+				if ts, ok := row["updated_at"].(int64); ok && ts > maxSince {
+					maxSince = ts
+				}
+			}
 		}
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	resp := map[string]any{
 		"pulled":    pulled,
 		"serverNow": time.Now().UnixMilli(),
-	})
+	}
+	if maxSince > since {
+		resp["next_since"] = maxSince
+	}
+	writeJSON(w, http.StatusOK, resp)
 }

@@ -81,10 +81,14 @@ func (a *App) requireActive(next http.Handler) http.Handler {
 	})
 }
 
-// requireAdmin exige rol admin (leído del JWT por el middleware de auth).
+// requireAdmin exige rol admin leyendo de la DB (no del JWT) para que un
+// demote se aplique inmediatamente, igual que requireActive.
 func (a *App) requireAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if auth.ContextRole(r.Context()) != "admin" {
+		var role string
+		err := a.Store.Pool().QueryRow(r.Context(),
+			`SELECT role FROM users WHERE user_id=$1`, auth.ContextUser(r.Context())).Scan(&role)
+		if err != nil || role != "admin" {
 			writeErr(w, http.StatusForbidden, "se requiere rol admin")
 			return
 		}

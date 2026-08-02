@@ -235,6 +235,16 @@ func (s *Store) ListChanged(ctx context.Context, table string, userID string, si
 	return queryRows(ctx, s.pool, sql, userID, since)
 }
 
+// ListChangedLimit es como ListChanged pero con un limite por tabla (paginación).
+func (s *Store) ListChangedLimit(ctx context.Context, table string, userID string, since int64, limit int) ([]map[string]any, error) {
+	t, err := checkTable(table)
+	if err != nil {
+		return nil, err
+	}
+	sql := fmt.Sprintf(`SELECT * FROM "%s" WHERE "user_id" = $1 AND "updated_at" > $2 ORDER BY "updated_at" ASC LIMIT $3`, t.Table)
+	return queryRows(ctx, s.pool, sql, userID, since, limit)
+}
+
 // Get devuelve una fila activa por su clave primaria.
 func (s *Store) Get(ctx context.Context, table string, id string, userID string) (map[string]any, error) {
 	t, err := checkTable(table)

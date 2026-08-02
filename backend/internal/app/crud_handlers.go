@@ -26,7 +26,7 @@ func (a *App) mountResource(r chi.Router, res resource) {
 		uid := auth.ContextUser(req.Context())
 		rows, err := a.Store.List(req.Context(), table, uid, res.orderBy)
 		if err != nil {
-			writeErr(w, http.StatusInternalServerError, err.Error())
+			writeServerError(w, req, "error interno del servidor", err)
 			return
 		}
 		if res.afterList != nil {
@@ -56,7 +56,7 @@ func (a *App) mountResource(r chi.Router, res resource) {
 	r.Delete("/{id}", func(w http.ResponseWriter, req *http.Request) {
 		uid := auth.ContextUser(req.Context())
 		if err := a.Store.SoftDelete(req.Context(), table, chi.URLParam(req, "id"), uid); err != nil {
-			writeErr(w, http.StatusInternalServerError, err.Error())
+			writeServerError(w, req, "error interno del servidor", err)
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
@@ -70,7 +70,7 @@ func (a *App) upsertRow(w http.ResponseWriter, r *http.Request, table string, ro
 		row[primaryKey(table)] = svc.GenID(idPrefix(table))
 	}
 	if err := a.Store.MergeRows(r.Context(), table, []map[string]any{row}, uid); err != nil {
-		writeErr(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
 	row["user_id"] = uid
