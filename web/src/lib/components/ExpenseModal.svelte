@@ -2,6 +2,7 @@
   import { i18n } from '$lib/i18n.svelte.js';
   import { S, createExpense, updateExpense, createTransfer, deleteExpense, refreshMonth } from '$lib/stores.svelte.js';
   import { toDisplay, toISO, todayISO } from '$lib/format.js';
+  import ConfirmSheet from './ConfirmSheet.svelte';
 
   let { expense = null, onClose } = $props();
 
@@ -16,6 +17,7 @@
   let selectedTags = $state(expense?.tags || []);
   let saving = $state(false);
   let err = $state('');
+  let confirmDel = $state(false);
 
   const cats = $derived(type === 'income' ? S.db.categories.filter((c) => c.type === 'income') : S.db.categories.filter((c) => c.type === 'expense'));
 
@@ -29,7 +31,15 @@
   }
 
   function onKeydown(e) {
-    if (e.key === 'Escape') onClose();
+    if (e.key === 'Escape' && confirmDel) confirmDel = false;
+    else if (e.key === 'Escape') onClose();
+  }
+
+  async function doDelete() {
+    confirmDel = false;
+    await deleteExpense(expense.expense_id);
+    await refreshMonth();
+    onClose();
   }
 
   async function save() {
@@ -76,10 +86,7 @@
   }
 
   async function removeExp() {
-    if (!confirm(expense.transfer_pair_id ? i18n.t('expenses.deleteTransferConfirm') : i18n.t('expenses.deleteConfirm'))) return;
-    await deleteExpense(expense.expense_id);
-    await refreshMonth();
-    onClose();
+    confirmDel = true;
   }
 </script>
 
@@ -196,3 +203,14 @@
     {/if}
   </div>
 </div>
+
+{#if confirmDel}
+  <ConfirmSheet
+    title={i18n.t('common.delete')}
+    message={expense.transfer_pair_id ? i18n.t('expenses.deleteTransferConfirm') : i18n.t('expenses.deleteConfirm')}
+    confirmLabel={i18n.t('common.delete')}
+    danger
+    onConfirm={doDelete}
+    onCancel={() => (confirmDel = false)}
+  />
+{/if}

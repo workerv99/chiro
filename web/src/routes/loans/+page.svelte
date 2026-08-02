@@ -110,8 +110,9 @@
   <div class="overlay" onclick={() => (showForm = false)}>
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="loan-form-title" onclick={(e) => e.stopPropagation()}>
       <h2 class="title" id="loan-form-title" style="margin-bottom:16px">{i18n.t('loans.newLoan')}</h2>
+
       <div class="form-field">
-        <label for="loan-person">{i18n.t('loans.person')}</label>
+        <label class="eyebrow" for="loan-person">{i18n.t('loans.person')}</label>
         <select id="loan-person" bind:value={personId} use:focusInit>
           <option value="">—</option>
           {#each S.db.persons as p (p.person_id)}
@@ -119,53 +120,64 @@
           {/each}
         </select>
       </div>
-      <div class="form-field">
-        <label for="loan-desc">{i18n.t('loans.description')}</label>
-        <input id="loan-desc" bind:value={description} />
-      </div>
       <div class="grid2">
         <div class="form-field">
-          <label for="loan-amount">{i18n.t('loans.principal')}</label>
+          <label class="eyebrow" for="loan-amount">{i18n.t('loans.principal')}</label>
           <input id="loan-amount" bind:value={amount} inputmode="decimal" />
         </div>
         <div class="form-field">
-          <label for="loan-rate">{i18n.t('loans.rate')}</label>
-          <input id="loan-rate" bind:value={rate} inputmode="decimal" placeholder="0" />
+          <label class="eyebrow" for="loan-months">{i18n.t('loans.installments')}</label>
+          <input id="loan-months" bind:value={months} inputmode="numeric" />
         </div>
       </div>
       <div class="form-field">
-        <label for="loan-interest">{i18n.t('loans.interest')}</label>
-        <select id="loan-interest" bind:value={interestType}>
-          <option value="simple">{i18n.t('loans.interestSimple')}</option>
-          <option value="compound">{i18n.t('loans.interestCompound')}</option>
+        <label class="eyebrow" for="loan-freq">{i18n.t('loans.frequency')}</label>
+        <select id="loan-freq" bind:value={frequency}>
+          <option value="weekly">{i18n.t('loans.weekly')}</option>
+          <option value="biweekly">{i18n.t('loans.biweekly')}</option>
+          <option value="monthly">{i18n.t('loans.monthly')}</option>
         </select>
       </div>
-      <div class="grid2">
-        <div class="form-field">
-          <label for="loan-months">{i18n.t('loans.installments')}</label>
-          <input id="loan-months" bind:value={months} inputmode="numeric" />
+
+      <details class="more-options">
+        <summary>{i18n.t('common.moreOptions')}</summary>
+        <div class="form-field" style="margin-top:12px">
+          <label class="eyebrow" for="loan-desc">{i18n.t('loans.description')}</label>
+          <input id="loan-desc" bind:value={description} />
         </div>
-        <div class="form-field">
-          <label for="loan-freq">{i18n.t('loans.frequency')}</label>
-          <select id="loan-freq" bind:value={frequency}>
-            <option value="weekly">{i18n.t('loans.weekly')}</option>
-            <option value="biweekly">{i18n.t('loans.biweekly')}</option>
-            <option value="monthly">{i18n.t('loans.monthly')}</option>
-          </select>
+        <div class="grid2">
+          <div class="form-field">
+            <label class="eyebrow" for="loan-rate">
+              {i18n.t('loans.rate')}
+              <span class="hint" title={i18n.t('loans.rateHint')}>?</span>
+            </label>
+            <input id="loan-rate" bind:value={rate} inputmode="decimal" placeholder="0" />
+          </div>
+          <div class="form-field">
+            <label class="eyebrow" for="loan-interest">
+              {i18n.t('loans.interest')}
+              <span class="hint" title={i18n.t('loans.interestHint')}>?</span>
+            </label>
+            <select id="loan-interest" bind:value={interestType}>
+              <option value="simple">{i18n.t('loans.interestSimple')}</option>
+              <option value="compound">{i18n.t('loans.interestCompound')}</option>
+            </select>
+          </div>
         </div>
-      </div>
-      <div class="grid2">
-        <div class="form-field">
-          <label for="loan-start">{i18n.t('loans.startDate')}</label>
-          <input id="loan-start" bind:value={startDate} placeholder={i18n.t('expenses.datePlaceholder')} />
+        <div class="grid2">
+          <div class="form-field">
+            <label class="eyebrow" for="loan-start">{i18n.t('loans.startDate')}</label>
+            <input id="loan-start" bind:value={startDate} placeholder={i18n.t('expenses.datePlaceholder')} />
+          </div>
+          <div class="form-field">
+            <label class="eyebrow" for="loan-due">{i18n.t('loans.dueDate')}</label>
+            <input id="loan-due" bind:value={dueDate} placeholder={i18n.t('expenses.datePlaceholder')} />
+          </div>
         </div>
-        <div class="form-field">
-          <label for="loan-due">{i18n.t('loans.dueDate')}</label>
-          <input id="loan-due" bind:value={dueDate} placeholder={i18n.t('expenses.datePlaceholder')} />
-        </div>
-      </div>
+      </details>
+
       {#if err}
-        <p class="error-text">{err}</p>
+        <p class="error-text" role="alert">{err}</p>
       {/if}
       <div class="inline-flex" style="margin-top:8px">
         <button class="btn btn-cancel" onclick={() => (showForm = false)}>{i18n.t('common.cancel')}</button>

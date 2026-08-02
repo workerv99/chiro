@@ -9,6 +9,10 @@
   let ready = $state(false);
 
   $effect(() => {
+    if (typeof document !== 'undefined') document.documentElement.lang = i18n.lang;
+  });
+
+  $effect(() => {
     loadToken();
     if (!A.token) {
       if (page.url.pathname !== '/login') goto('/login');

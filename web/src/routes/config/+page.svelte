@@ -2,16 +2,23 @@
   import { goto } from '$app/navigation';
   import { i18n } from '$lib/i18n.svelte.js';
   import { S, logout, create, update, remove, savePerson, payBill, skipBill, dueBills } from '$lib/stores.svelte.js';
-  import { toDisplay, todayISO, toISO, money } from '$lib/format.js';
+  import { toDisplay, todayISO, money } from '$lib/format.js';
+  import UndoToast from '$lib/components/UndoToast.svelte';
+  import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
 
   let section = $state('accounts');
   let showForm = $state(false);
   let editing = $state(null);
-  let name = $state('');
-  let extra = $state('');
-  let extra2 = $state('');
   let err = $state('');
   let due = $state([]);
+  let confirmDel = $state(null);
+  let undo = $state(null);
+
+  let form = $state(emptyForm());
+
+  function emptyForm() {
+    return { name: '', currency: 'USD', type: 'expense', color: '#5B7CF6', notes: '', target_amount: 0, current_amount: 0, amount: 0, next_date: '', frequency: 'monthly' };
+  }
 
   $effect(() => {
     if (section === 'bills') dueBills().then((d) => (due = d ?? [])).catch(() => {});
@@ -40,58 +47,39 @@
 
   function openNew() {
     editing = null;
-    name = '';
-    extra = '';
-    extra2 = '';
+    form = emptyForm();
+    form.next_date = todayISO();
     err = '';
     showForm = true;
   }
 
   function openEdit(item) {
     editing = item;
-    name = item.label;
-    extra = item.sub || '';
-    if (section === 'categories') extra = item.type;
-    if (section === 'bills') extra = String(item.amount ?? '');
-    if (section === 'piggy') { extra = String(item.target_amount ?? ''); extra2 = String(item.current_amount ?? ''); }
+    form = { ...emptyForm(), ...item };
     err = '';
     showForm = true;
   }
 
   async function save() {
     err = '';
-    if (!name.trim()) return (err = i18n.t('common.required'));
+    const name = form.name.trim();
+    if (!name) return (err = i18n.t('common.required'));
     try {
-      const body = { name: name.trim() };
-      if (section === 'accounts') body.currency = extra.trim() || 'USD';
-      if (section === 'categories') body.type = extra || 'expense';
-      if (section === 'persons') body.notes = extra.trim() || null;
-      if (section === 'tags') body.color = extra.trim() || '#5B7CF6';
-      if (section === 'piggy') {
-        body.target_amount = parseFloat(extra) || 0;
-        body.current_amount = parseFloat(extra2) || 0;
-      }
-      if (section === 'bills') {
-        body.amount = parseFloat(extra) || 0;
-        if (editing) {
-          body.next_date = editing.next_date;
-          body.frequency = editing.frequency || 'monthly';
-          body.type = editing.type || 'expense';
-          body.active = editing.active ?? 1;
-          for (const k of ['category_id', 'account_id', 'notes']) {
-            if (editing[k] != null) body[k] = editing[k];
-          }
-        }
-      }
-      if (editing) {
-        if (section === 'persons') await savePerson({ ...body, person_id: editing.person_id });
-        else await update(section, editing.key, body);
-      } else if (section === 'persons') {
-        await savePerson(body);
-      } else if (section === 'bills') {
-        await create(section, { ...body, next_date: toISO(todayISO()), frequency: 'monthly', type: 'expense' });
+      if (section === 'persons') {
+        const body = { name, notes: form.notes.trim() || null };
+        await savePerson(editing ? { ...body, person_id: editing.person_id } : body);
+      } else if (section === 'bills' && !editing) {
+        await create('bills', { name, amount: form.amount, next_date: form.next_date, frequency: 'monthly', type: 'expense' });
+      } else if (section === 'bills' && editing) {
+        await update('bills', editing.bill_id, {
+          name, amount: form.amount, next_date: editing.next_date, frequency: editing.frequency || 'monthly',
+          type: editing.type || 'expense', active: editing.active ?? 1,
+          category_id: editing.category_id, account_id: editing.account_id, notes: editing.notes
+        });
       } else {
-        await create(section, body);
+        const body = sectionPayload(name);
+        if (editing) await update(section, editing.key, body);
+        else await create(section, body);
       }
       showForm = false;
     } catch (e) {
@@ -100,14 +88,50 @@
     refreshDue();
   }
 
-  async function del(item) {
-    if (!confirm(i18n.t('config.deleteConfirm'))) return;
-    await remove(section, item.key);
-    refreshDue();
+  function sectionPayload(name) {
+    switch (section) {
+      case 'accounts': return { name, currency: (form.currency || 'USD').trim() || 'USD' };
+      case 'categories': return { name, type: form.type || 'expense' };
+      case 'tags': return { name, color: form.color || 'var(--indigo)' };
+      case 'piggy': return { name, target_amount: Number(form.target_amount) || 0, current_amount: Number(form.current_amount) || 0 };
+      default: return { name };
+    }
   }
 
-  function refreshDue() {
-    if (section === 'bills') dueBills().then((d) => (due = d ?? [])).catch(() => {});
+  function askDelete(item) {
+    confirmDel = item;
+  }
+
+  async function doDelete() {
+    const item = confirmDel;
+    confirmDel = null;
+    if (!item) return;
+    try {
+      const snapshot = structuredClone(item);
+      await remove(section, item.key);
+      const label = i18n.t('common.deleted') || 'Eliminado';
+      const msg = `${label}: ${item.label}`;
+      undo = { section, item: snapshot, msg, t: 0 };
+      const timer = setInterval(() => {
+        undo = undo ? { ...undo, t: undo.t + 1 } : null;
+        if (!undo || undo.t >= 5) { clearInterval(timer); undo = null; }
+      }, 1000);
+      refreshDue();
+    } catch (e) {
+      err = e.message;
+    }
+  }
+
+  async function doUndo() {
+    if (!undo) return;
+    const { section: s, item } = undo;
+    undo = null;
+    try {
+      await create(s, { ...item, deleted: 0 });
+    } catch (e) {
+      err = e.message;
+    }
+    refreshDue();
   }
 
   function focusInit(node) {
@@ -116,6 +140,11 @@
 
   function onKeydown(e) {
     if (e.key === 'Escape' && showForm) showForm = false;
+    if (e.key === 'Escape' && confirmDel) confirmDel = null;
+  }
+
+  function refreshDue() {
+    if (section === 'bills') dueBills().then((d) => (due = d ?? [])).catch(() => {});
   }
 </script>
 
@@ -173,7 +202,7 @@
           <div class="row-title">{item.label}</div>
           <div class="row-sub">{item.sub}</div>
         </div>
-        <button class="btn btn-small btn-cancel" onclick={(e) => { e.stopPropagation(); e.preventDefault(); del(item); }}>{i18n.t('common.delete')}</button>
+        <button class="btn btn-small btn-cancel" onclick={(e) => { e.stopPropagation(); e.preventDefault(); askDelete(item); }}>{i18n.t('common.delete')}</button>
       </a>
     {/each}
   {/if}
@@ -185,62 +214,80 @@
       <h2 class="title" id="cfg-form-title" style="margin-bottom:16px">
         {editing ? i18n.t('config.editItem') : i18n.t('common.add')}
       </h2>
+
       <div class="form-field">
-        <label for="cfg-name">{i18n.t('config.name')}</label>
-        <input id="cfg-name" bind:value={name} use:focusInit />
+        <label class="eyebrow" for="cfg-name">{i18n.t('config.name')}</label>
+        <input id="cfg-name" bind:value={form.name} use:focusInit />
       </div>
+
       {#if section === 'accounts'}
         <div class="form-field">
-          <label for="cfg-currency">{i18n.t('config.currency')}</label>
-          <input id="cfg-currency" bind:value={extra} placeholder="USD" />
+          <label class="eyebrow" for="cfg-currency">{i18n.t('config.currency')}</label>
+          <input id="cfg-currency" bind:value={form.currency} placeholder="USD" />
         </div>
       {:else if section === 'categories'}
         <div class="form-field">
-          <label for="cfg-type">{i18n.t('config.type')}</label>
-          <select id="cfg-type" bind:value={extra}>
+          <label class="eyebrow" for="cfg-type">{i18n.t('config.type')}</label>
+          <select id="cfg-type" bind:value={form.type}>
             <option value="expense">{i18n.t('common.expense')}</option>
             <option value="income">{i18n.t('common.income')}</option>
           </select>
         </div>
       {:else if section === 'tags'}
         <div class="form-field">
-          <label for="cfg-color">{i18n.t('config.color')}</label>
-          <input id="cfg-color" bind:value={extra} type="color" />
+          <label class="eyebrow" for="cfg-color">{i18n.t('config.color')}</label>
+          <div class="inline-flex" style="align-items:center;gap:10px">
+            <input id="cfg-color" bind:value={form.color} type="color" class="color-swatch" />
+            <code class="meta">{form.color}</code>
+          </div>
         </div>
       {:else if section === 'piggy'}
         <div class="grid2">
           <div class="form-field">
-            <label for="cfg-target">{i18n.t('config.target')}</label>
-            <input id="cfg-target" bind:value={extra} inputmode="decimal" />
+            <label class="eyebrow" for="cfg-target">{i18n.t('config.target')}</label>
+            <input id="cfg-target" type="number" inputmode="decimal" step="0.01" min="0" bind:value={form.target_amount} />
           </div>
           <div class="form-field">
-            <label for="cfg-current">{i18n.t('config.current')}</label>
-            <input id="cfg-current" bind:value={extra2} inputmode="decimal" />
+            <label class="eyebrow" for="cfg-current">{i18n.t('config.current')}</label>
+            <input id="cfg-current" type="number" inputmode="decimal" step="0.01" min="0" bind:value={form.current_amount} />
           </div>
         </div>
       {:else if section === 'bills'}
         <div class="form-field">
-          <label for="cfg-amount">{i18n.t('config.amount')}</label>
-          <input id="cfg-amount" bind:value={extra} inputmode="decimal" />
+          <label class="eyebrow" for="cfg-amount">{i18n.t('config.amount')}</label>
+          <input id="cfg-amount" type="number" inputmode="decimal" step="0.01" min="0" bind:value={form.amount} />
         </div>
       {:else if section === 'persons'}
         <div class="form-field">
-          <label for="cfg-notes">{i18n.t('config.notes')}</label>
-          <input id="cfg-notes" bind:value={extra} />
+          <label class="eyebrow" for="cfg-notes">{i18n.t('config.notes')}</label>
+          <input id="cfg-notes" bind:value={form.notes} />
         </div>
       {/if}
+
       {#if err}
-        <p class="error-text">{err}</p>
+        <p class="error-text" role="alert">{err}</p>
       {/if}
       <div class="inline-flex" style="margin-top:8px">
         <button class="btn btn-cancel" onclick={() => (showForm = false)}>{i18n.t('common.cancel')}</button>
         <button class="btn btn-primary" onclick={save}>{i18n.t('common.save')}</button>
       </div>
-      {#if editing}
-        <button class="btn btn-danger" style="margin-top:12px" onclick={() => { del(editing); showForm = false; }}>{i18n.t('common.delete')}</button>
-      {/if}
     </div>
   </div>
+{/if}
+
+{#if confirmDel}
+  <ConfirmSheet
+    title={i18n.t('common.delete')}
+    message={i18n.t('config.deleteConfirm') + ': ' + confirmDel.label}
+    confirmLabel={i18n.t('common.delete')}
+    danger
+    onConfirm={doDelete}
+    onCancel={() => (confirmDel = null)}
+  />
+{/if}
+
+{#if undo}
+  <UndoToast message={undo.msg} secondsLeft={5 - undo.t} onUndo={doUndo} onClose={() => (undo = null)} />
 {/if}
 
 <div class="card" style="padding:16px;margin-top:16px">

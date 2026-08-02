@@ -6,9 +6,11 @@ export const messages = {
       save: 'Guardar', cancel: 'Cancelar', delete: 'Eliminar', add: 'Añadir', loading: 'Cargando…',
       logout: 'Cerrar sesión', pay: 'Pagar', skip: 'Saltar', expense: 'Gasto', income: 'Ingreso',
       transfer: 'Transferencia', required: 'Completa todos los campos',
-      prevMonth: 'Mes anterior', nextMonth: 'Mes siguiente', goToday: 'Volver al mes actual'
+      prevMonth: 'Mes anterior', nextMonth: 'Mes siguiente', goToday: 'Volver al mes actual',
+      deleted: 'Eliminado', undo: 'Deshacer', close: 'Cerrar',
+      moreOptions: 'Más opciones'
     },
-    summary: { income: 'Ingresos', expense: 'Gastos', balance: 'Balance' },
+    summary: { income: 'Ingresos', expense: 'Gastos', balance: 'Balance', vsLastMonth: 'vs mes anterior' },
     expenses: {
       title: 'Gastos', newExpense: 'Nuevo gasto', editExpense: 'Editar gasto',
       description: 'Descripción', descriptionPlaceholder: 'Ej. Supermercado',
@@ -37,7 +39,8 @@ export const messages = {
       paidLabel: 'Pagado', progress: 'Cuotas', paid: 'Pagado', pending: 'Pendiente', interest: 'Interés', partial: 'Parcial',
       schedule: 'Calendario', installmentN: 'Cuota', paymentAmount: 'Importe', paymentDate: 'Fecha',
       payNext: 'Pagar siguiente', payNow: 'Pagar ahora', cascade: 'Reestructurar', unpay: 'Deshacer pago',
-      empty: 'Sin préstamos', deleteConfirm: '¿Eliminar préstamo y su calendario?'
+      empty: 'Sin préstamos', deleteConfirm: '¿Eliminar préstamo y su calendario?',
+      rateHint: 'Porcentaje anual. 0 para préstamos sin interés.', interestHint: 'Simple: interés solo sobre el capital original. Compuesto: interés sobre capital + interés acumulado.'
     },
     auth: {
       loginTitle: 'Bienvenido', loginSub: 'Controla tus gastos, hoy.',
@@ -54,6 +57,17 @@ export const messages = {
       nextDate: 'Próxima fecha', frequency: 'Frecuencia', day: 'Día',
       dueBills: 'Facturas por pagar', noDueBills: 'Nada pendiente', editItem: 'Editar',
       deleteConfirm: '¿Eliminar?', empty: 'Sin elementos', session: 'Sesión', loggedAs: 'Conectado como'
+    },
+    onboard: {
+      title: 'Empieza en 3 pasos',
+      sub: 'Crea tu primera cuenta y categoría para empezar a registrar gastos.',
+      step1Title: 'Crea una cuenta',
+      step1Sub: 'Por ejemplo: "Efectivo", "Banco", "Ahorros".',
+      step2Title: 'Crea categorías',
+      step2Sub: 'Las categorías se crean al registrar tu primer gasto.',
+      step3Title: 'Registra tu primer movimiento',
+      step3Sub: 'Toca el botón + para añadir un gasto o ingreso.',
+      go: 'Ir'
     }
   },
   en: {
@@ -62,9 +76,11 @@ export const messages = {
       save: 'Save', cancel: 'Cancel', delete: 'Delete', add: 'Add', loading: 'Loading…',
       logout: 'Log out', pay: 'Pay', skip: 'Skip', expense: 'Expense', income: 'Income',
       transfer: 'Transfer', required: 'Fill in all fields',
-      prevMonth: 'Previous month', nextMonth: 'Next month', goToday: 'Back to current month'
+      prevMonth: 'Previous month', nextMonth: 'Next month', goToday: 'Back to current month',
+      deleted: 'Deleted', undo: 'Undo', close: 'Close',
+      moreOptions: 'More options'
     },
-    summary: { income: 'Income', expense: 'Expenses', balance: 'Balance' },
+    summary: { income: 'Income', expense: 'Expenses', balance: 'Balance', vsLastMonth: 'vs last month' },
     expenses: {
       title: 'Expenses', newExpense: 'New expense', editExpense: 'Edit expense',
       description: 'Description', descriptionPlaceholder: 'e.g. Groceries',
@@ -93,7 +109,8 @@ export const messages = {
       paidLabel: 'Paid', progress: 'Installments', paid: 'Paid', pending: 'Pending', interest: 'Interest', partial: 'Partial',
       schedule: 'Schedule', installmentN: 'Installment', paymentAmount: 'Amount', paymentDate: 'Date',
       payNext: 'Pay next', payNow: 'Pay now', cascade: 'Restructure', unpay: 'Undo payment',
-      empty: 'No loans yet', deleteConfirm: 'Delete loan and its schedule?'
+      empty: 'No loans yet', deleteConfirm: 'Delete loan and its schedule?',
+      rateHint: 'Yearly percentage. 0 for interest-free loans.', interestHint: 'Simple: interest on the original principal only. Compound: interest on principal plus accumulated interest.'
     },
     auth: {
       loginTitle: 'Welcome back', loginSub: 'Track your money, today.',
@@ -110,6 +127,17 @@ export const messages = {
       nextDate: 'Next date', frequency: 'Frequency', day: 'Day',
       dueBills: 'Bills due', noDueBills: 'Nothing due', editItem: 'Edit',
       deleteConfirm: 'Delete?', empty: 'Nothing here yet', session: 'Session', loggedAs: 'Signed in as'
+    },
+    onboard: {
+      title: 'Start in 3 steps',
+      sub: 'Create your first account and category to begin tracking expenses.',
+      step1Title: 'Create an account',
+      step1Sub: 'For example: "Cash", "Bank", "Savings".',
+      step2Title: 'Create categories',
+      step2Sub: 'Categories are created when you log your first expense.',
+      step3Title: 'Log your first transaction',
+      step3Sub: 'Tap the + button to add an expense or income.',
+      go: 'Go'
     }
   }
 };

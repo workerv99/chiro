@@ -5,6 +5,7 @@
   import { api } from '$lib/api.svelte.js';
   import { payInstallment, cascadeInstallment, unpayInstallment, remove } from '$lib/stores.svelte.js';
   import { money, toDisplay, toISO, todayISO } from '$lib/format.js';
+  import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
 
   const loanId = String(page.params.id);
   let loan = $state(null);
@@ -12,6 +13,7 @@
   let loading = $state(true);
   let payAmount = $state('');
   let payDate = $state(toDisplay(todayISO()));
+  let confirmDel = $state(false);
 
   async function load() {
     const [loans, s] = await Promise.all([api('/api/loans'), api(`/api/loans/${loanId}/installments`)]);
@@ -28,6 +30,7 @@
   const nextPending = $derived(schedule.find((x) => !x.is_paid));
   const paidCount = $derived(schedule.filter((x) => x.is_paid).length);
   const remaining = $derived(loan ? loan.total_amount - loan.total_paid : 0);
+  const blastRadius = $derived(`${schedule.length} ${i18n.t('loans.progress').toLowerCase()} (${paidCount} ${i18n.t('loans.paid')})`);
 
   async function pay(next) {
     const target = nextPending;
@@ -54,14 +57,19 @@
     await load();
   }
 
-  async function del() {
-    if (!confirm(i18n.t('loans.deleteConfirm'))) return;
+  async function doDelete() {
+    confirmDel = false;
     await remove('loans', loanId);
     goto('/loans');
+  }
+
+  function onKeydown(e) {
+    if (e.key === 'Escape' && confirmDel) confirmDel = false;
   }
 </script>
 
 <svelte:head><title>{loan ? loan.person_name : i18n.t('loans.title')} · Chiro</title></svelte:head>
+<svelte:window onkeydown={onKeydown} />
 
 {#if loading || !loan}
   <p class="meta" style="padding:24px;text-align:center">{i18n.t('common.loading')}</p>
@@ -138,5 +146,16 @@
     {/each}
   </div>
 
-  <button class="btn btn-danger" style="margin:16px 0 32px" onclick={del}>{i18n.t('common.delete')}</button>
+  <button class="btn btn-danger" style="margin:16px 0 32px" onclick={() => (confirmDel = true)}>{i18n.t('common.delete')}</button>
+{/if}
+
+{#if confirmDel}
+  <ConfirmSheet
+    title={i18n.t('common.delete')}
+    message={`${i18n.t('loans.deleteConfirm')}\n\n${blastRadius}`}
+    confirmLabel={i18n.t('common.delete')}
+    danger
+    onConfirm={doDelete}
+    onCancel={() => (confirmDel = false)}
+  />
 {/if}

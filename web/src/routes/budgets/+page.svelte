@@ -3,6 +3,7 @@
   import { api } from '$lib/api.svelte.js';
   import { S, create, update, remove } from '$lib/stores.svelte.js';
   import { money, pct } from '$lib/format.js';
+  import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
 
   const now = new Date();
   let year = $state(now.getFullYear());
@@ -13,6 +14,7 @@
   let catId = $state('');
   let amount = $state('');
   let err = $state('');
+  let confirmDel = $state(null);
 
   function load() {
     return api(`/api/budgets/progress?year=${year}&month=${month}`)
@@ -58,8 +60,14 @@
     }
   }
 
-  async function del(b) {
-    if (!confirm(i18n.t('budgets.deleteConfirm'))) return;
+  function askDelete(b) {
+    confirmDel = b;
+  }
+
+  async function doDelete() {
+    const b = confirmDel;
+    confirmDel = null;
+    if (!b) return;
     await remove('budgets', b.budget_id);
     await load();
   }
@@ -74,6 +82,7 @@
 
   function onKeydown(e) {
     if (e.key === 'Escape' && showForm) showForm = false;
+    if (e.key === 'Escape' && confirmDel) confirmDel = null;
   }
 </script>
 
@@ -99,7 +108,7 @@
 {:else}
   <div class="card list-card">
     {#each list as b (b.budget_id)}
-      <button class="budget-row" onclick={() => openEdit(b)}>
+      <div class="budget-row" onclick={() => openEdit(b)} role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEdit(b); } }}>
         <div class="row-body">
           <div class="row-title">{b.category_name || catName(b.category_id)}</div>
           <div class="bar-track" style="margin-top:6px">
@@ -114,9 +123,10 @@
             {#if b.spent > b.amount}
               <span class="badge-danger">{i18n.t('budgets.exceeded')}</span>
             {/if}
+            <button class="btn btn-small btn-cancel" style="margin-left:auto" onclick={(e) => { e.stopPropagation(); askDelete(b); }}>{i18n.t('common.delete')}</button>
           </div>
         </div>
-      </button>
+      </div>
     {/each}
   </div>
 {/if}
@@ -148,10 +158,21 @@
         <button class="btn btn-primary" onclick={save}>{i18n.t('common.save')}</button>
       </div>
       {#if editing}
-        <button class="btn btn-danger" style="margin-top:12px" onclick={() => { del(editing); showForm = false; }}>
+        <button class="btn btn-danger" style="margin-top:12px" onclick={() => { confirmDel = editing; showForm = false; }}>
           {i18n.t('common.delete')}
         </button>
       {/if}
     </div>
   </div>
+{/if}
+
+{#if confirmDel}
+  <ConfirmSheet
+    title={i18n.t('common.delete')}
+    message={i18n.t('budgets.deleteConfirm') + (confirmDel.category_name ? ': ' + confirmDel.category_name : '')}
+    confirmLabel={i18n.t('common.delete')}
+    danger
+    onConfirm={doDelete}
+    onCancel={() => (confirmDel = null)}
+  />
 {/if}
