@@ -397,8 +397,8 @@
       </p>
     </div>
     <div class="inline-flex">
-      <button class="btn btn-small" onclick={openEdit}>✏️ Editar</button>
-      <button class="btn btn-small" onclick={generatePDF}>📄 PDF</button>
+      <button class="btn btn-small" onclick={openEdit}>Editar</button>
+      <button class="btn btn-small" onclick={generatePDF}>PDF</button>
     </div>
   </div>
 
