@@ -418,24 +418,50 @@
   </div>
 
   <div class="card" style="padding:16px;margin-top:14px">
-    <div class="grid2" style="align-items:end">
-      <div class="form-field">
-        <label for="pay-amount">{i18n.t('loans.paymentAmount')}</label>
-        <input id="pay-amount" bind:value={payAmount} inputmode="decimal" />
+    {#if nextPending}
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:0.82rem;color:var(--ink-dim);font-weight:600">Cuota #{nextPending.number}</span>
+          <span style="font-size:0.82rem;color:var(--ink-dim)">{toDisplay(nextPending.due_date)}</span>
+        </div>
+        <div style="font-size:1.3rem;font-weight:800">{money(nextPending.amount)}</div>
       </div>
-      <div class="form-field">
-        <label for="pay-date">{i18n.t('loans.paymentDate')}</label>
-        <input id="pay-date" bind:value={payDate} placeholder={i18n.t('expenses.datePlaceholder')} />
-      </div>
-    </div>
-    <div class="inline-flex" style="margin-top:8px;flex-wrap:wrap">
-      <button class="btn btn-primary" onclick={() => pay(true)} disabled={!nextPending}>
-        {i18n.t('loans.payNext')}
+      <button class="btn btn-primary" style="width:100%;margin-bottom:12px" onclick={() => pay(true)}>
+        Pagar cuota #{nextPending.number}
       </button>
-      <button class="btn" onclick={() => pay(false)} disabled={!nextPending}>{i18n.t('loans.payNow')}</button>
-      <button class="btn" onclick={cascade} disabled={!nextPending}>{i18n.t('loans.cascade')}</button>
-      <button class="btn" onclick={unpay} disabled={paidCount === 0}>{i18n.t('loans.unpay')}</button>
-    </div>
+    {:else}
+      <div style="text-align:center;padding:12px 0;margin-bottom:12px">
+        <div style="color:var(--green);font-weight:700;margin-bottom:4px">Todas las cuotas pagadas</div>
+        <div style="font-size:0.82rem;color:var(--ink-dim)">${loan.total_paid.toFixed(2)} de ${loan.total_amount.toFixed(2)}</div>
+      </div>
+    {/if}
+
+    <details class="more-options">
+      <summary>Pago personalizado</summary>
+      <div style="margin-top:12px">
+        <div class="grid2" style="margin-bottom:10px">
+          <div class="form-field">
+            <label class="eyebrow" for="pay-amount">Importe</label>
+            <input id="pay-amount" bind:value={payAmount} inputmode="decimal" />
+          </div>
+          <div class="form-field">
+            <label class="eyebrow" for="pay-date">Fecha</label>
+            <input id="pay-date" bind:value={payDate} placeholder="DD/MM/YYYY" />
+          </div>
+        </div>
+        <button class="btn" style="width:100%" onclick={() => pay(false)} disabled={!nextPending || !payAmount}>
+          Aplicar pago personalizado
+        </button>
+      </div>
+    </details>
+
+    {#if paidCount > 0}
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <button class="btn btn-cancel" style="width:100%;font-size:0.82rem" onclick={unpay}>
+          Deshacer ultimo pago
+        </button>
+      </div>
+    {/if}
   </div>
 
   <div class="card list-card" style="margin-top:14px">
