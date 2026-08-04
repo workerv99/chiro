@@ -21,7 +21,8 @@ export const S = $state({
   },
   summary: { income: 0, expense: 0, balance: 0 },
   monthExpenses: [],
-  view: { year: 0, month: 0 }
+  view: { year: 0, month: 0 },
+  subscription: { plan: 'free', status: 'active', limits: {}, usage: {} }
 });
 
 const TABLE_PATHS = {
@@ -92,6 +93,24 @@ export async function me() {
   } catch {
     return null;
   }
+}
+
+export async function fetchSubscription() {
+  try {
+    S.subscription = await api('/api/subscription');
+  } catch {
+    S.subscription = { plan: 'free', status: 'active', limits: {}, usage: {} };
+  }
+}
+
+export async function activatePro() {
+  await api('/api/subscription/activate', { method: 'POST' });
+  await fetchSubscription();
+}
+
+export async function cancelSubscription() {
+  await api('/api/subscription/cancel', { method: 'POST' });
+  await fetchSubscription();
 }
 
 export async function fetchAll() {

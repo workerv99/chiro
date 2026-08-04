@@ -1202,6 +1202,20 @@ a.active .nav-pill {
   border-top: 1px solid var(--border);
 }
 
+.progress-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--indigo);
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
 @media (max-width: 640px) {
   .hero h1 {
     font-size: 1.8rem;

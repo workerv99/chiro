@@ -22,6 +22,28 @@ type Config struct {
 	RateLimitPerMin int     // requests/min por IP para endpoints sensibles
 }
 
+// PlanLimits define los límites por plan.
+type PlanLimits struct {
+	MaxExpensesPerMonth int
+	MaxAccounts         int
+	MaxLoans            int
+	MaxCategories       int
+}
+
+var FreeLimits = PlanLimits{
+	MaxExpensesPerMonth: 50,
+	MaxAccounts:         3,
+	MaxLoans:            10,
+	MaxCategories:       10,
+}
+
+var ProLimits = PlanLimits{
+	MaxExpensesPerMonth: -1, // ilimitado
+	MaxAccounts:         -1,
+	MaxLoans:            -1,
+	MaxCategories:       -1,
+}
+
 const devJWTSecret = "dev-only-secret-change-me"
 
 // Load lee la configuración del entorno. requireSecret=true falla si JWT_SECRET

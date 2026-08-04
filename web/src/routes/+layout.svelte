@@ -3,7 +3,7 @@
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { i18n } from '$lib/i18n.svelte.js';
-  import { S, me, fetchAll, logout, loadMonth } from '$lib/stores.svelte.js';
+  import { S, me, fetchAll, logout, loadMonth, fetchSubscription } from '$lib/stores.svelte.js';
   import { A, loadToken } from '$lib/api.svelte.js';
 
   let ready = $state(false);
@@ -32,7 +32,7 @@
         goto('/dashboard');
       }
       try {
-        await Promise.all([fetchAll(), loadMonth(new Date().getFullYear(), new Date().getMonth() + 1)]);
+        await Promise.all([fetchAll(), loadMonth(new Date().getFullYear(), new Date().getMonth() + 1), fetchSubscription()]);
       } catch { /* ignore */ }
       ready = true;
     })();

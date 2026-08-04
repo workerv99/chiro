@@ -1,7 +1,7 @@
 <script>
   import { goto } from '$app/navigation';
   import { i18n } from '$lib/i18n.svelte.js';
-  import { S, logout, create, update, remove, savePerson, payBill, skipBill, dueBills } from '$lib/stores.svelte.js';
+  import { S, logout, create, update, remove, savePerson, payBill, skipBill, dueBills, activatePro, fetchSubscription } from '$lib/stores.svelte.js';
   import { toDisplay, todayISO, money } from '$lib/format.js';
   import UndoToast from '$lib/components/UndoToast.svelte';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
@@ -14,8 +14,18 @@
   let confirmDel = $state(null);
   let undo = $state(null);
   let amoled = $state(false);
+  let showUpgrade = $state(false);
 
   let form = $state(emptyForm());
+
+  async function handleUpgrade() {
+    try {
+      await activatePro();
+      showUpgrade = false;
+    } catch (e) {
+      err = e.message;
+    }
+  }
 
   function emptyForm() {
     return { name: '', currency: 'USD', type: 'expense', color: '#5B7CF6', notes: '', target_amount: 0, current_amount: 0, amount: 0, next_date: '', frequency: 'monthly' };
@@ -186,6 +196,51 @@
     <button class="btn btn-primary" onclick={openNew}>+ {i18n.t('common.add')}</button>
   </div>
 </div>
+
+<div class="card" style="padding:16px;margin-bottom:14px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div>
+      <h3 class="card-title" style="margin-bottom:2px">Plan {S.subscription.plan === 'pro' ? 'Pro' : 'Free'}</h3>
+      <p class="meta">
+        {#if S.subscription.plan === 'pro'}
+          Gastos ilimitados, cuentas ilimitadas, préstamos ilimitados
+        {:else}
+          {S.subscription.usage?.expenses_this_month || 0}/50 gastos · {S.subscription.usage?.total_accounts || 0}/3 cuentas · {S.subscription.usage?.total_loans || 0}/10 préstamos
+        {/if}
+      </p>
+    </div>
+    {#if S.subscription.plan === 'free'}
+      <a href="#upgrade" class="btn btn-primary btn-small" onclick={(e) => { e.preventDefault(); showUpgrade = true; }}>Upgrade a Pro</a>
+    {/if}
+  </div>
+  {#if S.subscription.plan === 'free'}
+    <div class="progress-bar" style="margin-top:8px">
+      <div class="progress-fill" style="width:{Math.min(100, ((S.subscription.usage?.expenses_this_month || 0) / 50) * 100)}%"></div>
+    </div>
+  {/if}
+</div>
+
+{#if showUpgrade}
+  <div class="overlay" onclick={() => (showUpgrade = false)}>
+    <div class="sheet" role="dialog" aria-modal="true" onclick={(e) => e.stopPropagation()}>
+      <div class="handle"></div>
+      <h2 class="title" style="margin-bottom:16px">Actualizar a Pro</h2>
+      <div style="text-align:center;padding:16px 0">
+        <div style="font-size:2rem;font-weight:800;color:var(--indigo);margin-bottom:8px">$4.99/mes</div>
+        <p class="meta" style="margin-bottom:24px">Gastos, cuentas y préstamos ilimitados</p>
+        <ul style="list-style:none;padding:0;text-align:left;max-width:280px;margin:0 auto 24px">
+          <li style="padding:8px 0;border-bottom:1px solid var(--border)">✓ Gastos ilimitados por mes</li>
+          <li style="padding:8px 0;border-bottom:1px solid var(--border)">✓ Cuentas ilimitadas</li>
+          <li style="padding:8px 0;border-bottom:1px solid var(--border)">✓ Préstamos ilimitados</li>
+          <li style="padding:8px 0;border-bottom:1px solid var(--border)">✓ Reportes PDF</li>
+          <li style="padding:8px 0">✓ Soporte prioritario</li>
+        </ul>
+        <button class="btn btn-primary" style="width:100%" onclick={handleUpgrade}>Activar Pro (simulado)</button>
+        <button class="btn btn-cancel" style="width:100%;margin-top:8px" onclick={() => (showUpgrade = false)}>Cancelar</button>
+      </div>
+    </div>
+  </div>
+{/if}
 
 {#if section === 'bills'}
   <div class="card" style="padding:16px;margin-bottom:14px">

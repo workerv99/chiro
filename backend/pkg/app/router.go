@@ -91,6 +91,11 @@ func (a *App) Handler(cfg config.Config) http.Handler {
 		pr.Get("/api/stats", a.handleStats)
 		pr.Get("/api/budgets/progress", a.handleBudgetProgress)
 		pr.Post("/api/sync", a.handleSync)
+
+		// Suscripciones.
+		pr.Get("/api/subscription", a.handleGetSubscription)
+		pr.Post("/api/subscription/activate", a.handleActivatePro)
+		pr.Post("/api/subscription/cancel", a.handleCancelSubscription)
 	})
 
 	return r
