@@ -15,6 +15,13 @@
   --radius-lg: 18px;
 }
 
+:root.amoled {
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --surface-2: #050505;
+  --border: rgba(255, 255, 255, 0.12);
+}
+
 * {
   box-sizing: border-box;
 }

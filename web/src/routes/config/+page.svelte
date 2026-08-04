@@ -13,11 +13,26 @@
   let due = $state([]);
   let confirmDel = $state(null);
   let undo = $state(null);
+  let amoled = $state(false);
 
   let form = $state(emptyForm());
 
   function emptyForm() {
     return { name: '', currency: 'USD', type: 'expense', color: '#5B7CF6', notes: '', target_amount: 0, current_amount: 0, amount: 0, next_date: '', frequency: 'monthly' };
+  }
+
+  $effect(() => {
+    if (typeof document !== 'undefined') {
+      const saved = localStorage.getItem('chiro_amoled');
+      amoled = saved === 'true';
+      document.documentElement.classList.toggle('amoled', amoled);
+    }
+  });
+
+  function toggleAmoled() {
+    amoled = !amoled;
+    document.documentElement.classList.toggle('amoled', amoled);
+    localStorage.setItem('chiro_amoled', amoled);
   }
 
   $effect(() => {
@@ -166,7 +181,10 @@
     <button class="chip" class:active={i18n.lang === 'es'} onclick={() => i18n.setLang('es')}>ES</button>
     <button class="chip" class:active={i18n.lang === 'en'} onclick={() => i18n.setLang('en')}>EN</button>
   </div>
-  <button class="btn btn-primary" onclick={openNew}>+ {i18n.t('common.add')}</button>
+  <div class="inline-flex">
+    <button class="chip" class:active={amoled} onclick={toggleAmoled}>AMOLED</button>
+    <button class="btn btn-primary" onclick={openNew}>+ {i18n.t('common.add')}</button>
+  </div>
 </div>
 
 {#if section === 'bills'}
