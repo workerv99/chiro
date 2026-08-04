@@ -71,6 +71,20 @@
   function onKeydown(e) {
     if (e.key === 'Escape' && showForm) showForm = false;
   }
+
+  const groupedLoans = $derived(() => {
+    const groups = {};
+    for (const l of S.db.loans) {
+      const pid = l.person_id || 'unknown';
+      if (!groups[pid]) {
+        groups[pid] = { person_name: l.person_name || '—', loans: [], total: 0, paid: 0 };
+      }
+      groups[pid].loans.push(l);
+      groups[pid].total += l.total_amount;
+      groups[pid].paid += l.total_paid;
+    }
+    return Object.values(groups).sort((a, b) => a.person_name.localeCompare(b.person_name));
+  });
 </script>
 
 <svelte:head><title>{i18n.t('loans.title')} · Chiro</title></svelte:head>
@@ -88,20 +102,30 @@
   </div>
 {:else}
   <div class="card list-card">
-    {#each S.db.loans as l (l.loan_id)}
-      <a class="row" href={`/loans/${l.loan_id}`}>
-        <div class="cat-dot" style="background:{l.is_paid ? 'var(--green)' : 'var(--amber)'}"></div>
-        <div class="row-body">
-          <div class="row-title">{l.person_name}</div>
-          <div class="row-sub">
-            {#if l.description}· {l.description}{/if}
-          </div>
+    {#each groupedLoans() as group (group.person_name)}
+      {@const groupRemaining = group.total - group.paid}
+      <div class="day-group">
+        <div class="day-head">
+          <span>{group.person_name}</span>
+          <span class="day-total negative">{money(groupRemaining)}</span>
         </div>
-        <div class="row-right">
-          <div class="row-amount">{money(remaining(l))}</div>
-          <div class="row-sub" class:paid={l.is_paid}>{statusLabel(l)}</div>
-        </div>
-      </a>
+        {#each group.loans as l (l.loan_id)}
+          <a class="row" href={`/loans/${l.loan_id}`}>
+            <div class="cat-dot" style="background:{l.is_paid ? 'var(--green)' : 'var(--amber)'}"></div>
+            <div class="row-body">
+              <div class="row-title">{l.description || i18n.t('loans.loan')}</div>
+              <div class="row-sub">
+                {#if l.is_paid}
+                  <span class="tag mini">{i18n.t('loans.paid')}</span>
+                {/if}
+              </div>
+            </div>
+            <div class="row-amount" class:negative={!l.is_paid}>
+              {l.is_paid ? '✓' : money(remaining(l))}
+            </div>
+          </a>
+        {/each}
+      </div>
     {/each}
   </div>
 {/if}
@@ -186,3 +210,5 @@
     </div>
   </div>
 {/if}
+
+<button class="fab" onclick={openNew} aria-label={i18n.t('loans.newLoan')}>+</button>
