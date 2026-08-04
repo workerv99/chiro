@@ -59,9 +59,8 @@
     return l.total_amount - l.total_paid;
   }
 
-  function statusLabel(l) {
-    if (l.is_paid) return i18n.t('loans.paid');
-    return i18n.t('loans.remaining') + ': ' + money(remaining(l));
+  function paidCount(l) {
+    return l.installments?.filter(i => i.paid_date).length || 0;
   }
 
   function focusInit(node) {
@@ -92,7 +91,6 @@
 
 <div class="page-head">
   <h1 class="headline">{i18n.t('loans.title')}</h1>
-  <button class="btn btn-primary" onclick={openNew}>+ {i18n.t('loans.newLoan')}</button>
 </div>
 
 {#if S.db.loans.length === 0}
@@ -117,6 +115,8 @@
               <div class="row-sub">
                 {#if l.is_paid}
                   <span class="tag mini">{i18n.t('loans.paid')}</span>
+                {:else}
+                  <span>{i18n.t('loans.progress')}: {paidCount(l)}/{l.months || '?'}</span>
                 {/if}
               </div>
             </div>
