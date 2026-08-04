@@ -63,11 +63,11 @@
     if (e.key === 'Escape' && showForm) showForm = false;
   }
 
-  const totalLoans = $derived(() => S.db.loans.reduce((sum, l) => sum + l.total_amount, 0));
-  const totalPaid = $derived(() => S.db.loans.reduce((sum, l) => sum + l.total_paid, 0));
-  const totalPending = $derived(() => totalLoans() - totalPaid());
+  const totalLoans = $derived(S.db.loans.reduce((sum, l) => sum + l.total_amount, 0));
+  const totalPaid = $derived(S.db.loans.reduce((sum, l) => sum + l.total_paid, 0));
+  const totalPending = $derived(totalLoans - totalPaid);
 
-  const groupedPersons = $derived(() => {
+  const groupedPersons = $derived.by(() => {
     const groups = {};
     for (const l of S.db.loans) {
       const pid = l.person_id || 'unknown';
@@ -93,11 +93,11 @@
   <div class="summary-cards">
     <div class="card stat-card">
       <div class="stat-label">Total prestado</div>
-      <div class="stat-value">{money(totalLoans())}</div>
+      <div class="stat-value">{money(totalLoans)}</div>
     </div>
     <div class="card stat-card">
       <div class="stat-label">Pendiente</div>
-      <div class="stat-value negative">{money(totalPending())}</div>
+      <div class="stat-value negative">{money(totalPending)}</div>
     </div>
   </div>
 {/if}
@@ -109,7 +109,7 @@
   </div>
 {:else}
   <div class="card list-card">
-    {#each groupedPersons() as group (group.person_id)}
+    {#each groupedPersons as group (group.person_id)}
       {@const groupRemaining = group.total - group.paid}
       <a class="row" href={`/loans/person/${group.person_id}`}>
         <div class="cat-dot" style="background:var(--indigo)"></div>

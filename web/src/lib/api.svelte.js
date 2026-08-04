@@ -18,13 +18,14 @@ export function setToken(t) {
   } catch { /* ignore */ }
 }
 
-export async function api(path, { method = 'GET', body } = {}) {
+export async function api(path, { method = 'GET', body, signal } = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (A.token) headers.Authorization = 'Bearer ' + A.token;
   const res = await fetch(BASE + path, {
     method,
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+    signal
   });
   if (res.status === 401) {
     setToken('');

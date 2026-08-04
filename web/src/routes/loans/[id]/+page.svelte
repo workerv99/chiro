@@ -6,8 +6,6 @@
   import { payInstallment, cascadeInstallment, unpayInstallment, remove, updateLoan } from '$lib/stores.svelte.js';
   import { money, toDisplay, toISO, todayISO } from '$lib/format.js';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
-  import { jsPDF } from 'jspdf';
-  import autoTable from 'jspdf-autotable';
 
   const loanId = String(page.params.id);
   let loan = $state(null);
@@ -180,7 +178,11 @@
     }
   }
 
-  function generatePDF() {
+  async function generatePDF() {
+    const [{ jsPDF }, autoTable] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable')
+    ]);
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();

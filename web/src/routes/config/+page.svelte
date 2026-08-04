@@ -39,7 +39,7 @@
     if (section === 'bills') dueBills().then((d) => (due = d ?? [])).catch(() => {});
   });
 
-  const items = $derived(() => {
+  const items = $derived.by(() => {
     switch (section) {
       case 'accounts': return S.db.accounts.map((a) => ({ ...a, key: a.account_id, label: a.name, sub: a.currency }));
       case 'categories': return S.db.categories.map((c) => ({ ...c, key: c.category_id, label: c.name, sub: c.type, color: c.color }));
@@ -210,10 +210,10 @@
 {/if}
 
 <div class="card list-card">
-  {#if items().length === 0}
+  {#if items.length === 0}
     <div class="empty"><p class="meta">{i18n.t('config.empty')}</p></div>
   {:else}
-    {#each items() as item (item.key)}
+    {#each items as item (item.key)}
       <a class="row" href="#" onclick={(e) => { e.preventDefault(); openEdit(item); }}>
         <div class="cat-dot" style="background:{item.color || 'var(--indigo)'}"></div>
         <div class="row-body">

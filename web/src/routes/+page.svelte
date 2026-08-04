@@ -11,17 +11,21 @@
   let showModal = $state(false);
   let loading = $state(true);
   let prevBalance = $state(null);
+  let abortCtrl = null;
 
   $effect(() => {
+    if (abortCtrl) abortCtrl.abort();
+    abortCtrl = new AbortController();
+    const signal = abortCtrl.signal;
     loading = true;
     const py = month === 1 ? year - 1 : year;
     const pm = month === 1 ? 12 : month - 1;
     Promise.all([
       loadMonth(year, month),
-      A.token ? api(`/api/summary?year=${py}&month=${pm}`).catch(() => null) : Promise.resolve(null)
+      A.token ? api(`/api/summary?year=${py}&month=${pm}`, { signal }).catch(() => null) : Promise.resolve(null)
     ]).then(([, prev]) => {
-      prevBalance = prev ? prev.balance : null;
-    }).finally(() => (loading = false));
+      if (!signal.aborted) prevBalance = prev ? prev.balance : null;
+    }).finally(() => { if (!signal.aborted) loading = false; });
   });
 
   function shift(delta) {
@@ -39,7 +43,7 @@
     month = d.getMonth() + 1;
   }
 
-  const grouped = $derived(() => {
+  const grouped = $derived.by(() => {
     const byDate = {};
     for (const e of S.monthExpenses) {
       (byDate[e.date] ||= []).push(e);
@@ -53,8 +57,16 @@
       .sort((a, b) => (a.date < b.date ? 1 : -1));
   });
 
+  const catMap = $derived.by(() => {
+    const map = {};
+    for (const c of S.db.categories) {
+      map[c.category_id] = c;
+    }
+    return map;
+  });
+
   function catOf(id) {
-    return S.db.categories.find((c) => c.category_id === id);
+    return catMap[id];
   }
 
   const delta = $derived(prevBalance != null ? S.summary.balance - prevBalance : null);
@@ -136,7 +148,7 @@
       <button class="btn btn-primary" onclick={() => (showModal = true)}>{i18n.t('expenses.newExpense')}</button>
     </div>
   {:else}
-    {#each grouped() as g (g.date)}
+    {#each grouped as g (g.date)}
       <div class="day-group">
         <div class="day-head">
           <span>{toDisplay(g.date)}</span>
