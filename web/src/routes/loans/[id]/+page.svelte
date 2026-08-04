@@ -7,7 +7,7 @@
   import { money, toDisplay, toISO, todayISO } from '$lib/format.js';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
   import { jsPDF } from 'jspdf';
-  import 'jspdf-autotable';
+  import autoTable from 'jspdf-autotable';
 
   const loanId = String(page.params.id);
   let loan = $state(null);
@@ -180,7 +180,7 @@
       return [s.number, dueDate, amount, paidDate, paidAmt, status, delay];
     });
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: tableStartY,
       head: [['#', 'VENCE', 'MONTO', 'PAGO', 'ABONADO', 'ESTADO', 'ATRASO']],
       body: tableData,
