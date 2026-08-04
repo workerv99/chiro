@@ -15,7 +15,9 @@
   $effect(() => {
     loadToken();
     if (!A.token) {
-      if (page.url.pathname !== '/login') goto('/login');
+      if (page.url.pathname !== '/login' && page.url.pathname !== '/') {
+        goto('/login');
+      }
       ready = true;
       return;
     }
@@ -26,7 +28,9 @@
         ready = true;
         return;
       }
-      if (page.url.pathname === '/login') goto('/');
+      if (page.url.pathname === '/login' || page.url.pathname === '/') {
+        goto('/dashboard');
+      }
       try {
         await Promise.all([fetchAll(), loadMonth(new Date().getFullYear(), new Date().getMonth() + 1)]);
       } catch { /* ignore */ }
@@ -34,9 +38,9 @@
     })();
   });
 
-  const isLogin = $derived(page.url.pathname === '/login');
+  const isPublicPage = $derived(page.url.pathname === '/login' || page.url.pathname === '/');
   const routes = $derived([
-    { href: '/', label: i18n.t('tabs.expenses') },
+    { href: '/dashboard', label: i18n.t('tabs.expenses') },
     { href: '/stats', label: i18n.t('tabs.stats') },
     { href: '/budgets', label: i18n.t('tabs.budgets') },
     { href: '/loans', label: i18n.t('tabs.loans') },
@@ -48,7 +52,7 @@
   <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:var(--ink-dim)">
     {i18n.t('common.loading')}
   </div>
-{:else if isLogin}
+{:else if isPublicPage}
   <slot />
 {:else if S.user}
   <nav class="nav">
