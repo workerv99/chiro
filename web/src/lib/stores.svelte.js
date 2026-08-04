@@ -167,6 +167,12 @@ export async function createLoan(row) {
   return data;
 }
 
+export async function updateLoan(loanId, row) {
+  const data = await api(`/api/loans/${loanId}`, { method: 'PUT', body: row });
+  await fetchAll();
+  return data;
+}
+
 export async function loanInstallments(loanId) {
   return api(`/api/loans/${loanId}/installments`);
 }

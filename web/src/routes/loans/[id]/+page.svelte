@@ -3,7 +3,7 @@
   import { goto } from '$app/navigation';
   import { i18n } from '$lib/i18n.svelte.js';
   import { api } from '$lib/api.svelte.js';
-  import { payInstallment, cascadeInstallment, unpayInstallment, remove } from '$lib/stores.svelte.js';
+  import { payInstallment, cascadeInstallment, unpayInstallment, remove, updateLoan } from '$lib/stores.svelte.js';
   import { money, toDisplay, toISO, todayISO } from '$lib/format.js';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
   import { jsPDF } from 'jspdf';
@@ -19,11 +19,92 @@
   let confirmPay = $state(false);
   let pendingAction = $state(null);
 
+  let showEdit = $state(false);
+  let editForm = $state({
+    description: '',
+    amount: '',
+    date: '',
+    interest_rate: '0',
+    interest_type: 'simple',
+    months: '1',
+    frequency: 'monthly',
+    first_due_date: ''
+  });
+  let editErr = $state('');
+  let editDay = $state('');
+  let editMonth = $state('');
+  let editYear = $state('');
+  let editDueDay = $state('');
+  let editDueMonth = $state('');
+  let editDueYear = $state('');
+
   async function load() {
     const [loans, s] = await Promise.all([api('/api/loans'), api(`/api/loans/${loanId}/installments`)]);
     loan = loans.find((l) => l.loan_id === loanId) || null;
     schedule = s;
     if (nextPending) payAmount = String(nextPending.amount);
+  }
+
+  function openEdit() {
+    if (!loan) return;
+    const d = new Date(loan.date);
+    editDay = String(d.getDate()).padStart(2, '0');
+    editMonth = String(d.getMonth() + 1).padStart(2, '0');
+    editYear = String(d.getFullYear());
+
+    if (loan.first_due_date) {
+      const fd = new Date(loan.first_due_date);
+      editDueDay = String(fd.getDate()).padStart(2, '0');
+      editDueMonth = String(fd.getMonth() + 1).padStart(2, '0');
+      editDueYear = String(fd.getFullYear());
+    } else {
+      editDueDay = '';
+      editDueMonth = '';
+      editDueYear = '';
+    }
+
+    editForm = {
+      description: loan.description || '',
+      amount: String(loan.amount),
+      date: loan.date,
+      interest_rate: String(loan.interest_rate || 0),
+      interest_type: loan.interest_type || 'simple',
+      months: String(loan.months || 1),
+      frequency: loan.frequency || 'monthly',
+      first_due_date: loan.first_due_date || ''
+    };
+    editErr = '';
+    showEdit = true;
+  }
+
+  async function saveEdit() {
+    editErr = '';
+    const amt = parseFloat(editForm.amount);
+    if (!amt || amt <= 0) return (editErr = 'Monto invalido');
+    if (!editDay || !editMonth || !editYear) return (editErr = 'Fecha requerida');
+
+    const dateStr = `${editYear}-${editMonth}-${editDay}`;
+    let firstDueStr = null;
+    if (editDueDay && editDueMonth && editDueYear) {
+      firstDueStr = `${editDueYear}-${editDueMonth}-${editDueDay}`;
+    }
+
+    try {
+      await updateLoan(loanId, {
+        description: editForm.description.trim(),
+        amount: amt,
+        date: dateStr,
+        interest_rate: parseFloat(editForm.interest_rate) || 0,
+        interest_type: editForm.interest_type,
+        months: parseInt(editForm.months, 10) || 1,
+        frequency: editForm.frequency,
+        first_due_date: firstDueStr
+      });
+      showEdit = false;
+      await load();
+    } catch (e) {
+      editErr = e.message;
+    }
   }
 
   $effect(() => {
@@ -315,7 +396,10 @@
         {#if loan.frequency}{loan.frequency}{/if}
       </p>
     </div>
-    <button class="btn btn-small" onclick={generatePDF}>📄 PDF</button>
+    <div class="inline-flex">
+      <button class="btn btn-small" onclick={openEdit}>✏️ Editar</button>
+      <button class="btn btn-small" onclick={generatePDF}>📄 PDF</button>
+    </div>
   </div>
 
   <div class="summary-cards">
@@ -401,4 +485,89 @@
     onConfirm={executeAction}
     onCancel={() => { confirmPay = false; pendingAction = null; }}
   />
+{/if}
+
+{#if showEdit}
+  <div class="overlay" onclick={() => (showEdit = false)}>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="edit-loan-title" onclick={(e) => e.stopPropagation()}>
+      <div class="handle"></div>
+      <h2 class="title" id="edit-loan-title" style="margin-bottom:16px">Editar prestamo</h2>
+
+      <div class="form-field">
+        <label class="eyebrow" for="edit-desc">Descripcion *</label>
+        <input id="edit-desc" bind:value={editForm.description} />
+      </div>
+
+      <div class="form-field">
+        <label class="eyebrow" for="edit-amount">Monto *</label>
+        <input id="edit-amount" bind:value={editForm.amount} inputmode="decimal" />
+      </div>
+
+      <div class="form-field">
+        <label class="eyebrow">Fecha *</label>
+        <div class="grid3">
+          <div>
+            <label class="eyebrow" style="font-size:0.7rem" for="edit-day">Dia</label>
+            <input id="edit-day" bind:value={editDay} placeholder="DD" maxlength="2" inputmode="numeric" />
+          </div>
+          <div>
+            <label class="eyebrow" style="font-size:0.7rem" for="edit-month">Mes</label>
+            <input id="edit-month" bind:value={editMonth} placeholder="MM" maxlength="2" inputmode="numeric" />
+          </div>
+          <div>
+            <label class="eyebrow" style="font-size:0.7rem" for="edit-year">Ano</label>
+            <input id="edit-year" bind:value={editYear} placeholder="AAAA" maxlength="4" inputmode="numeric" />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label class="eyebrow" for="edit-rate">Tasa de interes (%)</label>
+        <input id="edit-rate" bind:value={editForm.interest_rate} inputmode="decimal" placeholder="0" />
+        <p class="hint-text">Ej: $1000 x 10% = $100 de interes</p>
+      </div>
+
+      <div class="form-field">
+        <label class="eyebrow" for="edit-months">Numero de cuotas</label>
+        <input id="edit-months" bind:value={editForm.months} inputmode="numeric" />
+      </div>
+
+      <div class="form-field">
+        <label class="eyebrow">Frecuencia</label>
+        <div class="freq-tabs">
+          <button class="freq-tab" class:active={editForm.frequency === 'monthly'} onclick={() => editForm.frequency = 'monthly'}>Mensual</button>
+          <button class="freq-tab" class:active={editForm.frequency === 'biweekly'} onclick={() => editForm.frequency = 'biweekly'}>Quincenal</button>
+          <button class="freq-tab" class:active={editForm.frequency === 'weekly'} onclick={() => editForm.frequency = 'weekly'}>Semanal</button>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label class="eyebrow">Primera cuota</label>
+        <div class="grid3">
+          <div>
+            <label class="eyebrow" style="font-size:0.7rem" for="edit-due-day">Dia</label>
+            <input id="edit-due-day" bind:value={editDueDay} placeholder="DD" maxlength="2" inputmode="numeric" />
+          </div>
+          <div>
+            <label class="eyebrow" style="font-size:0.7rem" for="edit-due-month">Mes</label>
+            <input id="edit-due-month" bind:value={editDueMonth} placeholder="MM" maxlength="2" inputmode="numeric" />
+          </div>
+          <div>
+            <label class="eyebrow" style="font-size:0.7rem" for="edit-due-year">Ano</label>
+            <input id="edit-due-year" bind:value={editDueYear} placeholder="AAAA" maxlength="4" inputmode="numeric" />
+          </div>
+        </div>
+        <p class="hint-text">{editForm.months || 1} cuotas x ${money(parseFloat(editForm.amount) || 0)}</p>
+      </div>
+
+      {#if editErr}
+        <p class="error-text" role="alert">{editErr}</p>
+      {/if}
+
+      <div class="inline-flex" style="margin-top:8px">
+        <button class="btn btn-cancel" onclick={() => (showEdit = false)}>Cancelar</button>
+        <button class="btn btn-primary" onclick={saveEdit}>Guardar</button>
+      </div>
+    </div>
+  </div>
 {/if}
