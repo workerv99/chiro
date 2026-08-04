@@ -6,6 +6,8 @@
   import { payInstallment, cascadeInstallment, unpayInstallment, remove } from '$lib/stores.svelte.js';
   import { money, toDisplay, toISO, todayISO } from '$lib/format.js';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
+  import { jsPDF } from 'jspdf';
+  import 'jspdf-autotable';
 
   const loanId = String(page.params.id);
   let loan = $state(null);
@@ -66,6 +68,147 @@
   function onKeydown(e) {
     if (e.key === 'Escape' && confirmDel) confirmDel = false;
   }
+
+  function generatePDF() {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    const accent = [91, 124, 246];
+    const green = [34, 197, 94];
+    const red = [239, 68, 68];
+    const gray = [128, 128, 128];
+
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Reporte de prestamo', 14, 20);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(gray[0], gray[1], gray[2]);
+    const freqLabel = { monthly: 'Mensual', biweekly: 'Quincenal', weekly: 'Semanal' };
+    doc.text(`${loan.person_name} · ${loan.description || 'Sin descripcion'} · prestado el ${toDisplay(loan.date)}`, 14, 28);
+    doc.setTextColor(0, 0, 0);
+
+    const cardY = 34;
+    const cardH = 22;
+    const cardW = (pageWidth - 28 - 18) / 4;
+    const cards = [
+      { label: 'CAPITAL', value: `$${loan.total_amount.toFixed(2)}` },
+      { label: `INTERES (${loan.interest_rate || 0}%)`, value: `$${((loan.total_amount * (loan.interest_rate || 0)) / 100).toFixed(2)}` },
+      { label: 'TOTAL A PAGAR', value: `$${(loan.total_amount + (loan.total_amount * (loan.interest_rate || 0)) / 100).toFixed(2)}` },
+      { label: 'SALDO', value: `$${remaining.toFixed(2)}`, highlight: true }
+    ];
+
+    cards.forEach((c, i) => {
+      const x = 14 + i * (cardW + 6);
+      doc.setFillColor(248, 248, 248);
+      doc.roundedRect(x, cardY, cardW, cardH, 3, 3, 'F');
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(gray[0], gray[1], gray[2]);
+      doc.text(c.label, x + 6, cardY + 7);
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      if (c.highlight) {
+        doc.setTextColor(red[0], red[1], red[2]);
+      } else {
+        doc.setTextColor(0, 0, 0);
+      }
+      doc.text(c.value, x + 6, cardY + 16);
+      doc.setTextColor(0, 0, 0);
+    });
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    doc.text(`${schedule.length} cuota(s) · frecuencia ${freqLabel[loan.frequency] || loan.frequency} · abonado $${loan.total_paid.toFixed(2)}`, 14, cardY + cardH + 10);
+
+    const tableStartY = cardY + cardH + 18;
+    const tableData = schedule.map((s) => {
+      const isPaid = s.is_paid;
+      const dueDate = toDisplay(s.due_date);
+      const paidDate = s.paid_date ? toDisplay(s.paid_date) : '—';
+      const amount = `$${s.amount.toFixed(2)}`;
+      const paidAmt = isPaid ? `$${(s.paid_amount || s.amount).toFixed(2)}` : '$0.00';
+      const status = isPaid ? 'Saldada' : 'Impaga';
+
+      let delay = '—';
+      if (isPaid && s.paid_date && s.due_date) {
+        const due = new Date(s.due_date);
+        const paid = new Date(s.paid_date);
+        const diff = Math.ceil((paid - due) / (1000 * 60 * 60 * 24));
+        if (diff > 0) delay = `${diff} dia(s) tarde`;
+        else delay = 'a tiempo';
+      } else if (!isPaid) {
+        const due = new Date(s.due_date);
+        const today = new Date();
+        const diff = Math.ceil((today - due) / (1000 * 60 * 60 * 24));
+        if (diff > 0) delay = `${diff} dia(s) tarde`;
+        else delay = 'a tiempo';
+      }
+
+      return [s.number, dueDate, amount, paidDate, paidAmt, status, delay];
+    });
+
+    doc.autoTable({
+      startY: tableStartY,
+      head: [['#', 'VENCE', 'MONTO', 'PAGO', 'ABONADO', 'ESTADO', 'ATRASO']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: accent,
+        textColor: 255,
+        fontStyle: 'bold',
+        fontSize: 8
+      },
+      styles: {
+        fontSize: 8,
+        cellPadding: 3,
+        textColor: 40
+      },
+      columnStyles: {
+        0: { cellWidth: 10, halign: 'center' },
+        1: { cellWidth: 22 },
+        2: { cellWidth: 20, halign: 'right' },
+        3: { cellWidth: 22 },
+        4: { cellWidth: 20, halign: 'right' },
+        5: { cellWidth: 18, halign: 'center' },
+        6: { cellWidth: 24, halign: 'center' }
+      },
+      didParseCell: (data) => {
+        if (data.section === 'body') {
+          const row = data.row;
+          const statusIdx = 5;
+          const delayIdx = 6;
+          if (data.column.index === statusIdx) {
+            const val = row.raw[statusIdx];
+            if (val === 'Saldada') {
+              data.cell.styles.textColor = green;
+              data.cell.styles.fontStyle = 'bold';
+            } else {
+              data.cell.styles.textColor = gray;
+            }
+          }
+          if (data.column.index === delayIdx) {
+            const val = row.raw[delayIdx];
+            if (val.includes('tarde')) {
+              data.cell.styles.textColor = red;
+            } else if (val === 'a tiempo') {
+              data.cell.styles.textColor = green;
+            }
+          }
+        }
+      }
+    });
+
+    const finalY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(gray[0], gray[1], gray[2]);
+    doc.text(`Generado por Chiro · ${new Date().toLocaleString('es-EC')}`, 14, finalY);
+
+    doc.save(`prestamo-${loan.person_name.replace(/\s+/g, '_')}-${loanId}.pdf`);
+  }
 </script>
 
 <svelte:head><title>{loan ? loan.person_name : i18n.t('loans.title')} · Chiro</title></svelte:head>
@@ -83,6 +226,7 @@
         {#if loan.frequency}· {loan.frequency}{/if}
       </p>
     </div>
+    <button class="btn btn-small" onclick={generatePDF}>📄 PDF</button>
   </div>
 
   <div class="summary-cards">
