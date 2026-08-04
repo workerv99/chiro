@@ -7,8 +7,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
 
-	"chiro/internal/auth"
-	"chiro/internal/svc"
+	"chiro/pkg/auth"
+	"chiro/pkg/svc"
 )
 
 // handleDueBills devuelve facturas activas con next_date dentro de 7 días (port getDueBills).

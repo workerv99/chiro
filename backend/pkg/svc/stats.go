@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"chiro/internal/model"
-	"chiro/internal/store"
+	"chiro/pkg/model"
+	"chiro/pkg/store"
 )
 
 // ── Resúmenes de gastos (excluyen transferencias y borrados) ─────────────────

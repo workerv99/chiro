@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"chiro/internal/server"
+	"chiro/pkg/server"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {

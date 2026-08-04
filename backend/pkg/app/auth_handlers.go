@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"chiro/internal/auth"
-	"chiro/internal/model"
-	"chiro/internal/svc"
+	"chiro/pkg/auth"
+	"chiro/pkg/model"
+	"chiro/pkg/svc"
 )
 
 type registerReq struct {

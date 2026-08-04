@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	"chiro/internal/config"
-	"chiro/internal/server"
+	"chiro/pkg/config"
+	"chiro/pkg/server"
 )
 
 func main() {

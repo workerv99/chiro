@@ -8,9 +8,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
 
-	"chiro/internal/auth"
-	"chiro/internal/model"
-	"chiro/internal/svc"
+	"chiro/pkg/auth"
+	"chiro/pkg/model"
+	"chiro/pkg/svc"
 )
 
 // ── Personas ──────────────────────────────────────────────────────────────────

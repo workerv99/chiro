@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"chiro/internal/auth"
-	"chiro/internal/svc"
+	"chiro/pkg/auth"
+	"chiro/pkg/svc"
 )
 
 // handleStats devuelve el bundle para la pantalla de estadísticas:

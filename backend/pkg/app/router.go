@@ -6,8 +6,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 
-	"chiro/internal/config"
-	"chiro/internal/store"
+	"chiro/pkg/config"
+	"chiro/pkg/store"
 )
 
 // Handler construye el router HTTP completo de la API.

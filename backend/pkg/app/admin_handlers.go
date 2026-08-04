@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"chiro/internal/auth"
-	"chiro/internal/model"
+	"chiro/pkg/auth"
+	"chiro/pkg/model"
 )
 
 // ── Consultas ─────────────────────────────────────────────────────────────────

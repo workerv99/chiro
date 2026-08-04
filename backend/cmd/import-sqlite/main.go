@@ -31,10 +31,10 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"chiro/internal/auth"
-	"chiro/internal/config"
-	"chiro/internal/store"
-	"chiro/internal/svc"
+	"chiro/pkg/auth"
+	"chiro/pkg/config"
+	"chiro/pkg/store"
+	"chiro/pkg/svc"
 )
 
 func main() {

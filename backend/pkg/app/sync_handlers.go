@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"chiro/internal/auth"
-	"chiro/internal/store"
+	"chiro/pkg/auth"
+	"chiro/pkg/store"
 )
 
 // syncRequest es el payload de sincronización: un mapa tabla → filas locales

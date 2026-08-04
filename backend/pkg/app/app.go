@@ -2,8 +2,8 @@
 package app
 
 import (
-	"chiro/internal/auth"
-	"chiro/internal/store"
+	"chiro/pkg/auth"
+	"chiro/pkg/store"
 )
 
 // App agrupa las dependencias compartidas por los handlers.

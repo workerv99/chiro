@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"chiro/internal/store"
+	"chiro/pkg/store"
 )
 
 // CreateInstallments genera las n cuotas de un préstamo con ids deterministas

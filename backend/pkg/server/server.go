@@ -11,11 +11,11 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"chiro/internal/app"
-	"chiro/internal/auth"
-	"chiro/internal/config"
-	"chiro/internal/migrate"
-	"chiro/internal/store"
+	"chiro/pkg/app"
+	"chiro/pkg/auth"
+	"chiro/pkg/config"
+	"chiro/pkg/migrate"
+	"chiro/pkg/store"
 )
 
 var (

@@ -6,7 +6,7 @@ import (
 	"path"
 	"strings"
 
-	"chiro/internal/config"
+	"chiro/pkg/config"
 )
 
 func withSPA(api http.Handler, cfg config.Config) http.Handler {

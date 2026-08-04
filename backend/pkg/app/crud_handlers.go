@@ -5,9 +5,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"chiro/internal/auth"
-	"chiro/internal/store"
-	"chiro/internal/svc"
+	"chiro/pkg/auth"
+	"chiro/pkg/store"
+	"chiro/pkg/svc"
 )
 
 // resource define una tabla sincronizable con sus endpoints CRUD.

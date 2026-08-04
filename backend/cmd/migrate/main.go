@@ -7,8 +7,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"chiro/internal/config"
-	"chiro/internal/migrate"
+	"chiro/pkg/config"
+	"chiro/pkg/migrate"
 )
 
 func main() {

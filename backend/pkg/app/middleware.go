@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"chiro/internal/auth"
-	"chiro/internal/config"
+	"chiro/pkg/auth"
+	"chiro/pkg/config"
 )
 
 // CORS permite los orígenes configurados (o todos en desarrollo).
