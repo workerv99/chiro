@@ -63,6 +63,10 @@
     if (e.key === 'Escape' && showForm) showForm = false;
   }
 
+  const totalLoans = $derived(() => S.db.loans.reduce((sum, l) => sum + l.total_amount, 0));
+  const totalPaid = $derived(() => S.db.loans.reduce((sum, l) => sum + l.total_paid, 0));
+  const totalPending = $derived(() => totalLoans() - totalPaid());
+
   const groupedPersons = $derived(() => {
     const groups = {};
     for (const l of S.db.loans) {
@@ -84,6 +88,19 @@
 <div class="page-head">
   <h1 class="headline">{i18n.t('loans.title')}</h1>
 </div>
+
+{#if S.db.loans.length > 0}
+  <div class="summary-cards">
+    <div class="card stat-card">
+      <div class="stat-label">Total prestado</div>
+      <div class="stat-value">{money(totalLoans())}</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-label">Pendiente</div>
+      <div class="stat-value negative">{money(totalPending())}</div>
+    </div>
+  </div>
+{/if}
 
 {#if S.db.loans.length === 0}
   <div class="card empty">
