@@ -16,6 +16,8 @@
   let payAmount = $state('');
   let payDate = $state(toDisplay(todayISO()));
   let confirmDel = $state(false);
+  let confirmPay = $state(false);
+  let pendingAction = $state(null);
 
   async function load() {
     const [loans, s] = await Promise.all([api('/api/loans'), api(`/api/loans/${loanId}/installments`)]);
@@ -39,7 +41,17 @@
     if (!target) return;
     const amt = next ? target.amount : parseFloat(payAmount);
     if (!amt || amt <= 0) return;
-    await payInstallment(target.installment_id, { amount: amt, date: toISO(payDate) });
+    pendingAction = { type: 'pay', amount: amt, date: toISO(payDate) };
+    confirmPay = true;
+  }
+
+  async function executePay() {
+    if (!pendingAction || pendingAction.type !== 'pay') return;
+    const target = nextPending;
+    if (!target) return;
+    confirmPay = false;
+    await payInstallment(target.installment_id, { amount: pendingAction.amount, date: pendingAction.date });
+    pendingAction = null;
     await load();
   }
 
@@ -48,8 +60,23 @@
     if (!target) return;
     const amt = parseFloat(payAmount);
     if (!amt || amt <= 0) return;
-    await cascadeInstallment(target.installment_id, { amount: amt, date: toISO(payDate) });
+    pendingAction = { type: 'cascade', amount: amt, date: toISO(payDate) };
+    confirmPay = true;
+  }
+
+  async function executeCascade() {
+    if (!pendingAction || pendingAction.type !== 'cascade') return;
+    const target = nextPending;
+    if (!target) return;
+    confirmPay = false;
+    await cascadeInstallment(target.installment_id, { amount: pendingAction.amount, date: pendingAction.date });
+    pendingAction = null;
     await load();
+  }
+
+  async function executeAction() {
+    if (pendingAction?.type === 'pay') return executePay();
+    if (pendingAction?.type === 'cascade') return executeCascade();
   }
 
   async function unpay() {
@@ -66,7 +93,10 @@
   }
 
   function onKeydown(e) {
-    if (e.key === 'Escape' && confirmDel) confirmDel = false;
+    if (e.key === 'Escape') {
+      if (confirmDel) confirmDel = false;
+      else if (confirmPay) { confirmPay = false; pendingAction = null; }
+    }
   }
 
   function generatePDF() {
@@ -219,11 +249,10 @@
 {:else}
   <div class="page-head">
     <div>
-      <a class="back-link" href="/loans">← {i18n.t('tabs.loans')}</a>
-      <h1 class="headline">{loan.person_name}</h1>
+      <a class="back-link" href={`/loans/person/${loan.person_id}`}>← {loan.person_name}</a>
+      <h1 class="headline">{loan.description || i18n.t('loans.loan')}</h1>
       <p class="meta">
-        {#if loan.description}{loan.description}{/if}
-        {#if loan.frequency}· {loan.frequency}{/if}
+        {#if loan.frequency}{loan.frequency}{/if}
       </p>
     </div>
     <button class="btn btn-small" onclick={generatePDF}>📄 PDF</button>
@@ -301,5 +330,15 @@
     danger
     onConfirm={doDelete}
     onCancel={() => (confirmDel = false)}
+  />
+{/if}
+
+{#if confirmPay && pendingAction}
+  <ConfirmSheet
+    title={pendingAction.type === 'cascade' ? i18n.t('loans.cascade') : i18n.t('loans.payNow')}
+    message={`¿Confirmar pago de $${pendingAction.amount.toFixed(2)}?`}
+    confirmLabel={i18n.t('common.save')}
+    onConfirm={executeAction}
+    onCancel={() => { confirmPay = false; pendingAction = null; }}
   />
 {/if}

@@ -55,14 +55,6 @@
     }
   }
 
-  function remaining(l) {
-    return l.total_amount - l.total_paid;
-  }
-
-  function paidCount(l) {
-    return l.installments?.filter(i => i.paid_date).length || 0;
-  }
-
   function focusInit(node) {
     node.focus();
   }
@@ -71,14 +63,14 @@
     if (e.key === 'Escape' && showForm) showForm = false;
   }
 
-  const groupedLoans = $derived(() => {
+  const groupedPersons = $derived(() => {
     const groups = {};
     for (const l of S.db.loans) {
       const pid = l.person_id || 'unknown';
       if (!groups[pid]) {
-        groups[pid] = { person_name: l.person_name || '—', loans: [], total: 0, paid: 0 };
+        groups[pid] = { person_id: pid, person_name: l.person_name || '—', count: 0, total: 0, paid: 0 };
       }
-      groups[pid].loans.push(l);
+      groups[pid].count++;
       groups[pid].total += l.total_amount;
       groups[pid].paid += l.total_paid;
     }
@@ -100,32 +92,20 @@
   </div>
 {:else}
   <div class="card list-card">
-    {#each groupedLoans() as group (group.person_name)}
+    {#each groupedPersons() as group (group.person_id)}
       {@const groupRemaining = group.total - group.paid}
-      <div class="day-group">
-        <div class="day-head">
-          <span>{group.person_name}</span>
-          <span class="day-total negative">{money(groupRemaining)}</span>
+      <a class="row" href={`/loans/person/${group.person_id}`}>
+        <div class="cat-dot" style="background:var(--indigo)"></div>
+        <div class="row-body">
+          <div class="row-title">{group.person_name}</div>
+          <div class="row-sub">
+            <span>{group.count} préstamo{group.count > 1 ? 's' : ''}</span>
+          </div>
         </div>
-        {#each group.loans as l (l.loan_id)}
-          <a class="row" href={`/loans/${l.loan_id}`}>
-            <div class="cat-dot" style="background:{l.is_paid ? 'var(--green)' : 'var(--amber)'}"></div>
-            <div class="row-body">
-              <div class="row-title">{l.description || i18n.t('loans.loan')}</div>
-              <div class="row-sub">
-                {#if l.is_paid}
-                  <span class="tag mini">{i18n.t('loans.paid')}</span>
-                {:else}
-                  <span>{i18n.t('loans.progress')}: {paidCount(l)}/{l.months || '?'}</span>
-                {/if}
-              </div>
-            </div>
-            <div class="row-amount" class:negative={!l.is_paid}>
-              {l.is_paid ? '✓' : money(remaining(l))}
-            </div>
-          </a>
-        {/each}
-      </div>
+        <div class="row-amount negative">
+          {money(groupRemaining)}
+        </div>
+      </a>
     {/each}
   </div>
 {/if}
