@@ -105,6 +105,10 @@
 
     <footer class="landing-footer">
       <p>&copy; 2026 Chiro. Todos los derechos reservados.</p>
+      <p style="margin-top:8px">
+        <a href="/legal/tos" style="color:var(--ink-dim)">Términos</a> ·
+        <a href="/legal/privacy" style="color:var(--ink-dim)">Privacidad</a>
+      </p>
     </footer>
   </div>
 {/if}

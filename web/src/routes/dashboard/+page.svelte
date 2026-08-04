@@ -1,8 +1,8 @@
 <script>
   import { i18n } from '$lib/i18n.svelte.js';
-  import { S, loadMonth } from '$lib/stores.svelte.js';
+  import { S, loadMonth, create } from '$lib/stores.svelte.js';
   import { api, A } from '$lib/api.svelte.js';
-  import { money, signed, colorOf, monthLabel, toDisplay } from '$lib/format.js';
+  import { money, signed, colorOf, monthLabel, toDisplay, todayISO } from '$lib/format.js';
   import ExpenseModal from '$lib/components/ExpenseModal.svelte';
 
   const now = new Date();
@@ -12,6 +12,15 @@
   let loading = $state(true);
   let prevBalance = $state(null);
   let abortCtrl = null;
+  let onboardStep = $state(0);
+  let showOnboard = $state(false);
+
+  $effect(() => {
+    if (S.db.accounts.length === 0 && S.db.categories.length === 0) {
+      showOnboard = true;
+      onboardStep = 1;
+    }
+  });
 
   $effect(() => {
     if (abortCtrl) abortCtrl.abort();
@@ -41,6 +50,25 @@
     const d = new Date();
     year = d.getFullYear();
     month = d.getMonth() + 1;
+  }
+
+  async function createDefaultAccount() {
+    await create('accounts', { name: 'Efectivo', currency: 'USD', account_type: 'asset' });
+    await create('accounts', { name: 'Banco', currency: 'USD', account_type: 'asset' });
+    onboardStep = 2;
+  }
+
+  async function createDefaultCategories() {
+    const cats = [
+      { name: 'Alimentación', color: '#FF6B6B', type: 'expense' },
+      { name: 'Transporte', color: '#4ECDC4', type: 'expense' },
+      { name: 'Salario', color: '#27AE60', type: 'income' }
+    ];
+    for (const c of cats) {
+      await create('categories', c);
+    }
+    showOnboard = false;
+    onboardStep = 0;
   }
 
   const grouped = $derived.by(() => {
@@ -80,35 +108,44 @@
   </div>
 </div>
 
-{#if S.db.accounts.length === 0 && S.db.categories.length === 0}
-  <div class="card onboarding">
-    <h2 class="title">{i18n.t('onboard.title')}</h2>
-    <p class="meta">{i18n.t('onboard.sub')}</p>
-    <ol class="onboard-steps">
-      <li>
-        <span class="step-num">1</span>
-        <div>
-          <strong>{i18n.t('onboard.step1Title')}</strong>
-          <p class="meta">{i18n.t('onboard.step1Sub')}</p>
+{#if showOnboard}
+  <div class="card onboarding" style="margin-bottom:14px">
+    <h2 class="title">Bienvenido a Chiro</h2>
+    <p class="meta">Configurá tu cuenta en 2 pasos rápidos.</p>
+
+    {#if onboardStep === 1}
+      <div style="margin-top:16px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <span class="step-num">1</span>
+          <div>
+            <strong style="font-size:0.95rem">Crear cuentas</strong>
+            <p class="meta" style="margin:0">Efectivo y Banco para empezar</p>
+          </div>
         </div>
-        <a class="btn btn-small" href="/config">{i18n.t('onboard.go')}</a>
-      </li>
-      <li>
-        <span class="step-num">2</span>
-        <div>
-          <strong>{i18n.t('onboard.step2Title')}</strong>
-          <p class="meta">{i18n.t('onboard.step2Sub')}</p>
+        <button class="btn btn-primary" style="width:100%" onclick={createDefaultAccount}>
+          Crear cuentas por defecto
+        </button>
+        <button class="btn btn-cancel" style="width:100%;margin-top:8px" onclick={() => { showOnboard = false; onboardStep = 0; }}>
+          Saltar por ahora
+        </button>
+      </div>
+    {:else if onboardStep === 2}
+      <div style="margin-top:16px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <span class="step-num">2</span>
+          <div>
+            <strong style="font-size:0.95rem">Crear categorías</strong>
+            <p class="meta" style="margin:0">Alimentación, Transporte y Salario</p>
+          </div>
         </div>
-      </li>
-      <li>
-        <span class="step-num">3</span>
-        <div>
-          <strong>{i18n.t('onboard.step3Title')}</strong>
-          <p class="meta">{i18n.t('onboard.step3Sub')}</p>
-        </div>
-        <button class="btn btn-small btn-primary" onclick={() => (showModal = true)}>{i18n.t('onboard.go')}</button>
-      </li>
-    </ol>
+        <button class="btn btn-primary" style="width:100%" onclick={createDefaultCategories}>
+          Crear categorías por defecto
+        </button>
+        <button class="btn btn-cancel" style="width:100%;margin-top:8px" onclick={() => { showOnboard = false; onboardStep = 0; }}>
+          Configurar manualmente
+        </button>
+      </div>
+    {/if}
   </div>
 {/if}
 

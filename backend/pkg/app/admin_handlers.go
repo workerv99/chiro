@@ -2,162 +2,133 @@ package app
 
 import (
 	"net/http"
-	"strconv"
-	"strings"
-
-	"github.com/go-chi/chi/v5"
 
 	"chiro/pkg/auth"
-	"chiro/pkg/model"
+	"github.com/go-chi/chi/v5"
 )
 
-// ── Consultas ─────────────────────────────────────────────────────────────────
-
-const adminUserSelect = `
-SELECT u.user_id, u.email, u.name, u.role, u.status, u.created_at,
-       (SELECT COUNT(*) FROM expense e WHERE e.user_id = u.user_id AND e.deleted = 0)  AS expenses,
-       (SELECT COUNT(*) FROM loan l   WHERE l.user_id = u.user_id AND l.deleted = 0)  AS loans
-FROM users u`
-
-func scanAdminUser(row interface{ Scan(...any) error }) (model.AdminUser, error) {
-	var u model.AdminUser
-	err := row.Scan(&u.UserID, &u.Email, &u.Name, &u.Role, &u.Status, &u.CreatedAt, &u.Expenses, &u.Loans)
-	return u, err
+type adminStats struct {
+	TotalUsers    int `json:"total_users"`
+	TotalExpenses int `json:"total_expenses"`
+	TotalLoans    int `json:"total_loans"`
+	ProUsers      int `json:"pro_users"`
+	FreeUsers     int `json:"free_users"`
 }
 
-// GET /api/admin/users?limit=100&offset=0
-func (a *App) handleAdminListUsers(w http.ResponseWriter, r *http.Request) {
-	limit := 100
-	if v := r.URL.Query().Get("limit"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 500 {
-			limit = n
-		}
-	}
-	offset := 0
-	if v := r.URL.Query().Get("offset"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
-			offset = n
-		}
+type userInfo struct {
+	UserID   string `json:"user_id"`
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	Role     string `json:"role"`
+	Status   string `json:"status"`
+	Plan     string `json:"plan"`
+}
+
+// handleAdminStats devuelve métricas generales (solo admin).
+func (a *App) handleAdminStats(w http.ResponseWriter, r *http.Request) {
+	uid := auth.ContextUser(r.Context())
+	var role string
+	a.Store.Pool().QueryRow(r.Context(), `SELECT role FROM users WHERE user_id=$1`, uid).Scan(&role)
+	if role != "admin" {
+		writeErr(w, http.StatusForbidden, "se requiere rol admin")
+		return
 	}
 
-	rows, err := a.Store.Pool().Query(r.Context(), adminUserSelect+` ORDER BY u.created_at ASC LIMIT $1 OFFSET $2`, limit, offset)
+	ctx := r.Context()
+	var stats adminStats
+	a.Store.Pool().QueryRow(ctx, `SELECT COUNT(*) FROM users`).Scan(&stats.TotalUsers)
+	a.Store.Pool().QueryRow(ctx, `SELECT COUNT(*) FROM expense WHERE deleted=0`).Scan(&stats.TotalExpenses)
+	a.Store.Pool().QueryRow(ctx, `SELECT COUNT(*) FROM loan WHERE deleted=0`).Scan(&stats.TotalLoans)
+	a.Store.Pool().QueryRow(ctx, `SELECT COUNT(*) FROM subscription WHERE plan='pro'`).Scan(&stats.ProUsers)
+	stats.FreeUsers = stats.TotalUsers - stats.ProUsers
+
+	writeJSON(w, http.StatusOK, stats)
+}
+
+// handleAdminListUsers lista todos los usuarios (solo admin).
+func (a *App) handleAdminListUsers(w http.ResponseWriter, r *http.Request) {
+	uid := auth.ContextUser(r.Context())
+	var role string
+	a.Store.Pool().QueryRow(r.Context(), `SELECT role FROM users WHERE user_id=$1`, uid).Scan(&role)
+	if role != "admin" {
+		writeErr(w, http.StatusForbidden, "se requiere rol admin")
+		return
+	}
+
+	rows, err := a.Store.Pool().Query(r.Context(),
+		`SELECT u.user_id, u.email, u.name, u.role, u.status,
+		 COALESCE(s.plan, 'free') as plan
+		 FROM users u
+		 LEFT JOIN subscription s ON s.user_id = u.user_id
+		 ORDER BY u.created_at DESC`)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, "error al listar usuarios")
+		writeServerError(w, r, "error", err)
 		return
 	}
 	defer rows.Close()
 
-	out := make([]model.AdminUser, 0)
+	var users []userInfo
 	for rows.Next() {
-		u, err := scanAdminUser(rows)
-		if err != nil {
-			writeErr(w, http.StatusInternalServerError, "error al leer usuarios")
-			return
-		}
-		out = append(out, u)
+		var u userInfo
+		rows.Scan(&u.UserID, &u.Email, &u.Name, &u.Role, &u.Status, &u.Plan)
+		users = append(users, u)
 	}
-	writeJSON(w, http.StatusOK, out)
+
+	writeJSON(w, http.StatusOK, users)
 }
 
-// GET /api/admin/users/{id}
+// handleAdminGetUser obtiene un usuario específico (solo admin).
 func (a *App) handleAdminGetUser(w http.ResponseWriter, r *http.Request) {
-	u, err := scanAdminUser(a.Store.Pool().QueryRow(r.Context(),
-		adminUserSelect+` WHERE u.user_id = $1`, chi.URLParam(r, "id")))
+	uid := auth.ContextUser(r.Context())
+	var role string
+	a.Store.Pool().QueryRow(r.Context(), `SELECT role FROM users WHERE user_id=$1`, uid).Scan(&role)
+	if role != "admin" {
+		writeErr(w, http.StatusForbidden, "se requiere rol admin")
+		return
+	}
+
+	userID := chi.URLParam(r, "id")
+	var u userInfo
+	err := a.Store.Pool().QueryRow(r.Context(),
+		`SELECT u.user_id, u.email, u.name, u.role, u.status,
+		 COALESCE(s.plan, 'free') as plan
+		 FROM users u
+		 LEFT JOIN subscription s ON s.user_id = u.user_id
+		 WHERE u.user_id=$1`, userID).Scan(&u.UserID, &u.Email, &u.Name, &u.Role, &u.Status, &u.Plan)
 	if err != nil {
 		writeErr(w, http.StatusNotFound, "usuario no encontrado")
 		return
 	}
+
 	writeJSON(w, http.StatusOK, u)
 }
 
-// ── Actualización ─────────────────────────────────────────────────────────────
-
-type adminUpdateReq struct {
-	Role     *string `json:"role"`
-	Status   *string `json:"status"`
-	Name     *string `json:"name"`
-	Password *string `json:"password"`
-}
-
-// PUT /api/admin/users/{id}
-// Body: { role?: "user"|"admin", status?: "active"|"disabled", name?: string, password?: string }
+// handleAdminUpdateUser actualiza un usuario (solo admin).
 func (a *App) handleAdminUpdateUser(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	var req adminUpdateReq
-	if !readJSON(w, r, &req) {
+	uid := auth.ContextUser(r.Context())
+	var role string
+	a.Store.Pool().QueryRow(r.Context(), `SELECT role FROM users WHERE user_id=$1`, uid).Scan(&role)
+	if role != "admin" {
+		writeErr(w, http.StatusForbidden, "se requiere rol admin")
 		return
 	}
 
-	if req.Role != nil && *req.Role != "user" && *req.Role != "admin" {
-		writeErr(w, http.StatusBadRequest, "rol inválido (user|admin)")
-		return
+	var in struct {
+		Status string `json:"status"`
+		Role   string `json:"role"`
 	}
-	if req.Status != nil && *req.Status != "active" && *req.Status != "disabled" {
-		writeErr(w, http.StatusBadRequest, "estado inválido (active|disabled)")
-		return
-	}
-	if req.Password != nil && len(*req.Password) < 6 {
-		writeErr(w, http.StatusBadRequest, "contraseña de al menos 6 caracteres")
+	if !readJSON(w, r, &in) {
 		return
 	}
 
-	// Evitar que un admin se quite el acceso a sí mismo (lockout).
-	if id == auth.ContextUser(r.Context()) {
-		if (req.Role != nil && *req.Role == "user") || (req.Status != nil && *req.Status == "disabled") {
-			writeErr(w, http.StatusBadRequest, "no puedes quitarte el rol admin ni desactivar tu cuenta")
-			return
-		}
-	}
-
-	cols := []string{}
-	args := []any{}
-	add := func(c string, v any) {
-		cols = append(cols, c)
-		args = append(args, v)
-	}
-	if req.Role != nil {
-		add("role", *req.Role)
-	}
-	if req.Status != nil {
-		add("status", *req.Status)
-	}
-	if req.Name != nil {
-		add("name", *req.Name)
-	}
-	if req.Password != nil {
-		hash, err := auth.HashPassword(*req.Password)
-		if err != nil {
-			writeErr(w, http.StatusInternalServerError, "error al hashear")
-			return
-		}
-		add("password_hash", hash)
-	}
-	if len(cols) == 0 {
-		writeErr(w, http.StatusBadRequest, "nada que actualizar")
-		return
-	}
-
-	sets := make([]string, len(cols))
-	for i, c := range cols {
-		sets[i] = c + " = $" + strconv.Itoa(i+1)
-	}
-	tag, err := a.Store.Pool().Exec(r.Context(),
-		`UPDATE users SET `+strings.Join(sets, ", ")+` WHERE user_id = $`+strconv.Itoa(len(cols)+1),
-		append(args, id)...)
+	userID := chi.URLParam(r, "id")
+	_, err := a.Store.Pool().Exec(r.Context(),
+		`UPDATE users SET status=$2, role=$3 WHERE user_id=$1`,
+		userID, in.Status, in.Role)
 	if err != nil {
-		writeErr(w, http.StatusInternalServerError, "error al actualizar")
-		return
-	}
-	if tag.RowsAffected() == 0 {
-		writeErr(w, http.StatusNotFound, "usuario no encontrado")
+		writeServerError(w, r, "error", err)
 		return
 	}
 
-	u, err := scanAdminUser(a.Store.Pool().QueryRow(r.Context(),
-		adminUserSelect+` WHERE u.user_id = $1`, id))
-	if err != nil {
-		writeErr(w, http.StatusInternalServerError, "error al leer usuario")
-		return
-	}
-	writeJSON(w, http.StatusOK, u)
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
