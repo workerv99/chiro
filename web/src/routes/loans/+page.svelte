@@ -92,11 +92,11 @@
 {#if S.db.loans.length > 0}
   <div class="summary-cards">
     <div class="card stat-card">
-      <div class="stat-label">Total prestado</div>
+      <div class="stat-label">{i18n.t('loans.totalLent')}</div>
       <div class="stat-value">{money(totalLoans)}</div>
     </div>
     <div class="card stat-card">
-      <div class="stat-label">Pendiente</div>
+      <div class="stat-label">{i18n.t('loans.remaining')}</div>
       <div class="stat-value negative">{money(totalPending)}</div>
     </div>
   </div>

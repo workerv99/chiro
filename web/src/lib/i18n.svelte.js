@@ -40,7 +40,13 @@ export const messages = {
       schedule: 'Calendario', installmentN: 'Cuota', paymentAmount: 'Importe', paymentDate: 'Fecha',
       payNext: 'Pagar siguiente', payNow: 'Pagar ahora', cascade: 'Reestructurar', unpay: 'Deshacer pago',
       empty: 'Sin préstamos', deleteConfirm: '¿Eliminar préstamo y su calendario?',
-      rateHint: 'Porcentaje anual. 0 para préstamos sin interés.', interestHint: 'Simple: interés solo sobre el capital original. Compuesto: interés sobre capital + interés acumulado.'
+      rateHint: 'Porcentaje anual. 0 para préstamos sin interés.', interestHint: 'Simple: interés solo sobre el capital original. Compuesto: interés sobre capital + interés acumulado.',
+      totalLent: 'Total prestado', customPayment: 'Pago personalizado', applyCustom: 'Aplicar pago personalizado',
+      allPaid: 'Todas las cuotas pagadas', paidOf: 'de', installment: 'Cuota', payInstallment: 'Pagar cuota',
+      undoLast: 'Deshacer último pago', editLoan: 'Editar préstamo', invalidAmount: 'Monto inválido',
+      dateRequired: 'Fecha requerida', interestRate: 'Tasa de interés (%)', numInstallments: 'Número de cuotas',
+      firstDue: 'Primera cuota', installmentSummary: 'cuotas x', day: 'Día', month: 'Mes', year: 'Año',
+      interestHintEdit: 'Ej: $1000 x 10% = $100 de interés', noLoansForPerson: 'Sin préstamos para esta persona'
     },
     auth: {
       loginTitle: 'Bienvenido', loginSub: 'Controla tus gastos, hoy.',
@@ -110,7 +116,13 @@ export const messages = {
       schedule: 'Schedule', installmentN: 'Installment', paymentAmount: 'Amount', paymentDate: 'Date',
       payNext: 'Pay next', payNow: 'Pay now', cascade: 'Restructure', unpay: 'Undo payment',
       empty: 'No loans yet', deleteConfirm: 'Delete loan and its schedule?',
-      rateHint: 'Yearly percentage. 0 for interest-free loans.', interestHint: 'Simple: interest on the original principal only. Compound: interest on principal plus accumulated interest.'
+      rateHint: 'Yearly percentage. 0 for interest-free loans.', interestHint: 'Simple: interest on the original principal only. Compound: interest on principal plus accumulated interest.',
+      totalLent: 'Total lent', customPayment: 'Custom payment', applyCustom: 'Apply custom payment',
+      allPaid: 'All installments paid', paidOf: 'of', installment: 'Installment', payInstallment: 'Pay installment',
+      undoLast: 'Undo last payment', editLoan: 'Edit loan', invalidAmount: 'Invalid amount',
+      dateRequired: 'Date required', interestRate: 'Interest rate (%)', numInstallments: 'Number of installments',
+      firstDue: 'First due date', installmentSummary: 'installments x', day: 'Day', month: 'Month', year: 'Year',
+      interestHintEdit: 'e.g. $1000 x 10% = $100 interest', noLoansForPerson: 'No loans for this person'
     },
     auth: {
       loginTitle: 'Welcome back', loginSub: 'Track your money, today.',

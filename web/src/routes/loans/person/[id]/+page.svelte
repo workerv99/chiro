@@ -43,7 +43,7 @@
 
 {#if loans.length === 0}
   <div class="card empty" style="margin-top:14px">
-    <p class="meta">Sin préstamos para esta persona</p>
+    <p class="meta">{i18n.t('loans.noLoansForPerson')}</p>
     <a class="btn btn-primary" href="/loans">{i18n.t('loans.newLoan')}</a>
   </div>
 {:else}

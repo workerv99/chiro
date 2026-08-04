@@ -78,8 +78,8 @@
   async function saveEdit() {
     editErr = '';
     const amt = parseFloat(editForm.amount);
-    if (!amt || amt <= 0) return (editErr = 'Monto invalido');
-    if (!editDay || !editMonth || !editYear) return (editErr = 'Fecha requerida');
+    if (!amt || amt <= 0) return (editErr = i18n.t('loans.invalidAmount'));
+    if (!editDay || !editMonth || !editYear) return (editErr = i18n.t('loans.dateRequired'));
 
     const dateStr = `${editYear}-${editMonth}-${editDay}`;
     let firstDueStr = null;
@@ -399,7 +399,7 @@
       </p>
     </div>
     <div class="inline-flex">
-      <button class="btn btn-small" onclick={openEdit}>Editar</button>
+      <button class="btn btn-small" onclick={openEdit}>{i18n.t('loans.editLoan')}</button>
       <button class="btn btn-small" onclick={generatePDF}>PDF</button>
     </div>
   </div>
@@ -423,36 +423,36 @@
     {#if nextPending}
       <div style="margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:0.82rem;color:var(--ink-dim);font-weight:600">Cuota #{nextPending.number}</span>
+          <span style="font-size:0.82rem;color:var(--ink-dim);font-weight:600">{i18n.t('loans.installment')} #{nextPending.number}</span>
           <span style="font-size:0.82rem;color:var(--ink-dim)">{toDisplay(nextPending.due_date)}</span>
         </div>
         <div style="font-size:1.3rem;font-weight:800">{money(nextPending.amount)}</div>
       </div>
       <button class="btn btn-primary" style="width:100%;margin-bottom:12px" onclick={() => pay(true)}>
-        Pagar cuota #{nextPending.number}
+        {i18n.t('loans.payInstallment')} #{nextPending.number}
       </button>
     {:else}
       <div style="text-align:center;padding:12px 0;margin-bottom:12px">
-        <div style="color:var(--green);font-weight:700;margin-bottom:4px">Todas las cuotas pagadas</div>
-        <div style="font-size:0.82rem;color:var(--ink-dim)">${loan.total_paid.toFixed(2)} de ${loan.total_amount.toFixed(2)}</div>
+        <div style="color:var(--green);font-weight:700;margin-bottom:4px">{i18n.t('loans.allPaid')}</div>
+        <div style="font-size:0.82rem;color:var(--ink-dim)">${loan.total_paid.toFixed(2)} {i18n.t('loans.paidOf')} ${loan.total_amount.toFixed(2)}</div>
       </div>
     {/if}
 
     <details class="more-options">
-      <summary>Pago personalizado</summary>
+      <summary>{i18n.t('loans.customPayment')}</summary>
       <div style="margin-top:12px">
         <div class="grid2" style="margin-bottom:10px">
           <div class="form-field">
-            <label class="eyebrow" for="pay-amount">Importe</label>
+            <label class="eyebrow" for="pay-amount">{i18n.t('loans.paymentAmount')}</label>
             <input id="pay-amount" bind:value={payAmount} inputmode="decimal" />
           </div>
           <div class="form-field">
-            <label class="eyebrow" for="pay-date">Fecha</label>
+            <label class="eyebrow" for="pay-date">{i18n.t('loans.paymentDate')}</label>
             <input id="pay-date" bind:value={payDate} placeholder="DD/MM/YYYY" />
           </div>
         </div>
         <button class="btn" style="width:100%" onclick={() => pay(false)} disabled={!nextPending || !payAmount}>
-          Aplicar pago personalizado
+          {i18n.t('loans.applyCustom')}
         </button>
       </div>
     </details>
@@ -460,7 +460,7 @@
     {#if paidCount > 0}
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
         <button class="btn btn-cancel" style="width:100%;font-size:0.82rem" onclick={unpay}>
-          Deshacer ultimo pago
+          {i18n.t('loans.undoLast')}
         </button>
       </div>
     {/if}
@@ -519,73 +519,73 @@
   <div class="overlay" onclick={() => (showEdit = false)}>
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="edit-loan-title" onclick={(e) => e.stopPropagation()}>
       <div class="handle"></div>
-      <h2 class="title" id="edit-loan-title" style="margin-bottom:16px">Editar prestamo</h2>
+      <h2 class="title" id="edit-loan-title" style="margin-bottom:16px">{i18n.t('loans.editLoan')}</h2>
 
       <div class="form-field">
-        <label class="eyebrow" for="edit-desc">Descripcion *</label>
+        <label class="eyebrow" for="edit-desc">{i18n.t('loans.description')} *</label>
         <input id="edit-desc" bind:value={editForm.description} />
       </div>
 
       <div class="form-field">
-        <label class="eyebrow" for="edit-amount">Monto *</label>
+        <label class="eyebrow" for="edit-amount">{i18n.t('loans.principal')} *</label>
         <input id="edit-amount" bind:value={editForm.amount} inputmode="decimal" />
       </div>
 
       <div class="form-field">
-        <label class="eyebrow">Fecha *</label>
+        <label class="eyebrow">{i18n.t('expenses.date')} *</label>
         <div class="grid3">
           <div>
-            <label class="eyebrow" style="font-size:0.7rem" for="edit-day">Dia</label>
+            <label class="eyebrow" style="font-size:0.7rem" for="edit-day">{i18n.t('loans.day')}</label>
             <input id="edit-day" bind:value={editDay} placeholder="DD" maxlength="2" inputmode="numeric" />
           </div>
           <div>
-            <label class="eyebrow" style="font-size:0.7rem" for="edit-month">Mes</label>
+            <label class="eyebrow" style="font-size:0.7rem" for="edit-month">{i18n.t('loans.month')}</label>
             <input id="edit-month" bind:value={editMonth} placeholder="MM" maxlength="2" inputmode="numeric" />
           </div>
           <div>
-            <label class="eyebrow" style="font-size:0.7rem" for="edit-year">Ano</label>
+            <label class="eyebrow" style="font-size:0.7rem" for="edit-year">{i18n.t('loans.year')}</label>
             <input id="edit-year" bind:value={editYear} placeholder="AAAA" maxlength="4" inputmode="numeric" />
           </div>
         </div>
       </div>
 
       <div class="form-field">
-        <label class="eyebrow" for="edit-rate">Tasa de interes (%)</label>
+        <label class="eyebrow" for="edit-rate">{i18n.t('loans.interestRate')}</label>
         <input id="edit-rate" bind:value={editForm.interest_rate} inputmode="decimal" placeholder="0" />
-        <p class="hint-text">Ej: $1000 x 10% = $100 de interes</p>
+        <p class="hint-text">{i18n.t('loans.interestHintEdit')}</p>
       </div>
 
       <div class="form-field">
-        <label class="eyebrow" for="edit-months">Numero de cuotas</label>
+        <label class="eyebrow" for="edit-months">{i18n.t('loans.numInstallments')}</label>
         <input id="edit-months" bind:value={editForm.months} inputmode="numeric" />
       </div>
 
       <div class="form-field">
-        <label class="eyebrow">Frecuencia</label>
+        <label class="eyebrow">{i18n.t('loans.frequency')}</label>
         <div class="freq-tabs">
-          <button class="freq-tab" class:active={editForm.frequency === 'monthly'} onclick={() => editForm.frequency = 'monthly'}>Mensual</button>
-          <button class="freq-tab" class:active={editForm.frequency === 'biweekly'} onclick={() => editForm.frequency = 'biweekly'}>Quincenal</button>
-          <button class="freq-tab" class:active={editForm.frequency === 'weekly'} onclick={() => editForm.frequency = 'weekly'}>Semanal</button>
+          <button class="freq-tab" class:active={editForm.frequency === 'monthly'} onclick={() => editForm.frequency = 'monthly'}>{i18n.t('loans.monthly')}</button>
+          <button class="freq-tab" class:active={editForm.frequency === 'biweekly'} onclick={() => editForm.frequency = 'biweekly'}>{i18n.t('loans.biweekly')}</button>
+          <button class="freq-tab" class:active={editForm.frequency === 'weekly'} onclick={() => editForm.frequency = 'weekly'}>{i18n.t('loans.weekly')}</button>
         </div>
       </div>
 
       <div class="form-field">
-        <label class="eyebrow">Primera cuota</label>
+        <label class="eyebrow">{i18n.t('loans.firstDue')}</label>
         <div class="grid3">
           <div>
-            <label class="eyebrow" style="font-size:0.7rem" for="edit-due-day">Dia</label>
+            <label class="eyebrow" style="font-size:0.7rem" for="edit-due-day">{i18n.t('loans.day')}</label>
             <input id="edit-due-day" bind:value={editDueDay} placeholder="DD" maxlength="2" inputmode="numeric" />
           </div>
           <div>
-            <label class="eyebrow" style="font-size:0.7rem" for="edit-due-month">Mes</label>
+            <label class="eyebrow" style="font-size:0.7rem" for="edit-due-month">{i18n.t('loans.month')}</label>
             <input id="edit-due-month" bind:value={editDueMonth} placeholder="MM" maxlength="2" inputmode="numeric" />
           </div>
           <div>
-            <label class="eyebrow" style="font-size:0.7rem" for="edit-due-year">Ano</label>
+            <label class="eyebrow" style="font-size:0.7rem" for="edit-due-year">{i18n.t('loans.year')}</label>
             <input id="edit-due-year" bind:value={editDueYear} placeholder="AAAA" maxlength="4" inputmode="numeric" />
           </div>
         </div>
-        <p class="hint-text">{editForm.months || 1} cuotas x ${money(parseFloat(editForm.amount) || 0)}</p>
+        <p class="hint-text">{editForm.months || 1} {i18n.t('loans.installmentSummary')} ${money(parseFloat(editForm.amount) || 0)}</p>
       </div>
 
       {#if editErr}
