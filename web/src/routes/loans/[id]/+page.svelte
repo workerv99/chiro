@@ -102,59 +102,121 @@
   function generatePDF() {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
 
-    const accent = [91, 124, 246];
-    const green = [34, 197, 94];
-    const red = [239, 68, 68];
-    const gray = [128, 128, 128];
+    const brand = { primary: [91, 124, 246], dark: [30, 41, 59], light: [241, 245, 249] };
+    const colors = { green: [22, 163, 74], red: [220, 38, 38], amber: [245, 158, 11], gray: [100, 116, 139] };
+    const margin = 14;
+    const contentWidth = pageWidth - margin * 2;
 
-    doc.setFontSize(22);
+    const drawHeader = () => {
+      doc.setFillColor(...brand.dark);
+      doc.rect(0, 0, pageWidth, 32, 'F');
+      doc.setFillColor(...brand.primary);
+      doc.rect(0, 32, pageWidth, 2, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text('CHIRO', margin, 12);
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('REPORTE DE PRESTAMO', margin, 24);
+    };
+
+    const drawFooter = (pageNum) => {
+      doc.setFillColor(...brand.light);
+      doc.rect(0, pageHeight - 16, pageWidth, 16, 'F');
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colors.gray);
+      doc.text(`Generado por Chiro · ${new Date().toLocaleString('es-EC')}`, margin, pageHeight - 6);
+      doc.text(`Pagina ${pageNum}`, pageWidth - margin, pageHeight - 6, { align: 'right' });
+    };
+
+    drawHeader();
+    drawFooter(1);
+
+    let y = 44;
+
+    doc.setTextColor(...brand.dark);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text('Reporte de prestamo', 14, 20);
+    doc.text(loan.person_name, margin, y);
+    y += 6;
 
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(gray[0], gray[1], gray[2]);
+    doc.setTextColor(...colors.gray);
     const freqLabel = { monthly: 'Mensual', biweekly: 'Quincenal', weekly: 'Semanal' };
-    doc.text(`${loan.person_name} · ${loan.description || 'Sin descripcion'} · prestado el ${toDisplay(loan.date)}`, 14, 28);
-    doc.setTextColor(0, 0, 0);
+    doc.text(`${loan.description || 'Sin descripcion'} · ${freqLabel[loan.frequency] || loan.frequency} · ${toDisplay(loan.date)}`, margin, y);
+    y += 10;
 
-    const cardY = 34;
-    const cardH = 22;
-    const cardW = (pageWidth - 28 - 18) / 4;
-    const cards = [
-      { label: 'CAPITAL', value: `$${loan.total_amount.toFixed(2)}` },
-      { label: `INTERES (${loan.interest_rate || 0}%)`, value: `$${((loan.total_amount * (loan.interest_rate || 0)) / 100).toFixed(2)}` },
-      { label: 'TOTAL A PAGAR', value: `$${(loan.total_amount + (loan.total_amount * (loan.interest_rate || 0)) / 100).toFixed(2)}` },
-      { label: 'SALDO', value: `$${remaining.toFixed(2)}`, highlight: true }
+    doc.setDrawColor(...brand.light);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 8;
+
+    const interestAmount = (loan.total_amount * (loan.interest_rate || 0)) / 100;
+    const totalWithInterest = loan.total_amount + interestAmount;
+    const progressPct = loan.total_amount > 0 ? (loan.total_paid / loan.total_amount * 100).toFixed(0) : 0;
+
+    const summaryCards = [
+      { label: 'CAPITAL', value: `$${loan.total_amount.toFixed(2)}`, color: brand.dark },
+      { label: 'INTERES', value: `$${interestAmount.toFixed(2)}`, sub: `${loan.interest_rate || 0}%`, color: colors.gray },
+      { label: 'TOTAL', value: `$${totalWithInterest.toFixed(2)}`, color: brand.primary },
+      { label: 'SALDO', value: `$${remaining.toFixed(2)}`, color: remaining > 0 ? colors.red : colors.green }
     ];
 
-    cards.forEach((c, i) => {
-      const x = 14 + i * (cardW + 6);
-      doc.setFillColor(248, 248, 248);
-      doc.roundedRect(x, cardY, cardW, cardH, 3, 3, 'F');
+    const cardWidth = (contentWidth - 18) / 4;
+    summaryCards.forEach((card, i) => {
+      const x = margin + i * (cardWidth + 6);
+      doc.setFillColor(250, 250, 250);
+      doc.roundedRect(x, y, cardWidth, 24, 2, 2, 'F');
+      doc.setDrawColor(...brand.light);
+      doc.roundedRect(x, y, cardWidth, 24, 2, 2, 'S');
+
       doc.setFontSize(7);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(gray[0], gray[1], gray[2]);
-      doc.text(c.label, x + 6, cardY + 7);
-      doc.setFontSize(13);
+      doc.setTextColor(...colors.gray);
+      doc.text(card.label, x + 5, y + 7);
+
+      doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      if (c.highlight) {
-        doc.setTextColor(red[0], red[1], red[2]);
-      } else {
-        doc.setTextColor(0, 0, 0);
+      doc.setTextColor(...card.color);
+      doc.text(card.value, x + 5, y + 17);
+
+      if (card.sub) {
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colors.gray);
+        doc.text(card.sub, x + 5, y + 22);
       }
-      doc.text(c.value, x + 6, cardY + 16);
-      doc.setTextColor(0, 0, 0);
     });
+    y += 32;
 
-    doc.setFontSize(10);
+    doc.setFillColor(245, 245, 245);
+    doc.roundedRect(margin, y, contentWidth, 12, 2, 2, 'F');
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
-    doc.text(`${schedule.length} cuota(s) · frecuencia ${freqLabel[loan.frequency] || loan.frequency} · abonado $${loan.total_paid.toFixed(2)}`, 14, cardY + cardH + 10);
+    doc.setTextColor(...brand.dark);
+    doc.text(`${schedule.length} cuotas · Abonado: $${loan.total_paid.toFixed(2)} · Progreso: ${progressPct}%`, margin + 5, y + 7.5);
+    y += 18;
 
-    const tableStartY = cardY + cardH + 18;
-    const tableData = schedule.map((s) => {
+    const barY = y;
+    const barHeight = 6;
+    doc.setFillColor(230, 230, 230);
+    doc.roundedRect(margin, barY, contentWidth, barHeight, 3, 3, 'F');
+    if (loan.total_amount > 0) {
+      const fillWidth = Math.max(0, Math.min(contentWidth, (loan.total_paid / loan.total_amount) * contentWidth));
+      if (fillWidth > 0) {
+        doc.setFillColor(...colors.green);
+        doc.roundedRect(margin, barY, fillWidth, barHeight, 3, 3, 'F');
+      }
+    }
+    y += barHeight + 12;
+
+    const tableData = schedule.map((s, idx) => {
       const isPaid = s.is_paid;
       const dueDate = toDisplay(s.due_date);
       const paidDate = s.paid_date ? toDisplay(s.paid_date) : '—';
@@ -167,75 +229,73 @@
         const due = new Date(s.due_date);
         const paid = new Date(s.paid_date);
         const diff = Math.ceil((paid - due) / (1000 * 60 * 60 * 24));
-        if (diff > 0) delay = `${diff} dia(s) tarde`;
-        else delay = 'a tiempo';
+        if (diff > 0) delay = `${diff} dia(s)`;
+        else delay = 'A tiempo';
       } else if (!isPaid) {
         const due = new Date(s.due_date);
         const today = new Date();
         const diff = Math.ceil((today - due) / (1000 * 60 * 60 * 24));
-        if (diff > 0) delay = `${diff} dia(s) tarde`;
-        else delay = 'a tiempo';
+        if (diff > 0) delay = `${diff} dia(s)`;
+        else delay = 'Pendiente';
       }
 
       return [s.number, dueDate, amount, paidDate, paidAmt, status, delay];
     });
 
     autoTable(doc, {
-      startY: tableStartY,
-      head: [['#', 'VENCE', 'MONTO', 'PAGO', 'ABONADO', 'ESTADO', 'ATRASO']],
+      startY: y,
+      head: [['#', 'VENCIMIENTO', 'MONTO', 'PAGO', 'ABONADO', 'ESTADO', 'DIAS']],
       body: tableData,
-      theme: 'grid',
+      theme: 'striped',
       headStyles: {
-        fillColor: accent,
+        fillColor: brand.primary,
         textColor: 255,
         fontStyle: 'bold',
-        fontSize: 8
+        fontSize: 7,
+        cellPadding: 3
       },
       styles: {
         fontSize: 8,
-        cellPadding: 3,
-        textColor: 40
+        cellPadding: 3.5,
+        textColor: brand.dark,
+        lineColor: [230, 230, 230],
+        lineWidth: 0.3
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252]
       },
       columnStyles: {
-        0: { cellWidth: 10, halign: 'center' },
-        1: { cellWidth: 22 },
+        0: { cellWidth: 10, halign: 'center', fontStyle: 'bold' },
+        1: { cellWidth: 24 },
         2: { cellWidth: 20, halign: 'right' },
         3: { cellWidth: 22 },
         4: { cellWidth: 20, halign: 'right' },
-        5: { cellWidth: 18, halign: 'center' },
-        6: { cellWidth: 24, halign: 'center' }
+        5: { cellWidth: 18, halign: 'center', fontStyle: 'bold' },
+        6: { cellWidth: 18, halign: 'center' }
       },
       didParseCell: (data) => {
         if (data.section === 'body') {
           const row = data.row;
-          const statusIdx = 5;
-          const delayIdx = 6;
-          if (data.column.index === statusIdx) {
-            const val = row.raw[statusIdx];
+          if (data.column.index === 5) {
+            const val = row.raw[5];
             if (val === 'Saldada') {
-              data.cell.styles.textColor = green;
+              data.cell.styles.textColor = colors.green;
               data.cell.styles.fontStyle = 'bold';
             } else {
-              data.cell.styles.textColor = gray;
+              data.cell.styles.textColor = colors.gray;
             }
           }
-          if (data.column.index === delayIdx) {
-            const val = row.raw[delayIdx];
-            if (val.includes('tarde')) {
-              data.cell.styles.textColor = red;
-            } else if (val === 'a tiempo') {
-              data.cell.styles.textColor = green;
+          if (data.column.index === 6) {
+            const val = row.raw[6];
+            if (val.includes('dia(s)')) {
+              data.cell.styles.textColor = colors.red;
+            } else if (val === 'A tiempo') {
+              data.cell.styles.textColor = colors.green;
             }
           }
         }
       }
     });
-
-    const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(gray[0], gray[1], gray[2]);
-    doc.text(`Generado por Chiro · ${new Date().toLocaleString('es-EC')}`, 14, finalY);
 
     doc.save(`prestamo-${loan.person_name.replace(/\s+/g, '_')}-${loanId}.pdf`);
   }
