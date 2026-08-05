@@ -18,7 +18,6 @@
   let due = $state([]);
   let confirmDel = $state(null);
   let undo = $state(null);
-  let amoled = $state(true);
   let showUpgrade = $state(false);
   let confirmDeleteAccount = $state(false);
 
@@ -44,20 +43,6 @@
 
   function emptyForm() {
     return { name: '', currency: 'USD', type: 'expense', color: '#5B7CF6', notes: '', target_amount: 0, current_amount: 0, amount: 0, next_date: '', frequency: 'monthly' };
-  }
-
-  $effect(() => {
-    if (typeof document !== 'undefined') {
-      const saved = localStorage.getItem('chiro_theme');
-      amoled = saved !== 'light';
-      document.documentElement.classList.toggle('light', !amoled);
-    }
-  });
-
-  function toggleAmoled() {
-    amoled = !amoled;
-    document.documentElement.classList.toggle('light', !amoled);
-    localStorage.setItem('chiro_theme', amoled ? 'amoled' : 'light');
   }
 
   function openNew() {
@@ -171,7 +156,6 @@
   <div class="flex gap-2">
     <Button variant={i18n.lang === 'es' ? 'default' : 'outline'} size="sm" onclick={() => i18n.setLang('es')}>ES</Button>
     <Button variant={i18n.lang === 'en' ? 'default' : 'outline'} size="sm" onclick={() => i18n.setLang('en')}>EN</Button>
-    <Button variant={amoled ? 'default' : 'outline'} size="sm" onclick={toggleAmoled}>AMOLED</Button>
   </div>
   <Button onclick={openNew}>+ {i18n.t('common.add')}</Button>
 </div>

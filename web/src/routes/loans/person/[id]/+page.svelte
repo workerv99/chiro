@@ -3,6 +3,7 @@
   import { i18n } from '$lib/i18n.svelte.js';
   import { S } from '$lib/stores.svelte.js';
   import { money } from '$lib/format.js';
+  import Card from '$lib/components/ui/card.svelte';
 
   const personId = String(page.params.id);
 
@@ -19,52 +20,48 @@
 
 <svelte:head><title>{person?.name || i18n.t('loans.title')} · Chiro</title></svelte:head>
 
-<div class="page-head">
-  <div>
-    <a class="back-link" href="/loans">← {i18n.t('tabs.loans')}</a>
-    <h1 class="headline">{person?.name || '—'}</h1>
-  </div>
-</div>
+<a class="text-sm text-muted-foreground hover:text-foreground font-semibold mb-2 inline-block" href="/loans">← {i18n.t('tabs.loans')}</a>
+<h1 class="text-2xl font-bold mb-4">{person?.name || '—'}</h1>
 
-<div class="summary-cards">
-  <div class="card stat-card">
-    <div class="stat-label">{i18n.t('loans.remaining')}</div>
-    <div class="stat-value negative">{money(totalRemaining)}</div>
-  </div>
-  <div class="card stat-card">
-    <div class="stat-label">{i18n.t('loans.paidLabel')}</div>
-    <div class="stat-value positive">{money(totalPaid)}</div>
-  </div>
-  <div class="card stat-card">
-    <div class="stat-label">{i18n.t('loans.progress')}</div>
-    <div class="stat-value">{paidCount}/{loans.length}</div>
-  </div>
+<div class="grid grid-cols-3 gap-3 mb-4">
+  <Card class="p-4">
+    <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{i18n.t('loans.remaining')}</p>
+    <p class="text-lg font-bold text-destructive">{money(totalRemaining)}</p>
+  </Card>
+  <Card class="p-4">
+    <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{i18n.t('loans.paidLabel')}</p>
+    <p class="text-lg font-bold text-green-500">{money(totalPaid)}</p>
+  </Card>
+  <Card class="p-4">
+    <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{i18n.t('loans.progress')}</p>
+    <p class="text-lg font-bold">{paidCount}/{loans.length}</p>
+  </Card>
 </div>
 
 {#if loans.length === 0}
-  <div class="card empty" style="margin-top:14px">
-    <p class="meta">{i18n.t('loans.noLoansForPerson')}</p>
-    <a class="btn btn-primary" href="/loans">{i18n.t('loans.newLoan')}</a>
-  </div>
+  <Card class="flex flex-col items-center gap-3 py-8">
+    <p class="text-sm text-muted-foreground">{i18n.t('loans.noLoansForPerson')}</p>
+    <a href="/loans" class="inline-flex items-center justify-center h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90">{i18n.t('loans.newLoan')}</a>
+  </Card>
 {:else}
-  <div class="card list-card" style="margin-top:14px">
+  <Card class="overflow-hidden">
     {#each loans as l (l.loan_id)}
-      <a class="row" href={`/loans/${l.loan_id}`}>
-        <div class="cat-dot" style="background:{l.is_paid ? 'var(--green)' : 'var(--amber)'}"></div>
-        <div class="row-body">
-          <div class="row-title">{l.description || i18n.t('loans.loan')}</div>
-          <div class="row-sub">
-            {#if l.is_paid}
-              <span class="tag mini">{i18n.t('loans.paid')}</span>
-            {:else}
-              <span>{i18n.t('loans.progress')}: {l.months || '?'}</span>
-            {/if}
-          </div>
+      {@const loanRemaining = l.total_amount - l.total_paid}
+      <a class="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors border-t first:border-t-0" href={`/loans/${l.loan_id}`}>
+        <div class="h-2.5 w-2.5 rounded-full" style="background:{l.is_paid ? '#22c55e' : '#f59e0b'}"></div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold truncate">{l.description || i18n.t('loans.loan')}</p>
+          <p class="text-xs text-muted-foreground">
+            {i18n.t('loans.installments')}: {l.months || '?'}
+          </p>
         </div>
-        <div class="row-amount" class:negative={!l.is_paid}>
-          {l.is_paid ? '✓' : money(remaining(l))}
+        <div class="text-right">
+          <p class="text-sm font-bold" class:text-destructive={!l.is_paid}>{l.is_paid ? '✓' : money(loanRemaining)}</p>
+          {#if l.is_paid}
+            <p class="text-xs text-green-500 font-semibold">{i18n.t('loans.paid')}</p>
+          {/if}
         </div>
       </a>
     {/each}
-  </div>
+  </Card>
 {/if}
