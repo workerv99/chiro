@@ -23,18 +23,18 @@
 <a class="text-sm text-muted-foreground hover:text-foreground font-semibold mb-2 inline-block" href="/loans">← {i18n.t('tabs.loans')}</a>
 <h1 class="text-2xl font-bold mb-4">{person?.name || '—'}</h1>
 
-<div class="grid grid-cols-3 gap-3 mb-4">
-  <Card class="p-4">
-    <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{i18n.t('loans.remaining')}</p>
-    <p class="text-lg font-bold text-destructive">{money(totalRemaining)}</p>
+<div class="grid grid-cols-3 gap-2 mb-4">
+  <Card class="p-3 min-w-0">
+    <p class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 truncate">{i18n.t('loans.remaining')}</p>
+    <p class="text-sm font-bold text-destructive truncate">{money(totalRemaining)}</p>
   </Card>
-  <Card class="p-4">
-    <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{i18n.t('loans.paidLabel')}</p>
-    <p class="text-lg font-bold text-green-500">{money(totalPaid)}</p>
+  <Card class="p-3 min-w-0">
+    <p class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 truncate">{i18n.t('loans.paidLabel')}</p>
+    <p class="text-sm font-bold text-green-500 truncate">{money(totalPaid)}</p>
   </Card>
-  <Card class="p-4">
-    <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{i18n.t('loans.progress')}</p>
-    <p class="text-lg font-bold">{paidCount}/{loans.length}</p>
+  <Card class="p-3 min-w-0">
+    <p class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 truncate">{i18n.t('loans.progress')}</p>
+    <p class="text-sm font-bold truncate">{paidCount}/{loans.length}</p>
   </Card>
 </div>
 
