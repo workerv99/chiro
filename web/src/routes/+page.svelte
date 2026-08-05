@@ -3,7 +3,9 @@
   import { A, loadToken } from '$lib/api.svelte.js';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
-  import { DollarSign, Hash, Percent, Users, FileText, Shield, ChevronLeft, ChevronRight } from 'lucide-svelte';
+  import { DollarSign, Hash, Percent, Users, FileText, Shield } from 'lucide-svelte';
+  import Button from '$lib/components/ui/button.svelte';
+  import Card from '$lib/components/ui/card.svelte';
 
   let ready = $state(false);
 
@@ -48,91 +50,98 @@
 </svelte:head>
 
 {#if ready}
-  <div class="landing">
-    <nav class="landing-nav">
-      <div class="landing-brand">
-        <div class="brand-mark">C</div>
-        <span class="brand-name">Chiro</span>
+  <div class="min-h-screen">
+    <nav class="flex items-center justify-between px-6 py-4 border-b">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 text-primary font-bold text-sm flex items-center justify-center">C</div>
+        <span class="font-bold text-lg">Chiro</span>
       </div>
-      <div class="landing-nav-links">
-        <a href="#features">Características</a>
-        <a href="#pricing">Precios</a>
-        <a href="/login" class="btn btn-primary btn-small">Iniciar sesión</a>
+      <div class="flex items-center gap-6">
+        <a href="#features" class="text-sm text-muted-foreground hover:text-foreground">Características</a>
+        <a href="#pricing" class="text-sm text-muted-foreground hover:text-foreground">Precios</a>
+        <a href="/login" class="inline-flex items-center justify-center h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90">Iniciar sesión</a>
       </div>
     </nav>
 
-    <section class="hero">
-      <h1>Controla tu dinero<br /><span class="hero-highlight">sin complicaciones</span></h1>
-      <p class="hero-sub">Gastos, presupuestos y préstamos en una sola app. Gratis para empezar.</p>
-      <div class="hero-cta">
-        <a href="/login" class="btn btn-primary">Empezar gratis</a>
-        <a href="#features" class="btn">Ver características</a>
+    <section class="text-center py-20 px-4 max-w-2xl mx-auto">
+      <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
+        Controla tu dinero<br />
+        <span class="text-primary">sin complicaciones</span>
+      </h1>
+      <p class="text-lg text-muted-foreground mb-8">Gastos, presupuestos y préstamos en una sola app. Gratis para empezar.</p>
+      <div class="flex gap-4 justify-center">
+        <a href="/login"><Button size="lg">Empezar gratis</Button></a>
+        <a href="#features"><Button variant="outline" size="lg">Ver características</Button></a>
       </div>
     </section>
 
-    <section id="features" class="section">
-      <h2 class="section-title">Todo lo que necesitas</h2>
-      <p class="section-sub">Herramientas simples para tomar el control de tus finanzas.</p>
-      <div class="features-grid">
+    <section id="features" class="py-16 px-4 max-w-5xl mx-auto">
+      <h2 class="text-3xl font-extrabold text-center mb-2">Todo lo que necesitas</h2>
+      <p class="text-muted-foreground text-center mb-10">Herramientas simples para tomar el control de tus finanzas.</p>
+      <div class="grid md:grid-cols-3 gap-6">
         {#each features as f}
-          <div class="feature-card">
-            <div class="feature-icon">
+          <Card class="p-6">
+            <div class="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
               <svelte:component this={f.icon} size={20} />
             </div>
-            <h3>{f.title}</h3>
-            <p>{f.desc}</p>
-          </div>
+            <h3 class="font-bold mb-1">{f.title}</h3>
+            <p class="text-sm text-muted-foreground">{f.desc}</p>
+          </Card>
         {/each}
       </div>
     </section>
 
-    <section class="section" style="background:var(--surface)">
-      <h2 class="section-title">¿Por qué Chiro?</h2>
-      <div class="why-grid">
-        <div class="why-item">
-          <div class="why-num">3</div>
-          <div class="why-label">minutos para empezar</div>
-        </div>
-        <div class="why-item">
-          <div class="why-num">100%</div>
-          <div class="why-label">gratis para empezar</div>
-        </div>
-        <div class="why-item">
-          <div class="why-num">0</div>
-          <div class="why-label">publicidad en la app</div>
-        </div>
-        <div class="why-item">
-          <div class="why-num">24/7</div>
-          <div class="why-label">acceso desde cualquier lado</div>
+    <section class="py-16 px-4 bg-muted/30">
+      <div class="max-w-5xl mx-auto">
+        <h2 class="text-3xl font-extrabold text-center mb-10">¿Por qué Chiro?</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-2xl mx-auto">
+          <div class="text-center">
+            <div class="text-3xl font-extrabold text-primary">3</div>
+            <div class="text-sm text-muted-foreground mt-1">minutos para empezar</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-extrabold text-primary">100%</div>
+            <div class="text-sm text-muted-foreground mt-1">gratis para empezar</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-extrabold text-primary">0</div>
+            <div class="text-sm text-muted-foreground mt-1">publicidad en la app</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-extrabold text-primary">24/7</div>
+            <div class="text-sm text-muted-foreground mt-1">acceso desde cualquier lado</div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section id="pricing" class="section">
-      <h2 class="section-title">Planes simples</h2>
-      <p class="section-sub">Empieza gratis, upgrade cuando lo necesites.</p>
-      <div class="pricing-grid">
+    <section id="pricing" class="py-16 px-4 max-w-3xl mx-auto">
+      <h2 class="text-3xl font-extrabold text-center mb-2">Planes simples</h2>
+      <p class="text-muted-foreground text-center mb-10">Empieza gratis, upgrade cuando lo necesites.</p>
+      <div class="grid md:grid-cols-2 gap-6">
         {#each plans as plan}
-          <div class="pricing-card" class:primary={plan.primary}>
-            <div class="pricing-name">{plan.name}</div>
-            <div class="pricing-price">{plan.price}</div>
-            <div class="pricing-period">{plan.period}</div>
-            <ul class="pricing-features">
+          <Card class="p-8 text-center {plan.primary ? 'border-primary bg-gradient-to-b from-primary/5 to-transparent' : ''}">
+            <p class="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">{plan.name}</p>
+            <p class="text-4xl font-extrabold mb-1">{plan.price}</p>
+            <p class="text-sm text-muted-foreground mb-6">{plan.period}</p>
+            <ul class="text-sm text-left space-y-3 mb-8">
               {#each plan.features as feat}
-                <li>{feat}</li>
+                <li class="flex items-center gap-2"><span class="text-primary">✓</span> {feat}</li>
               {/each}
             </ul>
-            <a href="/login" class="btn" class:btn-primary={plan.primary} style="width:100%">{plan.cta}</a>
-          </div>
+            <a href="/login">
+              <Button variant={plan.primary ? 'default' : 'outline'} class="w-full">{plan.cta}</Button>
+            </a>
+          </Card>
         {/each}
       </div>
     </section>
 
-    <footer class="landing-footer">
+    <footer class="text-center py-8 px-4 border-t text-sm text-muted-foreground">
       <p>&copy; 2026 Chiro. Todos los derechos reservados.</p>
-      <p style="margin-top:8px">
-        <a href="/legal/tos" style="color:var(--ink-dim)">Términos</a> ·
-        <a href="/legal/privacy" style="color:var(--ink-dim)">Privacidad</a>
+      <p class="mt-2">
+        <a href="/legal/tos" class="hover:text-foreground">Términos</a> ·
+        <a href="/legal/privacy" class="hover:text-foreground">Privacidad</a>
       </p>
     </footer>
   </div>
