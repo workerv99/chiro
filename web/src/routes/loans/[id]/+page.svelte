@@ -394,99 +394,156 @@
   <p class="meta" style="padding:24px;text-align:center">{i18n.t('common.loading')}</p>
 {:else}
   <div class="page-head">
-    <div>
-      <a class="back-link" href={`/loans/person/${loan.person_id}`}>← {loan.person_name}</a>
-      <h1 class="headline">{loan.description || i18n.t('loans.loan')}</h1>
-      <p class="meta">
-        {#if loan.frequency}{loan.frequency}{/if}
-      </p>
+    <a class="back-link" href={`/loans/person/${loan.person_id}`}>← {loan.person_name}</a>
+    <h1 class="headline">{loan.description || i18n.t('loans.loan')}</h1>
+  </div>
+
+  <div class="card loan-info-card">
+    <div class="loan-info-grid">
+      <div class="loan-info-item">
+        <span class="loan-info-label">Persona</span>
+        <span class="loan-info-value">{loan.person_name}</span>
+      </div>
+      <div class="loan-info-item">
+        <span class="loan-info-label">Capital</span>
+        <span class="loan-info-value">{money(loan.amount)}</span>
+      </div>
+      <div class="loan-info-item">
+        <span class="loan-info-label">Ejecutado</span>
+        <span class="loan-info-value">{toDisplay(loan.date)}</span>
+      </div>
+      <div class="loan-info-item">
+        <span class="loan-info-label">Primera cuota</span>
+        <span class="loan-info-value">{toDisplay(loan.first_due_date)}</span>
+      </div>
+      <div class="loan-info-item">
+        <span class="loan-info-label">Frecuencia</span>
+        <span class="loan-info-value">{loan.frequency}</span>
+      </div>
+      <div class="loan-info-item">
+        <span class="loan-info-label">Cuotas</span>
+        <span class="loan-info-value">{paidCount}/{schedule.length}</span>
+      </div>
+      {#if loan.interest_rate > 0}
+        <div class="loan-info-item">
+          <span class="loan-info-label">Interés</span>
+          <span class="loan-info-value">{loan.interest_rate}%</span>
+        </div>
+      {/if}
     </div>
-    <div class="inline-flex">
-      <button class="btn btn-small" onclick={openEdit}>{i18n.t('loans.editLoan')}</button>
+    <div class="loan-info-actions">
+      <button class="btn btn-small" onclick={openEdit}>Editar</button>
       <button class="btn btn-small" onclick={generatePDF}>PDF</button>
     </div>
   </div>
 
-  <div class="summary-cards">
-    <div class="card stat-card">
-      <div class="stat-label">{i18n.t('loans.remaining')}</div>
-      <div class="stat-value">{money(remaining)}</div>
+  <div class="card balance-hero">
+    <div class="balance-eyebrow">{i18n.t('loans.remaining')}</div>
+    <div class="balance-amount" class:negative={remaining > 0} class:positive={remaining <= 0}>
+      {money(remaining)}
     </div>
-    <div class="card stat-card">
-      <div class="stat-label">{i18n.t('loans.paidLabel')}</div>
-      <div class="stat-value">{money(loan.total_paid)}</div>
+    <div class="balance-delta" style="color:var(--ink-dim)">
+      {money(loan.total_paid)} pagado de {money(loan.total_amount)}
     </div>
-    <div class="card stat-card">
-      <div class="stat-label">{i18n.t('loans.progress')}</div>
-      <div class="stat-value">{paidCount}/{schedule.length}</div>
+    <div class="progress-bar" style="margin-top:12px">
+      <div
+        class="progress-fill"
+        style="width:{loan.total_amount > 0 ? Math.round((loan.total_paid / loan.total_amount) * 100) : 0}%;background:var(--green)"
+      ></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px">
+      <span style="font-size:0.75rem;color:var(--ink-dim)">{paidCount}/{schedule.length} cuotas</span>
+      <span style="font-size:0.75rem;color:var(--ink-dim)">
+        {loan.total_amount > 0 ? Math.round((loan.total_paid / loan.total_amount) * 100) : 0}%
+      </span>
     </div>
   </div>
 
-  <div class="card" style="padding:16px;margin-top:14px">
-    {#if nextPending}
-      <div style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:0.82rem;color:var(--ink-dim);font-weight:600">{i18n.t('loans.installment')} #{nextPending.number}</span>
-          <span style="font-size:0.82rem;color:var(--ink-dim)">{toDisplay(nextPending.due_date)}</span>
+  {#if nextPending}
+    <div class="card payment-card" class:overdue-card={nextPending.is_overdue}>
+      {#if nextPending.is_overdue}
+        <div class="overdue-banner">
+          <span class="badge-danger">Vencida</span>
+          <span class="overdue-days">
+            {Math.ceil((new Date() - new Date(nextPending.due_date)) / (1000 * 60 * 60 * 24))} día(s) de retraso
+          </span>
         </div>
-        <div style="font-size:1.3rem;font-weight:800">{money(nextPending.amount)}</div>
+      {/if}
+
+      <div class="payment-header">
+        <span class="payment-label">Próxima cuota</span>
+        <span class="payment-date" class:text-red={nextPending.is_overdue}>
+          {toDisplay(nextPending.due_date)}
+        </span>
       </div>
-      <button class="btn btn-primary" style="width:100%;margin-bottom:12px" onclick={() => pay(true)}>
-        {i18n.t('loans.payInstallment')} #{nextPending.number}
+      <div class="payment-amount">{money(nextPending.amount)}</div>
+
+      <button class="btn btn-primary btn-pay" onclick={() => pay(true)}>
+        Pagar cuota #{nextPending.number}
       </button>
-    {:else}
-      <div style="text-align:center;padding:12px 0;margin-bottom:12px">
-        <div style="color:var(--green);font-weight:700;margin-bottom:4px">{i18n.t('loans.allPaid')}</div>
-        <div style="font-size:0.82rem;color:var(--ink-dim)">${loan.total_paid.toFixed(2)} {i18n.t('loans.paidOf')} ${loan.total_amount.toFixed(2)}</div>
-      </div>
-    {/if}
 
-    <details class="more-options">
-      <summary>{i18n.t('loans.customPayment')}</summary>
-      <div style="margin-top:12px">
-        <div class="grid2" style="margin-bottom:10px">
-          <div class="form-field">
-            <label class="eyebrow" for="pay-amount">{i18n.t('loans.paymentAmount')}</label>
-            <input id="pay-amount" bind:value={payAmount} inputmode="decimal" />
+      <details class="more-options">
+        <summary>Pago personalizado</summary>
+        <div class="custom-pay-fields">
+          <div class="grid2">
+            <div class="form-field">
+              <label class="eyebrow" for="pay-amount">Importe</label>
+              <input id="pay-amount" bind:value={payAmount} inputmode="decimal" />
+            </div>
+            <div class="form-field">
+              <label class="eyebrow" for="pay-date">Fecha</label>
+              <input id="pay-date" bind:value={payDate} placeholder="DD/MM/YYYY" />
+            </div>
           </div>
-          <div class="form-field">
-            <label class="eyebrow" for="pay-date">{i18n.t('loans.paymentDate')}</label>
-            <input id="pay-date" bind:value={payDate} placeholder="DD/MM/YYYY" />
-          </div>
+          <button class="btn" style="width:100%;margin-top:4px" onclick={() => pay(false)} disabled={!payAmount}>
+            Aplicar pago
+          </button>
         </div>
-        <button class="btn" style="width:100%" onclick={() => pay(false)} disabled={!nextPending || !payAmount}>
-          {i18n.t('loans.applyCustom')}
-        </button>
-      </div>
-    </details>
+      </details>
 
-    {#if paidCount > 0}
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-        <button class="btn btn-cancel" style="width:100%;font-size:0.82rem" onclick={unpay}>
-          {i18n.t('loans.undoLast')}
+      {#if paidCount > 0}
+        <button class="btn btn-cancel" style="width:100%;margin-top:12px;font-size:0.82rem" onclick={unpay}>
+          Deshacer último pago
         </button>
-      </div>
-    {/if}
-  </div>
+      {/if}
+    </div>
+  {:else}
+    <div class="card payment-card" style="text-align:center">
+      <div style="color:var(--green);font-weight:700;margin-bottom:4px">Todas las cuotas pagadas</div>
+      <div style="font-size:0.82rem;color:var(--ink-dim)">${loan.total_paid.toFixed(2)} de ${loan.total_amount.toFixed(2)}</div>
+    </div>
+  {/if}
 
-  <div class="card list-card" style="margin-top:14px">
-    <h3 class="card-title" style="padding:12px 16px 0">{i18n.t('loans.schedule')}</h3>
+  <div class="card list-card">
+    <h3 class="card-title" style="padding:12px 16px 0">Calendario de cuotas</h3>
     {#each schedule as s (s.number)}
-      <div class="row">
+      <div class="row installment-row" class:row-overdue={!s.is_paid && s.is_overdue} class:row-paid={s.is_paid}>
         <div class="cat-dot" style="background:{s.is_paid ? 'var(--green)' : s.is_overdue ? 'var(--red)' : 'var(--ink-dim)'}"></div>
         <div class="row-body">
-          <div class="row-title">{i18n.t('loans.installmentN')} {s.number}</div>
-          <div class="row-sub">{toDisplay(s.due_date)}</div>
+          <div class="row-title">
+            Cuota {s.number}
+            {#if !s.is_paid && s.is_overdue}
+              <span class="badge-danger" style="margin-left:6px">Vencida</span>
+            {/if}
+          </div>
+          <div class="row-sub">
+            <span>Vence: {toDisplay(s.due_date)}</span>
+            {#if s.is_paid && s.paid_date}
+              <span style="color:var(--green)">Pagado: {toDisplay(s.paid_date)}</span>
+            {/if}
+          </div>
         </div>
         <div class="row-right">
           <div class="row-amount">{money(s.amount)}</div>
           <div class="row-sub">
             {#if s.is_paid}
-              <span class="badge-ok">{i18n.t('loans.paid')}</span>
+              <span class="badge-ok">Saldada</span>
             {:else if s.is_partial}
-              <span class="badge-warn">{i18n.t('loans.partial')}</span>
+              <span class="badge-warn">Parcial</span>
+            {:else if s.is_overdue}
+              <span class="badge-danger">Pendiente</span>
             {:else}
-              <span class="badge-pending">{i18n.t('loans.pending')}</span>
+              <span class="badge-pending">Pendiente</span>
             {/if}
           </div>
         </div>
@@ -494,7 +551,7 @@
     {/each}
   </div>
 
-  <button class="btn btn-danger" style="margin:16px 0 32px" onclick={() => (confirmDel = true)}>{i18n.t('common.delete')}</button>
+  <button class="btn btn-danger" style="margin:16px 0 32px;width:100%" onclick={() => (confirmDel = true)}>Eliminar préstamo</button>
 {/if}
 
 {#if confirmDel}

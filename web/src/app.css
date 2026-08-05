@@ -634,6 +634,137 @@ a.active .nav-pill {
   margin-top: 4px;
 }
 
+.loan-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.meta-item {
+  font-size: 0.82rem;
+  color: var(--ink-dim);
+}
+
+.meta-label {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Loan detail */
+.loan-info-card {
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.loan-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.loan-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.loan-info-label {
+  font-size: 0.72rem;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.loan-info-value {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.loan-info-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.payment-card {
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.payment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.payment-label {
+  font-size: 0.82rem;
+  color: var(--ink-dim);
+  font-weight: 600;
+}
+
+.payment-date {
+  font-size: 0.82rem;
+  color: var(--ink-dim);
+}
+
+.payment-amount {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.overdue-card {
+  border-color: rgba(244, 63, 94, 0.35);
+}
+
+.overdue-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.overdue-days {
+  font-size: 0.82rem;
+  color: var(--red);
+  font-weight: 600;
+}
+
+.text-red {
+  color: var(--red) !important;
+}
+
+.btn-pay {
+  width: 100%;
+  min-height: 48px;
+  font-size: 0.95rem;
+}
+
+.custom-pay-fields {
+  margin-top: 12px;
+}
+
+.installment-row {
+  transition: background 0.12s;
+}
+
+.row-overdue {
+  background: rgba(244, 63, 94, 0.05);
+}
+
+.row-overdue:hover {
+  background: rgba(244, 63, 94, 0.08);
+}
+
+.row-paid {
+  opacity: 0.7;
+}
+
 .error-text {
   color: var(--red);
   font-size: 0.82rem;
@@ -1007,6 +1138,10 @@ a.active .nav-pill {
   }
   .brand-name {
     display: none;
+  }
+  .loan-info-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
 }
 
