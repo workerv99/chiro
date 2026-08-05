@@ -83,6 +83,28 @@
       </div>
     </section>
 
+    <section class="section" style="background:var(--surface)">
+      <h2 class="section-title">¿Por qué Chiro?</h2>
+      <div class="why-grid">
+        <div class="why-item">
+          <div class="why-num">3</div>
+          <div class="why-label">minutos para empezar</div>
+        </div>
+        <div class="why-item">
+          <div class="why-num">100%</div>
+          <div class="why-label">gratis para empezar</div>
+        </div>
+        <div class="why-item">
+          <div class="why-num">0</div>
+          <div class="why-label">publicidad en la app</div>
+        </div>
+        <div class="why-item">
+          <div class="why-num">24/7</div>
+          <div class="why-label">acceso desde cualquier lado</div>
+        </div>
+      </div>
+    </section>
+
     <section id="pricing" class="section">
       <h2 class="section-title">Planes simples</h2>
       <p class="section-sub">Empieza gratis, upgrade cuando lo necesites.</p>

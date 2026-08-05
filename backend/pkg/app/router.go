@@ -26,12 +26,16 @@ func (a *App) Handler(cfg config.Config) http.Handler {
 	r.Post("/api/auth/register", a.handleRegister)
 	r.Post("/api/auth/login", a.handleLogin)
 	r.Post("/api/auth/refresh", a.handleRefresh)
+	r.Post("/api/auth/forgot-password", a.handleForgotPassword)
+	r.Post("/api/auth/reset-password", a.handleResetPassword)
+	r.Get("/api/auth/verify", a.handleVerifyEmail)
 
 	// ── Protegido ──────────────────────────────────────────────────────────────
 	r.Group(func(pr chi.Router) {
 		pr.Use(a.Auth.Middleware)
 		pr.Use(a.requireActive)
 		pr.Get("/api/auth/me", a.handleMe)
+		pr.Post("/api/auth/send-verification", a.handleSendVerification)
 
 		// ── Administración (solo rol admin) ────────────────────────────────────
 		pr.Route("/api/admin", func(ar chi.Router) {

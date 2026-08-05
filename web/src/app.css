@@ -1235,6 +1235,30 @@ a.active .nav-pill {
   line-height: 1.6;
 }
 
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  max-width: 600px;
+  margin: 24px auto 0;
+}
+
+.why-item {
+  text-align: center;
+}
+
+.why-num {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--indigo);
+}
+
+.why-label {
+  font-size: 0.82rem;
+  color: var(--ink-dim);
+  margin-top: 4px;
+}
+
 @media (max-width: 640px) {
   .hero h1 {
     font-size: 1.8rem;

@@ -69,6 +69,15 @@
           <span class="nav-pill">{r.label}</span>
         </a>
       {/each}
+      {#if S.user?.role === 'admin'}
+        <a
+          href="/admin"
+          class={page.url.pathname === '/admin' ? 'active' : ''}
+          aria-current={page.url.pathname === '/admin' ? 'page' : undefined}
+        >
+          <span class="nav-pill">Admin</span>
+        </a>
+      {/if}
       <div class="spacer"></div>
       {#if S.user}
         <a class="nav-logout" href="#" onclick={(e) => { e.preventDefault(); logout(); goto('/login'); }}>
