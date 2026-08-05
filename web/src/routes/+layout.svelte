@@ -5,6 +5,7 @@
   import { i18n } from '$lib/i18n.svelte.js';
   import { S, me, fetchAll, logout, loadMonth, fetchSubscription } from '$lib/stores.svelte.js';
   import { A, loadToken } from '$lib/api.svelte.js';
+  import CookieBanner from '$lib/components/CookieBanner.svelte';
 
   let ready = $state(false);
 
@@ -58,6 +59,7 @@
   </div>
 {:else if isPublicPage}
   <slot />
+  <CookieBanner />
 {:else if S.user}
   <nav class="nav">
       <div class="brand">
@@ -92,4 +94,5 @@
     <main class="page">
       <slot />
     </main>
+    <CookieBanner />
   {/if}
