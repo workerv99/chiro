@@ -15,7 +15,7 @@
   $effect(() => {
     loadToken();
     if (!A.token) {
-      if (page.url.pathname !== '/login' && page.url.pathname !== '/') {
+      if (page.url.pathname !== '/login' && page.url.pathname !== '/' && !page.url.pathname.startsWith('/legal')) {
         goto('/login');
       }
       ready = true;
