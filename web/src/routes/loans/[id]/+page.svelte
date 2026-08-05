@@ -182,10 +182,11 @@
   }
 
   async function generatePDF() {
-    const [{ jsPDF }, autoTable] = await Promise.all([
+    const [{ jsPDF }, autoTableModule] = await Promise.all([
       import('jspdf'),
       import('jspdf-autotable')
     ]);
+    const autoTable = autoTableModule.default || autoTableModule;
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -333,6 +334,7 @@
       head: [['#', 'VENCIMIENTO', 'MONTO', 'PAGO', 'ABONADO', 'ESTADO', 'DIAS']],
       body: tableData,
       theme: 'striped',
+      tableWidth: 'auto',
       headStyles: {
         fillColor: brand.primary,
         textColor: 255,
@@ -351,13 +353,11 @@
         fillColor: [248, 250, 252]
       },
       columnStyles: {
-        0: { cellWidth: 10, halign: 'center', fontStyle: 'bold' },
-        1: { cellWidth: 24 },
-        2: { cellWidth: 20, halign: 'right' },
-        3: { cellWidth: 22 },
-        4: { cellWidth: 20, halign: 'right' },
-        5: { cellWidth: 18, halign: 'center', fontStyle: 'bold' },
-        6: { cellWidth: 18, halign: 'center' }
+        0: { halign: 'center', fontStyle: 'bold' },
+        2: { halign: 'right' },
+        4: { halign: 'right' },
+        5: { halign: 'center', fontStyle: 'bold' },
+        6: { halign: 'center' }
       },
       didParseCell: (data) => {
         if (data.section === 'body') {
