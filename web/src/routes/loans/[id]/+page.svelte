@@ -556,6 +556,7 @@
 
 {#if confirmDel}
   <ConfirmSheet
+    bind:open={() => confirmDel, (v) => confirmDel = v}
     title={i18n.t('common.delete')}
     message={`${i18n.t('loans.deleteConfirm')}\n\n${blastRadius}`}
     confirmLabel={i18n.t('common.delete')}
@@ -567,9 +568,10 @@
 
 {#if confirmPay && pendingAction}
   <ConfirmSheet
+    bind:open={() => confirmPay, (v) => confirmPay = v}
     title={pendingAction.type === 'cascade' ? i18n.t('loans.cascade') : i18n.t('loans.payNow')}
     message={`¿Confirmar pago de $${pendingAction.amount.toFixed(2)}?`}
-    confirmLabel={i18n.t('common.save')}
+    confirmLabel="Pagar"
     onConfirm={executeAction}
     onCancel={() => { confirmPay = false; pendingAction = null; }}
   />

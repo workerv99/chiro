@@ -360,6 +360,7 @@
 
 {#if confirmDel}
   <ConfirmSheet
+    bind:open={() => confirmDel !== null, (v) => confirmDel = v ? confirmDel : null}
     title={i18n.t('common.delete')}
     message={i18n.t('config.deleteConfirm') + ': ' + confirmDel.label}
     confirmLabel={i18n.t('common.delete')}

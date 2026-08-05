@@ -169,6 +169,7 @@
 
 {#if confirmDel}
   <ConfirmSheet
+    bind:open={() => confirmDel !== null, (v) => confirmDel = v ? confirmDel : null}
     title={i18n.t('common.delete')}
     message={i18n.t('budgets.deleteConfirm') + (confirmDel.category_name ? ': ' + confirmDel.category_name : '')}
     confirmLabel={i18n.t('common.delete')}
