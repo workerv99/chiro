@@ -3,6 +3,7 @@
   import { A, loadToken } from '$lib/api.svelte.js';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
+  import { DollarSign, Hash, Percent, Users, FileText, Shield, ChevronLeft, ChevronRight } from 'lucide-svelte';
 
   let ready = $state(false);
 
@@ -13,12 +14,12 @@
   });
 
   const features = [
-    { icon: '$', title: 'Control de gastos', desc: 'Registra ingresos y gastos diarios con categorías y etiquetas.' },
-    { icon: '#', title: 'Presupuestos', desc: 'Establece límites por categoría y monitorea tu progreso.' },
-    { icon: '%', title: 'Préstamos', desc: 'Gestiona préstamos con calendario de cuotas y seguimiento de pagos.' },
-    { icon: '@', title: 'Multi-usuario', desc: 'Comparte con tu pareja o familia con cuentas separadas.' },
-    { icon: '!', title: 'Reportes PDF', desc: 'Genera reportes profesionales de préstamos y gastos.' },
-    { icon: '*', title: 'Datos seguros', desc: 'Tus datos están en la nube con encriptación de extremo a extremo.' }
+    { icon: DollarSign, title: 'Control de gastos', desc: 'Registra ingresos y gastos diarios con categorías y etiquetas.' },
+    { icon: Hash, title: 'Presupuestos', desc: 'Establece límites por categoría y monitorea tu progreso.' },
+    { icon: Percent, title: 'Préstamos', desc: 'Gestiona préstamos con calendario de cuotas y seguimiento de pagos.' },
+    { icon: Users, title: 'Multi-usuario', desc: 'Comparte con tu pareja o familia con cuentas separadas.' },
+    { icon: FileText, title: 'Reportes PDF', desc: 'Genera reportes profesionales de préstamos y gastos.' },
+    { icon: Shield, title: 'Datos seguros', desc: 'Tus datos están en la nube con encriptación de extremo a extremo.' }
   ];
 
   const plans = [
@@ -75,7 +76,9 @@
       <div class="features-grid">
         {#each features as f}
           <div class="feature-card">
-            <div class="feature-icon">{f.icon}</div>
+            <div class="feature-icon">
+              <svelte:component this={f.icon} size={20} />
+            </div>
             <h3>{f.title}</h3>
             <p>{f.desc}</p>
           </div>

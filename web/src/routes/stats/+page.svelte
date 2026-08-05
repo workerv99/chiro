@@ -3,6 +3,7 @@
   import { api } from '$lib/api.svelte.js';
   import { S, loadMonth } from '$lib/stores.svelte.js';
   import { money } from '$lib/format.js';
+  import { ChevronLeft, ChevronRight } from 'lucide-svelte';
 
   const now = new Date();
   let year = $state(now.getFullYear());
@@ -34,11 +35,11 @@
   <h1 class="headline">{i18n.t('stats.title')}</h1>
 </div>
 
-<div class="month-nav">
-  <button class="icon-btn" onclick={() => (month = month === 1 ? (year -= 1, 12) : month - 1)} aria-label={i18n.t('common.prevMonth')}>‹</button>
-  <div class="month-label">{year}-{String(month).padStart(2, '0')}</div>
-  <button class="icon-btn" onclick={() => (month = month === 12 ? (year += 1, 1) : month + 1)} aria-label={i18n.t('common.nextMonth')}>›</button>
-</div>
+  <div class="month-nav">
+    <button class="icon-btn" onclick={() => (month = month === 1 ? (year -= 1, 12) : month - 1)} aria-label={i18n.t('common.prevMonth')}><ChevronLeft size={20} /></button>
+    <span class="month-label">{monthLabel(year, month)}</span>
+    <button class="icon-btn" onclick={() => (month = month === 12 ? (year += 1, 1) : month + 1)} aria-label={i18n.t('common.nextMonth')}><ChevronRight size={20} /></button>
+  </div>
 
 {#if loading}
   <p class="meta" style="padding:24px;text-align:center">{i18n.t('common.loading')}</p>

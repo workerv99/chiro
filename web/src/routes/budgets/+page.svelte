@@ -4,6 +4,7 @@
   import { S, create, update, remove } from '$lib/stores.svelte.js';
   import { money, pct } from '$lib/format.js';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
+  import { ChevronLeft, ChevronRight } from 'lucide-svelte';
 
   const now = new Date();
   let year = $state(now.getFullYear());
@@ -94,11 +95,11 @@
   <button class="btn btn-primary" onclick={openNew}>+ {i18n.t('budgets.newBudget')}</button>
 </div>
 
-<div class="month-nav">
-  <button class="icon-btn" onclick={() => (month = month === 1 ? (year -= 1, 12) : month - 1)} aria-label={i18n.t('common.prevMonth')}>‹</button>
-  <div class="month-label">{year}-{String(month).padStart(2, '0')}</div>
-  <button class="icon-btn" onclick={() => (month = month === 12 ? (year += 1, 1) : month + 1)} aria-label={i18n.t('common.nextMonth')}>›</button>
-</div>
+  <div class="month-nav">
+    <button class="icon-btn" onclick={() => (month = month === 1 ? (year -= 1, 12) : month - 1)} aria-label={i18n.t('common.prevMonth')}><ChevronLeft size={20} /></button>
+    <span class="month-label">{monthLabel(year, month)}</span>
+    <button class="icon-btn" onclick={() => (month = month === 12 ? (year += 1, 1) : month + 1)} aria-label={i18n.t('common.nextMonth')}><ChevronRight size={20} /></button>
+  </div>
 
 {#if list.length === 0}
   <div class="card empty">

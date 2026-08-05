@@ -4,6 +4,7 @@
   import { api, A } from '$lib/api.svelte.js';
   import { money, signed, colorOf, monthLabel, toDisplay, todayISO } from '$lib/format.js';
   import ExpenseModal from '$lib/components/ExpenseModal.svelte';
+  import { ChevronLeft, ChevronRight } from 'lucide-svelte';
 
   const now = new Date();
   let year = $state(now.getFullYear());
@@ -150,9 +151,9 @@
 {/if}
 
 <div class="month-nav">
-  <button class="icon-btn" onclick={() => shift(-1)} aria-label={i18n.t('common.prevMonth')}>‹</button>
+  <button class="icon-btn" onclick={() => shift(-1)} aria-label={i18n.t('common.prevMonth')}><ChevronLeft size={20} /></button>
   <button class="month-label" onclick={today} title={i18n.t('common.goToday')}>{monthLabel(year, month)}</button>
-  <button class="icon-btn" onclick={() => shift(1)} aria-label={i18n.t('common.nextMonth')}>›</button>
+  <button class="icon-btn" onclick={() => shift(1)} aria-label={i18n.t('common.nextMonth')}><ChevronRight size={20} /></button>
 </div>
 
 <div class="card balance-hero">
