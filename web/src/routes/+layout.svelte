@@ -38,7 +38,11 @@
     })();
   });
 
-  const isPublicPage = $derived(page.url.pathname === '/login' || page.url.pathname === '/');
+  const isPublicPage = $derived(
+    page.url.pathname === '/login' ||
+    page.url.pathname === '/' ||
+    page.url.pathname.startsWith('/legal')
+  );
   const routes = $derived([
     { href: '/dashboard', label: i18n.t('tabs.expenses') },
     { href: '/stats', label: i18n.t('tabs.stats') },

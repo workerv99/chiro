@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [],
+  "rules": [
+    {
+      "glob": "/legal/*",
+    "exclude": []
+    }
+  ]
+}
