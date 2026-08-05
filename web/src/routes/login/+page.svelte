@@ -2,6 +2,10 @@
   import { goto } from '$app/navigation';
   import { i18n } from '$lib/i18n.svelte.js';
   import { login, register, S } from '$lib/stores.svelte.js';
+  import Button from '$lib/components/ui/button.svelte';
+  import Input from '$lib/components/ui/input.svelte';
+  import Label from '$lib/components/ui/label.svelte';
+  import Card from '$lib/components/ui/card.svelte';
 
   let mode = $state('login');
   let name = $state('');
@@ -41,130 +45,61 @@
 
 <svelte:head><title>{mode === 'login' ? i18n.t('auth.login') : i18n.t('auth.register')} · Chiro</title></svelte:head>
 
-<div class="login-wrap">
-  <div class="login-card">
-    <div class="login-brand">
-      <div class="login-mark">C</div>
-      <h1 class="headline">{mode === 'login' ? i18n.t('auth.loginTitle') : 'Crear cuenta'}</h1>
-      <p class="meta">{i18n.t('auth.loginSub')}</p>
+<div class="min-h-screen flex items-center justify-center p-4">
+  <Card class="w-full max-w-sm p-8">
+    <div class="text-center mb-6">
+      <div class="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 text-primary font-black text-xl mx-auto mb-3 flex items-center justify-center">
+        C
+      </div>
+      <h1 class="text-xl font-bold">{mode === 'login' ? i18n.t('auth.loginTitle') : 'Crear cuenta'}</h1>
+      <p class="text-sm text-muted-foreground mt-1">{i18n.t('auth.loginSub')}</p>
     </div>
 
-    <div class="login-lang">
-      <button class="tag-chip" class:active={i18n.lang === 'es'} onclick={() => i18n.setLang('es')}>ES</button>
-      <button class="tag-chip" class:active={i18n.lang === 'en'} onclick={() => i18n.setLang('en')}>EN</button>
+    <div class="flex gap-2 justify-center mb-6">
+      <Button variant={i18n.lang === 'es' ? 'default' : 'outline'} size="sm" onclick={() => i18n.setLang('es')}>ES</Button>
+      <Button variant={i18n.lang === 'en' ? 'default' : 'outline'} size="sm" onclick={() => i18n.setLang('en')}>EN</Button>
     </div>
 
-    <form onsubmit={(e) => { e.preventDefault(); submit(); }}>
+    <form onsubmit={(e) => { e.preventDefault(); submit(); }} class="space-y-4">
       {#if mode === 'register'}
-        <div class="form-field">
-          <label for="login-name">{i18n.t('auth.name')}</label>
-          <input id="login-name" bind:value={name} placeholder="Chiro" autocomplete="name" />
+        <div class="space-y-2">
+          <Label for="login-name">{i18n.t('auth.name')}</Label>
+          <Input id="login-name" bind:value={name} placeholder="Chiro" autocomplete="name" />
         </div>
       {/if}
-      <div class="form-field">
-        <label for="login-email">{i18n.t('auth.email')}</label>
-        <input id="login-email" bind:value={email} type="email" placeholder={i18n.t('auth.emailPlaceholder')} autocomplete="email" />
+      <div class="space-y-2">
+        <Label for="login-email">{i18n.t('auth.email')}</Label>
+        <Input id="login-email" bind:value={email} type="email" placeholder={i18n.t('auth.emailPlaceholder')} autocomplete="email" />
       </div>
-      <div class="form-field">
-        <label for="login-password">{i18n.t('auth.password')}</label>
-        <input id="login-password" bind:value={password} type="password" placeholder={i18n.t('auth.passwordPlaceholder')} autocomplete={mode === 'login' ? 'current-password' : 'new-password'} />
+      <div class="space-y-2">
+        <Label for="login-password">{i18n.t('auth.password')}</Label>
+        <Input id="login-password" bind:value={password} type="password" placeholder={i18n.t('auth.passwordPlaceholder')} autocomplete={mode === 'login' ? 'current-password' : 'new-password'} />
       </div>
+
       {#if mode === 'register'}
-        <div class="consent-box">
-          <label class="consent-label">
-            <input type="checkbox" bind:checked={termsAccepted} />
-            <span>Acepto los <a href="/legal/tos" target="_blank">Términos de Servicio</a></span>
+        <div class="space-y-2">
+          <label class="flex items-start gap-2 cursor-pointer">
+            <input type="checkbox" bind:checked={termsAccepted} class="mt-0.5" />
+            <span class="text-sm text-muted-foreground">Acepto los <a href="/legal/tos" target="_blank" class="text-primary hover:underline">Términos de Servicio</a></span>
           </label>
-          <label class="consent-label">
-            <input type="checkbox" bind:checked={privacyAccepted} />
-            <span>Acepto la <a href="/legal/privacy" target="_blank">Política de Privacidad</a></span>
+          <label class="flex items-start gap-2 cursor-pointer">
+            <input type="checkbox" bind:checked={privacyAccepted} class="mt-0.5" />
+            <span class="text-sm text-muted-foreground">Acepto la <a href="/legal/privacy" target="_blank" class="text-primary hover:underline">Política de Privacidad</a></span>
           </label>
         </div>
       {/if}
+
       {#if err}
-        <p class="error-text" role="alert">{err}</p>
+        <p class="text-sm text-destructive">{err}</p>
       {/if}
-      <button class="btn btn-primary login-submit" type="submit" disabled={S.busy}>
+
+      <Button type="submit" class="w-full" disabled={S.busy}>
         {mode === 'login' ? i18n.t('auth.login') : i18n.t('auth.register')}
-      </button>
+      </Button>
     </form>
 
-    <button class="btn btn-cancel" onclick={() => (mode = mode === 'login' ? 'register' : 'login')}>
+    <Button variant="ghost" class="w-full mt-4" onclick={() => (mode = mode === 'login' ? 'register' : 'login')}>
       {mode === 'login' ? i18n.t('auth.register') : i18n.t('auth.login')}
-    </button>
-  </div>
+    </Button>
+  </Card>
 </div>
-
-<style>
-  .login-wrap {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-  }
-  .login-card {
-    width: 100%;
-    max-width: 400px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 28px 20px;
-  }
-  .login-brand {
-    text-align: center;
-    margin-bottom: 16px;
-  }
-  .login-brand p {
-    margin: 4px 0 0;
-  }
-  .login-mark {
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 10px;
-    border-radius: 12px;
-    background: var(--indigo-tint);
-    border: 1px solid rgba(91, 124, 246, 0.27);
-    color: var(--indigo);
-    font-weight: 900;
-    font-size: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .login-lang {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    margin-bottom: 16px;
-  }
-  .login-lang .tag-chip.active {
-    color: var(--indigo);
-    border-color: var(--indigo);
-    background: var(--indigo-tint);
-  }
-  .login-submit {
-    width: 100%;
-  }
-  .consent-box {
-    margin-bottom: 12px;
-  }
-  .consent-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.82rem;
-    color: var(--ink-dim);
-    margin-bottom: 8px;
-    cursor: pointer;
-  }
-  .consent-label input {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--indigo);
-  }
-  .consent-label a {
-    color: var(--indigo);
-    text-decoration: underline;
-  }
-</style>
