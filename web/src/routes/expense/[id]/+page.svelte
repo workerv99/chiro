@@ -19,13 +19,11 @@
 
 <svelte:head><title>{i18n.t('expenses.editExpense')} · Chiro</title></svelte:head>
 
-<div class="page-head">
-  <a class="back-link" href="/">← {i18n.t('expenses.title')}</a>
-  <h1 class="headline">{i18n.t('expenses.editExpense')}</h1>
-</div>
+<a class="text-sm text-muted-foreground hover:text-foreground font-semibold mb-2 inline-block" href="/">← {i18n.t('expenses.title')}</a>
+<h1 class="text-2xl font-bold mb-4">{i18n.t('expenses.editExpense')}</h1>
 
 {#if loading}
-  <p class="meta" style="padding:24px;text-align:center">{i18n.t('common.loading')}</p>
+  <p class="text-sm text-muted-foreground py-8 text-center">{i18n.t('common.loading')}</p>
 {:else if expense}
   <ExpenseModal
     expense={expense}
