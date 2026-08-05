@@ -12,9 +12,11 @@ import (
 )
 
 type registerReq struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Name     string `json:"name"`
+	Email          string `json:"email"`
+	Password       string `json:"password"`
+	Name           string `json:"name"`
+	TermsAccepted  bool   `json:"terms_accepted"`
+	PrivacyAccepted bool  `json:"privacy_accepted"`
 }
 
 type loginReq struct {
@@ -30,6 +32,10 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 	if req.Email == "" || len(req.Password) < 6 {
 		writeErr(w, http.StatusBadRequest, "Email requerido y contraseña de al menos 6 caracteres")
+		return
+	}
+	if !req.TermsAccepted || !req.PrivacyAccepted {
+		writeErr(w, http.StatusBadRequest, "Debes aceptar los Términos y la Política de Privacidad")
 		return
 	}
 	hash, err := auth.HashPassword(req.Password)
@@ -51,6 +57,16 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusInternalServerError, "error al crear el usuario")
 		return
 	}
+
+	// Registrar consentimiento GDPR.
+	clientIP := r.Header.Get("X-Forwarded-For")
+	if clientIP == "" {
+		clientIP = r.RemoteAddr
+	}
+	_, _ = a.Store.Pool().Exec(r.Context(),
+		`INSERT INTO user_consent (user_id, terms_accepted, privacy_accepted, consented_at, ip_address)
+		 VALUES ($1, $2, $3, now(), $4)`,
+		uid, req.TermsAccepted, req.PrivacyAccepted, clientIP)
 
 	// Semilla por defecto (port de SEED del proyecto original): cuentas y categorías.
 	seedDefaults(r.Context(), a, uid)

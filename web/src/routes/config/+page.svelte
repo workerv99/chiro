@@ -1,7 +1,7 @@
 <script>
   import { goto } from '$app/navigation';
   import { i18n } from '$lib/i18n.svelte.js';
-  import { S, logout, create, update, remove, savePerson, payBill, skipBill, dueBills, activatePro, fetchSubscription } from '$lib/stores.svelte.js';
+  import { S, logout, create, update, remove, savePerson, payBill, skipBill, dueBills, activatePro, fetchSubscription, deleteAccount, exportData } from '$lib/stores.svelte.js';
   import { toDisplay, todayISO, money } from '$lib/format.js';
   import UndoToast from '$lib/components/UndoToast.svelte';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
@@ -13,8 +13,9 @@
   let due = $state([]);
   let confirmDel = $state(null);
   let undo = $state(null);
-  let amoled = $state(false);
+  let amoled = $state(true);
   let showUpgrade = $state(false);
+  let confirmDeleteAccount = $state(false);
 
   let form = $state(emptyForm());
 
@@ -27,22 +28,31 @@
     }
   }
 
+  async function handleDeleteAccount() {
+    try {
+      await deleteAccount();
+      goto('/login');
+    } catch (e) {
+      err = e.message;
+    }
+  }
+
   function emptyForm() {
     return { name: '', currency: 'USD', type: 'expense', color: '#5B7CF6', notes: '', target_amount: 0, current_amount: 0, amount: 0, next_date: '', frequency: 'monthly' };
   }
 
   $effect(() => {
     if (typeof document !== 'undefined') {
-      const saved = localStorage.getItem('chiro_amoled');
-      amoled = saved === 'true';
-      document.documentElement.classList.toggle('amoled', amoled);
+      const saved = localStorage.getItem('chiro_theme');
+      amoled = saved !== 'light';
+      document.documentElement.classList.toggle('light', !amoled);
     }
   });
 
   function toggleAmoled() {
     amoled = !amoled;
-    document.documentElement.classList.toggle('amoled', amoled);
-    localStorage.setItem('chiro_amoled', amoled);
+    document.documentElement.classList.toggle('light', !amoled);
+    localStorage.setItem('chiro_theme', amoled ? 'amoled' : 'light');
   }
 
   $effect(() => {
@@ -363,10 +373,30 @@
   <UndoToast message={undo.msg} secondsLeft={5 - undo.t} onUndo={doUndo} onClose={() => (undo = null)} />
 {/if}
 
-<div class="card" style="padding:16px;margin-top:16px">
+<div class="card" style="padding:16px;margin-bottom:16px">
+  <h3 class="card-title">Tus datos (GDPR)</h3>
+  <p class="meta" style="margin-bottom:12px">Exportá o eliminá tu cuenta y datos personales.</p>
+  <div class="inline-flex">
+    <button class="btn btn-small" onclick={exportData}>Exportar datos</button>
+    <button class="btn btn-small btn-danger" onclick={() => (confirmDeleteAccount = true)}>Eliminar cuenta</button>
+  </div>
+</div>
+
+<div class="card" style="padding:16px">
   <h3 class="card-title">{i18n.t('config.session')}</h3>
   {#if S.user}
     <p class="meta">{i18n.t('config.loggedAs')}: {S.user.name} ({S.user.email})</p>
   {/if}
   <button class="btn btn-cancel" onclick={() => { logout(); goto('/login'); }}>{i18n.t('common.logout')}</button>
 </div>
+
+{#if confirmDeleteAccount}
+  <ConfirmSheet
+    title="Eliminar cuenta"
+    message="Esta acción es permanente. Se eliminarán todos tus datos, gastos, préstamos y configuración. ¿Estás seguro?"
+    confirmLabel="Eliminar mi cuenta"
+    danger
+    onConfirm={handleDeleteAccount}
+    onCancel={() => (confirmDeleteAccount = false)}
+  />
+{/if}

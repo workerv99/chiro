@@ -62,11 +62,14 @@ export async function login(email, password) {
   }
 }
 
-export async function register(name, email, password) {
+export async function register(name, email, password, termsAccepted, privacyAccepted) {
   S.busy = true;
   S.error = '';
   try {
-    const data = await api('/api/auth/register', { method: 'POST', body: { name, email, password } });
+    const data = await api('/api/auth/register', {
+      method: 'POST',
+      body: { name, email, password, terms_accepted: termsAccepted, privacy_accepted: privacyAccepted }
+    });
     setToken(data.token);
     S.user = data.user;
   } catch (e) {
@@ -111,6 +114,24 @@ export async function activatePro() {
 export async function cancelSubscription() {
   await api('/api/subscription/cancel', { method: 'POST' });
   await fetchSubscription();
+}
+
+export async function deleteAccount() {
+  await api('/api/account', { method: 'DELETE' });
+  logout();
+}
+
+export async function exportData() {
+  const res = await fetch('/api/export', {
+    headers: { Authorization: 'Bearer ' + A.token }
+  });
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'chiro-export.json';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function fetchAll() {

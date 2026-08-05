@@ -8,6 +8,8 @@
   let email = $state('');
   let password = $state('');
   let err = $state('');
+  let termsAccepted = $state(false);
+  let privacyAccepted = $state(false);
 
   async function submit() {
     err = '';
@@ -23,10 +25,14 @@
       err = i18n.t('auth.passwordRequired');
       return;
     }
+    if (mode === 'register' && (!termsAccepted || !privacyAccepted)) {
+      err = 'Debes aceptar los Términos y la Política de Privacidad';
+      return;
+    }
     try {
       if (mode === 'login') await login(email, password);
-      else await register(name, email, password);
-      goto('/');
+      else await register(name, email, password, termsAccepted, privacyAccepted);
+      goto('/dashboard');
     } catch {
       err = mode === 'login' ? i18n.t('auth.loginError') : i18n.t('auth.registerError');
     }
@@ -39,7 +45,7 @@
   <div class="login-card">
     <div class="login-brand">
       <div class="login-mark">C</div>
-      <h1 class="headline">{i18n.t('auth.loginTitle')}</h1>
+      <h1 class="headline">{mode === 'login' ? i18n.t('auth.loginTitle') : 'Crear cuenta'}</h1>
       <p class="meta">{i18n.t('auth.loginSub')}</p>
     </div>
 
@@ -63,6 +69,18 @@
         <label for="login-password">{i18n.t('auth.password')}</label>
         <input id="login-password" bind:value={password} type="password" placeholder={i18n.t('auth.passwordPlaceholder')} autocomplete={mode === 'login' ? 'current-password' : 'new-password'} />
       </div>
+      {#if mode === 'register'}
+        <div class="consent-box">
+          <label class="consent-label">
+            <input type="checkbox" bind:checked={termsAccepted} />
+            <span>Acepto los <a href="/legal/tos" target="_blank">Términos de Servicio</a></span>
+          </label>
+          <label class="consent-label">
+            <input type="checkbox" bind:checked={privacyAccepted} />
+            <span>Acepto la <a href="/legal/privacy" target="_blank">Política de Privacidad</a></span>
+          </label>
+        </div>
+      {/if}
       {#if err}
         <p class="error-text" role="alert">{err}</p>
       {/if}
@@ -127,5 +145,26 @@
   }
   .login-submit {
     width: 100%;
+  }
+  .consent-box {
+    margin-bottom: 12px;
+  }
+  .consent-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--ink-dim);
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .consent-label input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--indigo);
+  }
+  .consent-label a {
+    color: var(--indigo);
+    text-decoration: underline;
   }
 </style>

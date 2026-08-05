@@ -100,6 +100,10 @@ func (a *App) Handler(cfg config.Config) http.Handler {
 		// Admin.
 		pr.Get("/api/admin/stats", a.handleAdminStats)
 		pr.Get("/api/admin/users", a.handleAdminListUsers)
+
+		// GDPR.
+		pr.Delete("/api/account", a.handleDeleteAccount)
+		pr.Get("/api/export", a.handleExportData)
 	})
 
 	return r
