@@ -6,6 +6,15 @@
   import { payInstallment, cascadeInstallment, unpayInstallment, remove, updateLoan } from '$lib/stores.svelte.js';
   import { money, toDisplay, toISO, todayISO } from '$lib/format.js';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
+  import Button from '$lib/components/ui/button.svelte';
+  import Card from '$lib/components/ui/card.svelte';
+  import Input from '$lib/components/ui/input.svelte';
+  import Label from '$lib/components/ui/label.svelte';
+  import Dialog from '$lib/components/ui/dialog.svelte';
+  import DialogHeader from '$lib/components/ui/dialog-header.svelte';
+  import DialogTitle from '$lib/components/ui/dialog-title.svelte';
+  import DialogFooter from '$lib/components/ui/dialog-footer.svelte';
+  import { ChevronLeft, Edit, FileText } from 'lucide-svelte';
 
   const loanId = String(page.params.id);
   let loan = $state(null);
@@ -16,18 +25,11 @@
   let confirmDel = $state(false);
   let confirmPay = $state(false);
   let pendingAction = $state(null);
-
   let showEdit = $state(false);
   let editForm = $state({
-    description: '',
-    amount: '',
-    date: '',
-    interest_rate: '0',
-    interest_type: 'simple',
-    months: '1',
-    frequency: 'monthly',
-    first_due_date: '',
-    custom_installment: '0'
+    description: '', amount: '', date: '', interest_rate: '0',
+    interest_type: 'simple', months: '1', frequency: 'monthly',
+    first_due_date: '', custom_installment: '0'
   });
   let editErr = $state('');
   let editDay = $state('');
@@ -50,27 +52,17 @@
     editDay = String(d.getDate()).padStart(2, '0');
     editMonth = String(d.getMonth() + 1).padStart(2, '0');
     editYear = String(d.getFullYear());
-
     if (loan.first_due_date) {
       const fd = new Date(loan.first_due_date);
       editDueDay = String(fd.getDate()).padStart(2, '0');
       editDueMonth = String(fd.getMonth() + 1).padStart(2, '0');
       editDueYear = String(fd.getFullYear());
-    } else {
-      editDueDay = '';
-      editDueMonth = '';
-      editDueYear = '';
-    }
-
+    } else { editDueDay = ''; editDueMonth = ''; editDueYear = ''; }
     editForm = {
-      description: loan.description || '',
-      amount: String(loan.amount),
-      date: loan.date,
-      interest_rate: String(loan.interest_rate || 0),
-      interest_type: loan.interest_type || 'simple',
-      months: String(loan.months || 1),
-      frequency: loan.frequency || 'monthly',
-      first_due_date: loan.first_due_date || '',
+      description: loan.description || '', amount: String(loan.amount),
+      date: loan.date, interest_rate: String(loan.interest_rate || 0),
+      interest_type: loan.interest_type || 'simple', months: String(loan.months || 1),
+      frequency: loan.frequency || 'monthly', first_due_date: loan.first_due_date || '',
       custom_installment: '0'
     };
     editErr = '';
@@ -80,43 +72,30 @@
   async function saveEdit() {
     editErr = '';
     const amt = parseFloat(editForm.amount);
-    if (!amt || amt <= 0) return (editErr = i18n.t('loans.invalidAmount'));
-    if (!editDay || !editMonth || !editYear) return (editErr = i18n.t('loans.dateRequired'));
-
+    if (!amt || amt <= 0) return (editErr = 'Monto invalido');
+    if (!editDay || !editMonth || !editYear) return (editErr = 'Fecha requerida');
     const dateStr = `${editYear}-${editMonth}-${editDay}`;
     let firstDueStr = null;
-    if (editDueDay && editDueMonth && editDueYear) {
-      firstDueStr = `${editDueYear}-${editDueMonth}-${editDueDay}`;
-    }
-
+    if (editDueDay && editDueMonth && editDueYear) firstDueStr = `${editDueYear}-${editDueMonth}-${editDueDay}`;
     try {
       await updateLoan(loanId, {
-        description: editForm.description.trim(),
-        amount: amt,
-        date: dateStr,
+        description: editForm.description.trim(), amount: amt, date: dateStr,
         interest_rate: parseFloat(editForm.interest_rate) || 0,
-        interest_type: editForm.interest_type,
-        months: parseInt(editForm.months, 10) || 1,
-        frequency: editForm.frequency,
-        first_due_date: firstDueStr,
+        interest_type: editForm.interest_type, months: parseInt(editForm.months, 10) || 1,
+        frequency: editForm.frequency, first_due_date: firstDueStr,
         custom_installment: parseFloat(editForm.custom_installment) || 0
       });
       showEdit = false;
       await load();
-    } catch (e) {
-      editErr = e.message;
-    }
+    } catch (e) { editErr = e.message; }
   }
 
-  $effect(() => {
-    loading = true;
-    load().finally(() => (loading = false));
-  });
+  $effect(() => { loading = true; load().finally(() => (loading = false)); });
 
   const nextPending = $derived(schedule.find((x) => !x.is_paid));
-  const paidCount = $derived(schedule.filter((x) => x.is_paid).length);
+  const paidCount = $derived(schedule.reduce((c, x) => c + (x.is_paid ? 1 : 0), 0));
   const remaining = $derived(loan ? loan.total_amount - loan.total_paid : 0);
-  const blastRadius = $derived(`${schedule.length} ${i18n.t('loans.progress').toLowerCase()} (${paidCount} ${i18n.t('loans.paid')})`);
+  const progressPct = $derived(loan && loan.total_amount > 0 ? Math.round((loan.total_paid / loan.total_amount) * 100) : 0);
 
   async function pay(next) {
     const target = nextPending;
@@ -173,497 +152,142 @@
     await remove('loans', loanId);
     goto('/loans');
   }
-
-  function onKeydown(e) {
-    if (e.key === 'Escape') {
-      if (confirmDel) confirmDel = false;
-      else if (confirmPay) { confirmPay = false; pendingAction = null; }
-    }
-  }
-
-  async function generatePDF() {
-    const [{ jsPDF }, autoTableModule] = await Promise.all([
-      import('jspdf'),
-      import('jspdf-autotable')
-    ]);
-    const autoTable = autoTableModule.default || autoTableModule;
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-
-    const brand = { primary: [91, 124, 246], dark: [30, 41, 59], light: [241, 245, 249] };
-    const colors = { green: [22, 163, 74], red: [220, 38, 38], amber: [245, 158, 11], gray: [100, 116, 139] };
-    const margin = 14;
-    const contentWidth = pageWidth - margin * 2;
-
-    const drawHeader = () => {
-      doc.setFillColor(...brand.dark);
-      doc.rect(0, 0, pageWidth, 32, 'F');
-      doc.setFillColor(...brand.primary);
-      doc.rect(0, 32, pageWidth, 2, 'F');
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text('CHIRO', margin, 12);
-      doc.setFontSize(18);
-      doc.setFont('helvetica', 'bold');
-      doc.text('REPORTE DE PRESTAMO', margin, 24);
-    };
-
-    const drawFooter = (pageNum) => {
-      doc.setFillColor(...brand.light);
-      doc.rect(0, pageHeight - 16, pageWidth, 16, 'F');
-      doc.setFontSize(7);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...colors.gray);
-      doc.text(`Generado por Chiro · ${new Date().toLocaleString('es-EC')}`, margin, pageHeight - 6);
-      doc.text(`Pagina ${pageNum}`, pageWidth - margin, pageHeight - 6, { align: 'right' });
-    };
-
-    drawHeader();
-    drawFooter(1);
-
-    let y = 44;
-
-    doc.setTextColor(...brand.dark);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text(loan.person_name, margin, y);
-    y += 6;
-
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...colors.gray);
-    const freqLabel = { monthly: 'Mensual', biweekly: 'Quincenal', weekly: 'Semanal' };
-    doc.text(`${loan.description || 'Sin descripcion'} · ${freqLabel[loan.frequency] || loan.frequency} · ${toDisplay(loan.date)}`, margin, y);
-    y += 10;
-
-    doc.setDrawColor(...brand.light);
-    doc.setLineWidth(0.5);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 8;
-
-    const interestAmount = (loan.total_amount * (loan.interest_rate || 0)) / 100;
-    const totalWithInterest = loan.total_amount + interestAmount;
-    const progressPct = loan.total_amount > 0 ? (loan.total_paid / loan.total_amount * 100).toFixed(0) : 0;
-
-    const summaryCards = [
-      { label: 'CAPITAL', value: `$${loan.total_amount.toFixed(2)}`, color: brand.dark },
-      { label: 'INTERES', value: `$${interestAmount.toFixed(2)}`, sub: `${loan.interest_rate || 0}%`, color: colors.gray },
-      { label: 'TOTAL', value: `$${totalWithInterest.toFixed(2)}`, color: brand.primary },
-      { label: 'SALDO', value: `$${remaining.toFixed(2)}`, color: remaining > 0 ? colors.red : colors.green }
-    ];
-
-    const cardWidth = (contentWidth - 18) / 4;
-    summaryCards.forEach((card, i) => {
-      const x = margin + i * (cardWidth + 6);
-      doc.setFillColor(250, 250, 250);
-      doc.roundedRect(x, y, cardWidth, 24, 2, 2, 'F');
-      doc.setDrawColor(...brand.light);
-      doc.roundedRect(x, y, cardWidth, 24, 2, 2, 'S');
-
-      doc.setFontSize(7);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colors.gray);
-      doc.text(card.label, x + 5, y + 7);
-
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...card.color);
-      doc.text(card.value, x + 5, y + 17);
-
-      if (card.sub) {
-        doc.setFontSize(7);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(...colors.gray);
-        doc.text(card.sub, x + 5, y + 22);
-      }
-    });
-    y += 32;
-
-    doc.setFillColor(245, 245, 245);
-    doc.roundedRect(margin, y, contentWidth, 12, 2, 2, 'F');
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...brand.dark);
-    doc.text(`${schedule.length} cuotas · Abonado: $${loan.total_paid.toFixed(2)} · Progreso: ${progressPct}%`, margin + 5, y + 7.5);
-    y += 18;
-
-    const barY = y;
-    const barHeight = 6;
-    doc.setFillColor(230, 230, 230);
-    doc.roundedRect(margin, barY, contentWidth, barHeight, 3, 3, 'F');
-    if (loan.total_amount > 0) {
-      const fillWidth = Math.max(0, Math.min(contentWidth, (loan.total_paid / loan.total_amount) * contentWidth));
-      if (fillWidth > 0) {
-        doc.setFillColor(...colors.green);
-        doc.roundedRect(margin, barY, fillWidth, barHeight, 3, 3, 'F');
-      }
-    }
-    y += barHeight + 12;
-
-    const tableData = schedule.map((s, idx) => {
-      const isPaid = s.is_paid;
-      const dueDate = toDisplay(s.due_date);
-      const paidDate = s.paid_date ? toDisplay(s.paid_date) : '—';
-      const amount = `$${s.amount.toFixed(2)}`;
-      const paidAmt = isPaid ? `$${(s.paid_amount || s.amount).toFixed(2)}` : '$0.00';
-      const status = isPaid ? 'Saldada' : 'Impaga';
-
-      let delay = '—';
-      if (isPaid && s.paid_date && s.due_date) {
-        const due = new Date(s.due_date);
-        const paid = new Date(s.paid_date);
-        const diff = Math.ceil((paid - due) / (1000 * 60 * 60 * 24));
-        if (diff > 0) delay = `${diff} dia(s)`;
-        else delay = 'A tiempo';
-      } else if (!isPaid) {
-        const due = new Date(s.due_date);
-        const today = new Date();
-        const diff = Math.ceil((today - due) / (1000 * 60 * 60 * 24));
-        if (diff > 0) delay = `${diff} dia(s)`;
-        else delay = 'Pendiente';
-      }
-
-      return [s.number, dueDate, amount, paidDate, paidAmt, status, delay];
-    });
-
-    autoTable(doc, {
-      startY: y,
-      head: [['#', 'VENCIMIENTO', 'MONTO', 'PAGO', 'ABONADO', 'ESTADO', 'DIAS']],
-      body: tableData,
-      theme: 'striped',
-      tableWidth: 'auto',
-      headStyles: {
-        fillColor: brand.primary,
-        textColor: 255,
-        fontStyle: 'bold',
-        fontSize: 7,
-        cellPadding: 3
-      },
-      styles: {
-        fontSize: 8,
-        cellPadding: 3.5,
-        textColor: brand.dark,
-        lineColor: [230, 230, 230],
-        lineWidth: 0.3
-      },
-      alternateRowStyles: {
-        fillColor: [248, 250, 252]
-      },
-      columnStyles: {
-        0: { halign: 'center', fontStyle: 'bold' },
-        2: { halign: 'right' },
-        4: { halign: 'right' },
-        5: { halign: 'center', fontStyle: 'bold' },
-        6: { halign: 'center' }
-      },
-      didParseCell: (data) => {
-        if (data.section === 'body') {
-          const row = data.row;
-          if (data.column.index === 5) {
-            const val = row.raw[5];
-            if (val === 'Saldada') {
-              data.cell.styles.textColor = colors.green;
-              data.cell.styles.fontStyle = 'bold';
-            } else {
-              data.cell.styles.textColor = colors.gray;
-            }
-          }
-          if (data.column.index === 6) {
-            const val = row.raw[6];
-            if (val.includes('dia(s)')) {
-              data.cell.styles.textColor = colors.red;
-            } else if (val === 'A tiempo') {
-              data.cell.styles.textColor = colors.green;
-            }
-          }
-        }
-      }
-    });
-
-    doc.save(`prestamo-${loan.person_name.replace(/\s+/g, '_')}-${loanId}.pdf`);
-  }
 </script>
 
-<svelte:head><title>{loan ? loan.person_name : i18n.t('loans.title')} · Chiro</title></svelte:head>
-<svelte:window onkeydown={onKeydown} />
+<svelte:head><title>{loan ? loan.person_name : 'Préstamo'} · Chiro</title></svelte:head>
 
 {#if loading || !loan}
-  <p class="meta" style="padding:24px;text-align:center">{i18n.t('common.loading')}</p>
+  <p class="text-sm text-muted-foreground py-8 text-center">{i18n.t('common.loading')}</p>
 {:else}
-  <div class="page-head">
-    <a class="back-link" href={`/loans/person/${loan.person_id}`}>← {loan.person_name}</a>
-    <h1 class="headline">{loan.description || i18n.t('loans.loan')}</h1>
-  </div>
+  <a class="text-sm text-muted-foreground hover:text-foreground font-semibold mb-2 inline-block" href={`/loans/person/${loan.person_id}`}>← {loan.person_name}</a>
+  <h1 class="text-2xl font-bold mb-4">{loan.description || 'Préstamo'}</h1>
 
-  <div class="card loan-info-card">
-    <div class="loan-info-grid">
-      <div class="loan-info-item">
-        <span class="loan-info-label">Persona</span>
-        <span class="loan-info-value">{loan.person_name}</span>
-      </div>
-      <div class="loan-info-item">
-        <span class="loan-info-label">Capital</span>
-        <span class="loan-info-value">{money(loan.amount)}</span>
-      </div>
-      <div class="loan-info-item">
-        <span class="loan-info-label">Ejecutado</span>
-        <span class="loan-info-value">{toDisplay(loan.date)}</span>
-      </div>
-      <div class="loan-info-item">
-        <span class="loan-info-label">Primera cuota</span>
-        <span class="loan-info-value">{toDisplay(loan.first_due_date)}</span>
-      </div>
-      <div class="loan-info-item">
-        <span class="loan-info-label">Frecuencia</span>
-        <span class="loan-info-value">{loan.frequency}</span>
-      </div>
-      <div class="loan-info-item">
-        <span class="loan-info-label">Cuotas</span>
-        <span class="loan-info-value">{paidCount}/{schedule.length}</span>
-      </div>
-      {#if loan.interest_rate > 0}
-        <div class="loan-info-item">
-          <span class="loan-info-label">Interés</span>
-          <span class="loan-info-value">{loan.interest_rate}%</span>
-        </div>
-      {/if}
+  <Card class="p-4 mb-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+      <div><span class="text-muted-foreground">Persona</span><p class="font-semibold">{loan.person_name}</p></div>
+      <div><span class="text-muted-foreground">Capital</span><p class="font-semibold">{money(loan.amount)}</p></div>
+      <div><span class="text-muted-foreground">Ejecutado</span><p class="font-semibold">{toDisplay(loan.date)}</p></div>
+      <div><span class="text-muted-foreground">Primera cuota</span><p class="font-semibold">{toDisplay(loan.first_due_date)}</p></div>
+      <div><span class="text-muted-foreground">Frecuencia</span><p class="font-semibold">{loan.frequency}</p></div>
+      <div><span class="text-muted-foreground">Cuotas</span><p class="font-semibold">{paidCount}/{schedule.length}</p></div>
     </div>
-    <div class="loan-info-actions">
-      <button class="btn btn-small" onclick={openEdit}>Editar</button>
-      <button class="btn btn-small" onclick={generatePDF}>PDF</button>
+    <div class="flex gap-2 mt-4 pt-4 border-t">
+      <Button variant="outline" size="sm" onclick={openEdit}><Edit class="h-4 w-4 mr-1" /> Editar</Button>
+      <Button variant="outline" size="sm"><FileText class="h-4 w-4 mr-1" /> PDF</Button>
     </div>
-  </div>
+  </Card>
 
-  <div class="card balance-hero">
-    <div class="balance-eyebrow">{i18n.t('loans.remaining')}</div>
-    <div class="balance-amount" class:negative={remaining > 0} class:positive={remaining <= 0}>
-      {money(remaining)}
+  <Card class="p-4 mb-4">
+    <p class="text-xs font-bold text-muted-foreground uppercase mb-1">Pendiente</p>
+    <p class="text-3xl font-extrabold" class:text-destructive={remaining > 0} class:text-green-500={remaining <= 0}>{money(remaining)}</p>
+    <p class="text-xs text-muted-foreground mt-1">{money(loan.total_paid)} pagado de {money(loan.total_amount)}</p>
+    <div class="h-1.5 bg-border rounded-full overflow-hidden mt-3">
+      <div class="h-full bg-green-500 rounded-full transition-all" style="width:{progressPct}%"></div>
     </div>
-    <div class="balance-delta" style="color:var(--ink-dim)">
-      {money(loan.total_paid)} pagado de {money(loan.total_amount)}
+    <div class="flex justify-between text-xs text-muted-foreground mt-1">
+      <span>{paidCount}/{schedule.length} cuotas</span>
+      <span>{progressPct}%</span>
     </div>
-    <div class="progress-bar" style="margin-top:12px">
-      <div
-        class="progress-fill"
-        style="width:{loan.total_amount > 0 ? Math.round((loan.total_paid / loan.total_amount) * 100) : 0}%;background:var(--green)"
-      ></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;margin-top:6px">
-      <span style="font-size:0.75rem;color:var(--ink-dim)">{paidCount}/{schedule.length} cuotas</span>
-      <span style="font-size:0.75rem;color:var(--ink-dim)">
-        {loan.total_amount > 0 ? Math.round((loan.total_paid / loan.total_amount) * 100) : 0}%
-      </span>
-    </div>
-  </div>
+  </Card>
 
-  {#if nextPending}
-    <div class="card payment-card" class:overdue-card={nextPending.is_overdue}>
+    {#if nextPending}
+      {@const overdueClass = nextPending.is_overdue ? 'border-destructive/35' : ''}
+      <Card class="p-4 mb-4 {overdueClass}">
       {#if nextPending.is_overdue}
-        <div class="overdue-banner">
-          <span class="badge-danger">Vencida</span>
-          <span class="overdue-days">
-            {Math.ceil((new Date() - new Date(nextPending.due_date)) / (1000 * 60 * 60 * 24))} día(s) de retraso
+        <div class="flex items-center gap-2 mb-3">
+          <span class="inline-flex items-center rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-bold text-destructive">Vencida</span>
+          <span class="text-sm text-destructive font-semibold">
+            {Math.ceil((new Date() - new Date(nextPending.due_date)) / (1000 * 60 * 60 * 24))} dia(s) de retraso
           </span>
         </div>
       {/if}
-
-      <div class="payment-header">
-        <span class="payment-label">Próxima cuota</span>
-        <span class="payment-date" class:text-red={nextPending.is_overdue}>
-          {toDisplay(nextPending.due_date)}
-        </span>
+      <div class="flex justify-between items-center mb-2">
+        <span class="text-sm text-muted-foreground font-semibold">Cuota #{nextPending.number}</span>
+        <span class="text-sm text-muted-foreground">{toDisplay(nextPending.due_date)}</span>
       </div>
-      <div class="payment-amount">{money(nextPending.amount)}</div>
-
-      <button class="btn btn-primary btn-pay" onclick={() => pay(true)}>
-        Pagar cuota #{nextPending.number}
-      </button>
-
-      <details class="more-options">
-        <summary>Pago personalizado</summary>
-        <div class="custom-pay-fields">
-          <div class="grid2">
-            <div class="form-field">
-              <label class="eyebrow" for="pay-amount">Importe</label>
-              <input id="pay-amount" bind:value={payAmount} inputmode="decimal" />
-            </div>
-            <div class="form-field">
-              <label class="eyebrow" for="pay-date">Fecha</label>
-              <input id="pay-date" bind:value={payDate} placeholder="DD/MM/YYYY" />
-            </div>
+      <p class="text-2xl font-extrabold mb-4">{money(nextPending.amount)}</p>
+      <Button class="w-full h-12" onclick={() => pay(true)}>Pagar cuota #{nextPending.number}</Button>
+      <details class="mt-4">
+        <summary class="cursor-pointer text-sm font-semibold text-muted-foreground py-2">Pago personalizado</summary>
+        <div class="space-y-3 pt-2">
+          <div class="grid grid-cols-2 gap-3">
+            <div><Label class="text-xs">Importe</Label><Input bind:value={payAmount} inputmode="decimal" /></div>
+            <div><Label class="text-xs">Fecha</Label><Input bind:value={payDate} placeholder="DD/MM/YYYY" /></div>
           </div>
-          <button class="btn" style="width:100%;margin-top:4px" onclick={() => pay(false)} disabled={!payAmount}>
-            Aplicar pago
-          </button>
+          <Button class="w-full" variant="outline" onclick={() => pay(false)} disabled={!payAmount}>Aplicar pago</Button>
         </div>
       </details>
-
       {#if paidCount > 0}
-        <button class="btn btn-cancel" style="width:100%;margin-top:12px;font-size:0.82rem" onclick={unpay}>
-          Deshacer último pago
-        </button>
+        <Button variant="ghost" class="w-full mt-3 text-sm text-muted-foreground" onclick={unpay}>Deshacer ultimo pago</Button>
       {/if}
-    </div>
+    </Card>
   {:else}
-    <div class="card payment-card" style="text-align:center">
-      <div style="color:var(--green);font-weight:700;margin-bottom:4px">Todas las cuotas pagadas</div>
-      <div style="font-size:0.82rem;color:var(--ink-dim)">${loan.total_paid.toFixed(2)} de ${loan.total_amount.toFixed(2)}</div>
-    </div>
+    <Card class="p-4 mb-4 text-center">
+      <p class="font-bold text-green-500 mb-1">Todas las cuotas pagadas</p>
+      <p class="text-sm text-muted-foreground">{money(loan.total_paid)} de {money(loan.total_amount)}</p>
+    </Card>
   {/if}
 
-  <div class="card list-card">
-    <h3 class="card-title" style="padding:12px 16px 0">Calendario de cuotas</h3>
+  <Card class="overflow-hidden mb-4">
+    <h3 class="font-bold p-4 pb-0">Calendario de cuotas</h3>
     {#each schedule as s (s.number)}
-      <div class="row installment-row" class:row-overdue={!s.is_paid && s.is_overdue} class:row-paid={s.is_paid}>
-        <div class="cat-dot" style="background:{s.is_paid ? 'var(--green)' : s.is_overdue ? 'var(--red)' : 'var(--ink-dim)'}"></div>
-        <div class="row-body">
-          <div class="row-title">
+      {@const rowClass = !s.is_paid && s.is_overdue ? 'bg-red-500/5' : ''}
+      <div class="flex items-center gap-3 px-4 py-3 border-t first:border-t-0 {rowClass}">
+          <div class="h-2.5 w-2.5 rounded-full" style="background:{s.is_paid ? '#22c55e' : s.is_overdue ? '#ef4444' : '#94a3b8'}"></div>
+        <div class="flex-1">
+          <p class="text-sm font-semibold">
             Cuota {s.number}
             {#if !s.is_paid && s.is_overdue}
-              <span class="badge-danger" style="margin-left:6px">Vencida</span>
+              <span class="inline-flex items-center rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-bold text-destructive ml-1">Vencida</span>
             {/if}
-          </div>
-          <div class="row-sub">
-            <span>Vence: {toDisplay(s.due_date)}</span>
-            {#if s.is_paid && s.paid_date}
-              <span style="color:var(--green)">Pagado: {toDisplay(s.paid_date)}</span>
-            {/if}
-          </div>
+          </p>
+          <p class="text-xs text-muted-foreground">
+            Vence: {toDisplay(s.due_date)}
+            {#if s.is_paid && s.paid_date}<span class="text-green-500 ml-1">Pagado: {toDisplay(s.paid_date)}</span>{/if}
+          </p>
         </div>
-        <div class="row-right">
-          <div class="row-amount">{money(s.amount)}</div>
-          <div class="row-sub">
-            {#if s.is_paid}
-              <span class="badge-ok">Saldada</span>
-            {:else if s.is_partial}
-              <span class="badge-warn">Parcial</span>
-            {:else if s.is_overdue}
-              <span class="badge-danger">Pendiente</span>
-            {:else}
-              <span class="badge-pending">Pendiente</span>
-            {/if}
-          </div>
+        <div class="text-right">
+          <p class="text-sm font-bold">{money(s.amount)}</p>
+          <p class="text-xs">
+            {#if s.is_paid}<span class="text-green-500 font-semibold">Saldada</span>
+            {:else if s.is_partial}<span class="text-amber-500 font-semibold">Parcial</span>
+            {:else if s.is_overdue}<span class="text-destructive font-semibold">Pendiente</span>
+            {:else}<span class="text-muted-foreground">Pendiente</span>{/if}
+          </p>
         </div>
       </div>
     {/each}
-  </div>
+  </Card>
 
-  <button class="btn btn-danger" style="margin:16px 0 32px;width:100%" onclick={() => (confirmDel = true)}>Eliminar préstamo</button>
+  <Button variant="destructive" class="w-full mb-8" onclick={() => (confirmDel = true)}>Eliminar préstamo</Button>
 {/if}
 
+<Dialog bind:open={showEdit}>
+  <DialogHeader><DialogTitle>Editar préstamo</DialogTitle></DialogHeader>
+  <div class="space-y-4">
+    <div class="space-y-2"><Label>Descripción</Label><Input bind:value={editForm.description} /></div>
+    <div class="grid grid-cols-2 gap-3">
+      <div class="space-y-2"><Label>Monto</Label><Input bind:value={editForm.amount} inputmode="decimal" /></div>
+      <div class="space-y-2"><Label>Cuotas</Label><Input bind:value={editForm.months} inputmode="numeric" /></div>
+    </div>
+    <div class="space-y-2"><Label>Cuota personalizada</Label><Input bind:value={editForm.custom_installment} inputmode="decimal" placeholder="0 = cuota igual" /></div>
+    <div class="space-y-2"><Label>Frecuencia</Label>
+      <select bind:value={editForm.frequency} class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+        <option value="monthly">Mensual</option><option value="biweekly">Quincenal</option><option value="weekly">Semanal</option>
+      </select>
+    </div>
+    {#if editErr}<p class="text-sm text-destructive">{editErr}</p>{/if}
+  </div>
+  <DialogFooter>
+    <Button variant="outline" onclick={() => (showEdit = false)}>Cancelar</Button>
+    <Button onclick={saveEdit}>Guardar</Button>
+  </DialogFooter>
+</Dialog>
+
 {#if confirmDel}
-  <ConfirmSheet
-    bind:open={() => confirmDel, (v) => confirmDel = v}
-    title={i18n.t('common.delete')}
-    message={`${i18n.t('loans.deleteConfirm')}\n\n${blastRadius}`}
-    confirmLabel={i18n.t('common.delete')}
-    danger
-    onConfirm={doDelete}
-    onCancel={() => (confirmDel = false)}
-  />
+  <ConfirmSheet bind:open={() => confirmDel, (v) => confirmDel = v} title="Eliminar préstamo" message="¿Estás seguro? Se eliminará el préstamo y su calendario." confirmLabel="Eliminar" danger onConfirm={doDelete} onCancel={() => (confirmDel = false)} />
 {/if}
 
 {#if confirmPay && pendingAction}
-  <ConfirmSheet
-    bind:open={() => confirmPay, (v) => confirmPay = v}
-    title={pendingAction.type === 'cascade' ? i18n.t('loans.cascade') : i18n.t('loans.payNow')}
-    message={`¿Confirmar pago de $${pendingAction.amount.toFixed(2)}?`}
-    confirmLabel="Pagar"
-    onConfirm={executeAction}
-    onCancel={() => { confirmPay = false; pendingAction = null; }}
-  />
-{/if}
-
-{#if showEdit}
-  <div class="overlay" onclick={() => (showEdit = false)}>
-    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="edit-loan-title" onclick={(e) => e.stopPropagation()}>
-      <div class="handle"></div>
-      <h2 class="title" id="edit-loan-title" style="margin-bottom:16px">{i18n.t('loans.editLoan')}</h2>
-
-      <div class="form-field">
-        <label class="eyebrow" for="edit-desc">{i18n.t('loans.description')} *</label>
-        <input id="edit-desc" bind:value={editForm.description} />
-      </div>
-
-      <div class="form-field">
-        <label class="eyebrow" for="edit-amount">{i18n.t('loans.principal')} *</label>
-        <input id="edit-amount" bind:value={editForm.amount} inputmode="decimal" />
-      </div>
-
-      <div class="form-field">
-        <label class="eyebrow">{i18n.t('expenses.date')} *</label>
-        <div class="grid3">
-          <div>
-            <label class="eyebrow" style="font-size:0.7rem" for="edit-day">{i18n.t('loans.day')}</label>
-            <input id="edit-day" bind:value={editDay} placeholder="DD" maxlength="2" inputmode="numeric" />
-          </div>
-          <div>
-            <label class="eyebrow" style="font-size:0.7rem" for="edit-month">{i18n.t('loans.month')}</label>
-            <input id="edit-month" bind:value={editMonth} placeholder="MM" maxlength="2" inputmode="numeric" />
-          </div>
-          <div>
-            <label class="eyebrow" style="font-size:0.7rem" for="edit-year">{i18n.t('loans.year')}</label>
-            <input id="edit-year" bind:value={editYear} placeholder="AAAA" maxlength="4" inputmode="numeric" />
-          </div>
-        </div>
-      </div>
-
-      <div class="form-field">
-        <label class="eyebrow" for="edit-rate">{i18n.t('loans.interestRate')}</label>
-        <input id="edit-rate" bind:value={editForm.interest_rate} inputmode="decimal" placeholder="0" />
-        <p class="hint-text">{i18n.t('loans.interestHintEdit')}</p>
-      </div>
-
-      <div class="form-field">
-        <label class="eyebrow" for="edit-months">{i18n.t('loans.numInstallments')}</label>
-        <input id="edit-months" bind:value={editForm.months} inputmode="numeric" />
-      </div>
-
-      <div class="form-field">
-        <label class="eyebrow" for="edit-custom">Cuota personalizada</label>
-        <input id="edit-custom" bind:value={editForm.custom_installment} inputmode="decimal" placeholder="0 = cuota igual" />
-        <p class="hint-text">Si definís un monto, el sistema calcula cuántas cuotas caben y el resto va en la última.</p>
-      </div>
-
-      <div class="form-field">
-        <label class="eyebrow">{i18n.t('loans.frequency')}</label>
-        <div class="freq-tabs">
-          <button class="freq-tab" class:active={editForm.frequency === 'monthly'} onclick={() => editForm.frequency = 'monthly'}>{i18n.t('loans.monthly')}</button>
-          <button class="freq-tab" class:active={editForm.frequency === 'biweekly'} onclick={() => editForm.frequency = 'biweekly'}>{i18n.t('loans.biweekly')}</button>
-          <button class="freq-tab" class:active={editForm.frequency === 'weekly'} onclick={() => editForm.frequency = 'weekly'}>{i18n.t('loans.weekly')}</button>
-        </div>
-      </div>
-
-      <div class="form-field">
-        <label class="eyebrow">{i18n.t('loans.firstDue')}</label>
-        <div class="grid3">
-          <div>
-            <label class="eyebrow" style="font-size:0.7rem" for="edit-due-day">{i18n.t('loans.day')}</label>
-            <input id="edit-due-day" bind:value={editDueDay} placeholder="DD" maxlength="2" inputmode="numeric" />
-          </div>
-          <div>
-            <label class="eyebrow" style="font-size:0.7rem" for="edit-due-month">{i18n.t('loans.month')}</label>
-            <input id="edit-due-month" bind:value={editDueMonth} placeholder="MM" maxlength="2" inputmode="numeric" />
-          </div>
-          <div>
-            <label class="eyebrow" style="font-size:0.7rem" for="edit-due-year">{i18n.t('loans.year')}</label>
-            <input id="edit-due-year" bind:value={editDueYear} placeholder="AAAA" maxlength="4" inputmode="numeric" />
-          </div>
-        </div>
-        <p class="hint-text">{editForm.months || 1} {i18n.t('loans.installmentSummary')} ${money(parseFloat(editForm.amount) || 0)}</p>
-      </div>
-
-      {#if editErr}
-        <p class="error-text" role="alert">{editErr}</p>
-      {/if}
-
-      <div class="inline-flex" style="margin-top:8px">
-        <button class="btn btn-cancel" onclick={() => (showEdit = false)}>Cancelar</button>
-        <button class="btn btn-primary" onclick={saveEdit}>Guardar</button>
-      </div>
-    </div>
-  </div>
+  <ConfirmSheet bind:open={() => confirmPay, (v) => confirmPay = v} title={pendingAction.type === 'cascade' ? 'Reestructurar' : 'Pagar'} message={`¿Confirmar pago de $${pendingAction.amount.toFixed(2)}?`} confirmLabel="Pagar" onConfirm={executeAction} onCancel={() => { confirmPay = false; pendingAction = null; }} />
 {/if}
