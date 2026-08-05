@@ -4,7 +4,15 @@
   import { S, create, update, remove } from '$lib/stores.svelte.js';
   import { money, pct } from '$lib/format.js';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
-  import { ChevronLeft, ChevronRight } from 'lucide-svelte';
+  import Button from '$lib/components/ui/button.svelte';
+  import Card from '$lib/components/ui/card.svelte';
+  import Input from '$lib/components/ui/input.svelte';
+  import Label from '$lib/components/ui/label.svelte';
+  import Dialog from '$lib/components/ui/dialog.svelte';
+  import DialogHeader from '$lib/components/ui/dialog-header.svelte';
+  import DialogTitle from '$lib/components/ui/dialog-title.svelte';
+  import DialogFooter from '$lib/components/ui/dialog-footer.svelte';
+  import { ChevronLeft, ChevronRight, Plus } from 'lucide-svelte';
 
   const now = new Date();
   let year = $state(now.getFullYear());
@@ -23,9 +31,16 @@
       .catch(() => {});
   }
 
-  $effect(() => {
-    load();
-  });
+  $effect(() => { load(); });
+
+  function shift(delta) {
+    let m = month + delta;
+    let y = year;
+    if (m < 1) { m = 12; y -= 1; }
+    if (m > 12) { m = 1; y += 1; }
+    year = y;
+    month = m;
+  }
 
   function openNew() {
     editing = null;
@@ -48,130 +63,108 @@
     const amt = parseFloat(amount);
     if (!amt || amt <= 0) return (err = i18n.t('common.required'));
     try {
-      const body = { category_id: catId || null, amount: amt, month, year };
-      if (editing) {
-        await update('budgets', editing.budget_id, body);
-      } else {
-        await create('budgets', body);
-      }
-      await load();
+      if (editing) await update('budgets', editing.budget_id, { amount: amt, category_id: catId });
+      else await create('budgets', { amount: amt, category_id: catId, month, year });
       showForm = false;
+      await load();
     } catch (e) {
       err = e.message;
     }
   }
 
-  function askDelete(b) {
-    confirmDel = b;
-  }
-
   async function doDelete() {
-    const b = confirmDel;
+    if (!confirmDel) return;
+    await remove('budgets', confirmDel.budget_id);
     confirmDel = null;
-    if (!b) return;
-    await remove('budgets', b.budget_id);
     await load();
-  }
-
-  function catName(id) {
-    return S.db.categories.find((c) => c.category_id === id)?.name || '—';
-  }
-
-  function focusInit(node) {
-    node.focus();
-  }
-
-  function onKeydown(e) {
-    if (e.key === 'Escape' && showForm) showForm = false;
-    if (e.key === 'Escape' && confirmDel) confirmDel = null;
   }
 </script>
 
 <svelte:head><title>{i18n.t('budgets.title')} · Chiro</title></svelte:head>
-<svelte:window onkeydown={onKeydown} />
 
-<div class="page-head">
-  <h1 class="headline">{i18n.t('budgets.title')}</h1>
-  <button class="btn btn-primary" onclick={openNew}>+ {i18n.t('budgets.newBudget')}</button>
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-bold">{i18n.t('budgets.title')}</h1>
 </div>
 
-  <div class="month-nav">
-    <button class="icon-btn" onclick={() => (month = month === 1 ? (year -= 1, 12) : month - 1)} aria-label={i18n.t('common.prevMonth')}><ChevronLeft size={20} /></button>
-    <span class="month-label">{monthLabel(year, month)}</span>
-    <button class="icon-btn" onclick={() => (month = month === 12 ? (year += 1, 1) : month + 1)} aria-label={i18n.t('common.nextMonth')}><ChevronRight size={20} /></button>
-  </div>
+<div class="flex items-center justify-between bg-card rounded-lg border p-2 mb-4">
+  <Button variant="ghost" size="icon" onclick={() => shift(-1)} aria-label={i18n.t('common.prevMonth')}>
+    <ChevronLeft class="h-5 w-5" />
+  </Button>
+  <span class="text-sm font-bold">{new Date(year, month - 1).toLocaleDateString(i18n.lang === 'en' ? 'en' : 'es', { month: 'long', year: 'numeric' })}</span>
+  <Button variant="ghost" size="icon" onclick={() => shift(1)} aria-label={i18n.t('common.nextMonth')}>
+    <ChevronRight class="h-5 w-5" />
+  </Button>
+</div>
 
 {#if list.length === 0}
-  <div class="card empty">
-    <p class="meta">{i18n.t('budgets.empty')}</p>
-    <button class="btn btn-primary" onclick={openNew}>{i18n.t('budgets.newBudget')}</button>
-  </div>
+  <Card class="flex flex-col items-center gap-3 py-8">
+    <p class="text-sm text-muted-foreground">{i18n.t('budgets.empty')}</p>
+    <Button onclick={openNew}>{i18n.t('budgets.newBudget')}</Button>
+  </Card>
 {:else}
-  <div class="card list-card">
+  <Card class="overflow-hidden">
     {#each list as b (b.budget_id)}
-      <div class="budget-row" onclick={() => openEdit(b)} role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEdit(b); } }}>
-        <div class="row-body">
-          <div class="row-title">{b.category_name || catName(b.category_id)}</div>
-          <div class="bar-track" style="margin-top:6px">
-            <div
-              class="bar-fill"
-              class:over={b.spent > b.amount}
-              style="transform:scaleX({pct(b.spent, b.amount) / 100});background:{b.category_color || 'var(--indigo)'}"
-            ></div>
-          </div>
-          <div class="row-sub" style="margin-top:4px">
-            {money(b.spent)} / {money(b.amount)}
-            {#if b.spent > b.amount}
-              <span class="badge-danger">{i18n.t('budgets.exceeded')}</span>
-            {/if}
-            <button class="btn btn-small btn-cancel" style="margin-left:auto" onclick={(e) => { e.stopPropagation(); askDelete(b); }}>{i18n.t('common.delete')}</button>
-          </div>
+      {@const progress = b.amount > 0 ? Math.min(100, (b.spent / b.amount) * 100) : 0}
+      {@const exceeded = b.spent > b.amount}
+      <button class="w-full text-left p-4 hover:bg-muted/50 transition-colors border-t first:border-t-0" onclick={() => openEdit(b)}>
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm font-semibold">{b.category_name}</span>
+          <span class="text-sm font-bold" class:text-destructive={exceeded}>{money(b.spent)} / {money(b.amount)}</span>
         </div>
-      </div>
+        <div class="h-2 bg-border rounded-full overflow-hidden">
+          <div class="h-full rounded-full transition-all" class:bg-destructive={exceeded} class:bg-primary={!exceeded} style="width:{progress}%"></div>
+        </div>
+      </button>
     {/each}
-  </div>
+  </Card>
 {/if}
 
-{#if showForm}
-  <div class="overlay" onclick={() => (showForm = false)}>
-    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="bud-form-title" onclick={(e) => e.stopPropagation()}>
-      <h2 class="title" id="bud-form-title" style="margin-bottom:16px">
-        {editing ? i18n.t('budgets.editBudget') : i18n.t('budgets.newBudget')}
-      </h2>
-      <div class="form-field">
-        <label for="bud-cat">{i18n.t('budgets.category')}</label>
-        <select id="bud-cat" bind:value={catId}>
-          <option value="">{i18n.t('budgets.allCategories')}</option>
-          {#each S.db.categories.filter((c) => c.type === 'expense') as c (c.category_id)}
-            <option value={c.category_id}>{c.name}</option>
-          {/each}
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="bud-amount">{i18n.t('budgets.amount')}</label>
-        <input id="bud-amount" bind:value={amount} inputmode="decimal" use:focusInit />
-      </div>
-      {#if err}
-        <p class="error-text">{err}</p>
-      {/if}
-      <div class="inline-flex" style="margin-top:8px">
-        <button class="btn btn-cancel" onclick={() => (showForm = false)}>{i18n.t('common.cancel')}</button>
-        <button class="btn btn-primary" onclick={save}>{i18n.t('common.save')}</button>
-      </div>
-      {#if editing}
-        <button class="btn btn-danger" style="margin-top:12px" onclick={() => { confirmDel = editing; showForm = false; }}>
-          {i18n.t('common.delete')}
-        </button>
-      {/if}
+<Button
+  size="icon"
+  class="fixed right-5 bottom-20 h-14 w-14 rounded-2xl shadow-lg z-40"
+  onclick={openNew}
+  aria-label={i18n.t('budgets.newBudget')}
+>
+  <Plus class="h-6 w-6" />
+</Button>
+
+<Dialog bind:open={showForm}>
+  <DialogHeader>
+    <DialogTitle>{editing ? i18n.t('budgets.editBudget') : i18n.t('budgets.newBudget')}</DialogTitle>
+  </DialogHeader>
+
+  <div class="space-y-4">
+    <div class="space-y-2">
+      <Label for="bud-cat">{i18n.t('budgets.category')}</Label>
+      <select id="bud-cat" bind:value={catId} class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+        <option value="">{i18n.t('budgets.allCategories')}</option>
+        {#each S.db.categories as c (c.category_id)}
+          <option value={c.category_id}>{c.name}</option>
+        {/each}
+      </select>
     </div>
+
+    <div class="space-y-2">
+      <Label for="bud-amount">{i18n.t('budgets.amount')}</Label>
+      <Input id="bud-amount" bind:value={amount} inputmode="decimal" />
+    </div>
+
+    {#if err}
+      <p class="text-sm text-destructive">{err}</p>
+    {/if}
   </div>
-{/if}
+
+  <DialogFooter>
+    <Button variant="outline" onclick={() => (showForm = false)}>{i18n.t('common.cancel')}</Button>
+    <Button onclick={save}>{i18n.t('common.save')}</Button>
+  </DialogFooter>
+</Dialog>
 
 {#if confirmDel}
   <ConfirmSheet
     bind:open={() => confirmDel !== null, (v) => confirmDel = v ? confirmDel : null}
     title={i18n.t('common.delete')}
-    message={i18n.t('budgets.deleteConfirm') + (confirmDel.category_name ? ': ' + confirmDel.category_name : '')}
+    message={i18n.t('budgets.deleteConfirm')}
     confirmLabel={i18n.t('common.delete')}
     danger
     onConfirm={doDelete}
