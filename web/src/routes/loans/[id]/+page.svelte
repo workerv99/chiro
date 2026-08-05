@@ -160,6 +160,7 @@
     const pw = doc.internal.pageSize.getWidth();
     const m = 14;
     const cw = pw - m * 2;
+    const accent = [91, 124, 246];
 
     doc.setFillColor(30, 41, 59);
     doc.rect(0, 0, pw, 32, 'F');
