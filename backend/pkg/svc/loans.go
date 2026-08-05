@@ -31,9 +31,14 @@ func CreateInstallments(ctx context.Context, st *store.Store, userID string, loa
 
 // RegenerateSchedule recalcula vencimientos y montos conservando lo pagado en
 // cada número de cuota; las sobrantes quedan borradas (soft).
-func RegenerateSchedule(ctx context.Context, st *store.Store, userID string, loanID string, total float64, n int, firstDue string, freq string) error {
+func RegenerateSchedule(ctx context.Context, st *store.Store, userID string, loanID string, total float64, n int, firstDue string, freq string, customInstallment float64) error {
 	count := max(1, n)
-	amounts := SplitAmounts(total, count)
+	var amounts []float64
+	if customInstallment > 0 {
+		amounts = SplitAmountsCustom(total, customInstallment)
+	} else {
+		amounts = SplitAmounts(total, count)
+	}
 	ts := time.Now().UnixMilli()
 
 	return st.ExecAll(ctx, func(tx pgx.Tx) error {

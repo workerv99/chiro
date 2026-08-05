@@ -13,6 +13,7 @@
   let startDate = $state(toDisplay(todayISO()));
   let dueDate = $state('');
   let description = $state('');
+  let customInstallment = $state('');
   let err = $state('');
 
   function openNew() {
@@ -25,6 +26,7 @@
     startDate = toDisplay(todayISO());
     dueDate = '';
     description = '';
+    customInstallment = '';
     err = '';
     showForm = true;
   }
@@ -37,6 +39,7 @@
     if (!description.trim()) return (err = i18n.t('common.required'));
     const n = parseInt(months, 10);
     if (!n || n <= 0) return (err = i18n.t('loans.installmentsRequired'));
+    const custom = parseFloat(customInstallment) || 0;
     try {
       await createLoan({
         person_id: personId,
@@ -47,7 +50,8 @@
         interest_type: interestType,
         months: n,
         frequency,
-        first_due_date: dueDate ? toISO(dueDate) : null
+        first_due_date: dueDate ? toISO(dueDate) : null,
+        custom_installment: custom
       });
       showForm = false;
     } catch (e) {
@@ -150,6 +154,11 @@
           <label class="eyebrow" for="loan-months">{i18n.t('loans.installments')}</label>
           <input id="loan-months" bind:value={months} inputmode="numeric" />
         </div>
+      </div>
+      <div class="form-field">
+        <label class="eyebrow" for="loan-custom">Cuota personalizada (opcional)</label>
+        <input id="loan-custom" bind:value={customInstallment} inputmode="decimal" placeholder="Dejar vacío para cuota igual" />
+        <p class="hint-text">Si definís un monto, el sistema calcula cuántas cuotas caben y el resto va en la última.</p>
       </div>
       <div class="form-field">
         <label class="eyebrow" for="loan-freq">{i18n.t('loans.frequency')}</label>

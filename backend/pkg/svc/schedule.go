@@ -80,6 +80,28 @@ func SplitAmounts(total float64, n int) []float64 {
 	return arr
 }
 
+// SplitAmountsCustom divide el total en cuotas iguales al monto indicado,
+// y el último pago cubre el saldo restante.
+// Ej: total=1000, installment=80 → [80, 80, ..., 80, 120]
+func SplitAmountsCustom(total, installment float64) []float64 {
+	if installment <= 0 {
+		return SplitAmounts(total, 1)
+	}
+	full := int(total / installment)
+	remainder := Round2(total - installment*float64(full))
+	if remainder > 0.01 {
+		full++
+	} else {
+		remainder = installment
+	}
+	arr := make([]float64, full)
+	for i := 0; i < full-1; i++ {
+		arr[i] = installment
+	}
+	arr[full-1] = remainder
+	return arr
+}
+
 // LoanTotal calcula el total a devolver según el tipo de interés.
 // simple   → monto * (1 + tasa/100)
 // compound → monto * (1 + tasa/100)^meses

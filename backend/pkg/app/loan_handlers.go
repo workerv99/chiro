@@ -104,15 +104,16 @@ func (a *App) handlePersonLoans(w http.ResponseWriter, r *http.Request) {
 // ── Préstamos ─────────────────────────────────────────────────────────────────
 
 type loanInput struct {
-	PersonID     string  `json:"person_id"`
-	Description  string  `json:"description"`
-	Amount       float64 `json:"amount"`
-	Date         string  `json:"date"`
-	InterestRate float64 `json:"interest_rate"`
-	InterestType string  `json:"interest_type"`
-	Months       int     `json:"months"`
-	Frequency    string  `json:"frequency"`
-	FirstDueDate *string `json:"first_due_date"`
+	PersonID          string  `json:"person_id"`
+	Description       string  `json:"description"`
+	Amount            float64 `json:"amount"`
+	Date              string  `json:"date"`
+	InterestRate      float64 `json:"interest_rate"`
+	InterestType      string  `json:"interest_type"`
+	Months            int     `json:"months"`
+	Frequency         string  `json:"frequency"`
+	FirstDueDate      *string `json:"first_due_date"`
+	CustomInstallment float64 `json:"custom_installment"`
 }
 
 // handleListLoans lista préstamos con persona y total pagado (?year=&month=).
@@ -227,7 +228,12 @@ func (a *App) handleCreateLoan(w http.ResponseWriter, r *http.Request) {
 			in.InterestRate, orDefault(in.InterestType, "simple"), n, freq, firstDue, ts); err != nil {
 			return err
 		}
-		amounts := svc.SplitAmounts(total, n)
+		var amounts []float64
+		if in.CustomInstallment > 0 {
+			amounts = svc.SplitAmountsCustom(total, in.CustomInstallment)
+		} else {
+			amounts = svc.SplitAmounts(total, n)
+		}
 		for i := range amounts {
 			num := i + 1
 			due, err := svc.AdvanceByFreq(firstDue, freq, i)
@@ -305,7 +311,7 @@ func (a *App) handleUpdateLoan(w http.ResponseWriter, r *http.Request) {
 		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}
-	if err := svc.RegenerateSchedule(r.Context(), a.Store, uid, loanID, total, n, firstDue, freq); err != nil {
+	if err := svc.RegenerateSchedule(r.Context(), a.Store, uid, loanID, total, n, firstDue, freq, in.CustomInstallment); err != nil {
 		writeServerError(w, r, "error interno del servidor", err)
 		return
 	}

@@ -26,7 +26,8 @@
     interest_type: 'simple',
     months: '1',
     frequency: 'monthly',
-    first_due_date: ''
+    first_due_date: '',
+    custom_installment: '0'
   });
   let editErr = $state('');
   let editDay = $state('');
@@ -69,7 +70,8 @@
       interest_type: loan.interest_type || 'simple',
       months: String(loan.months || 1),
       frequency: loan.frequency || 'monthly',
-      first_due_date: loan.first_due_date || ''
+      first_due_date: loan.first_due_date || '',
+      custom_installment: '0'
     };
     editErr = '';
     showEdit = true;
@@ -96,7 +98,8 @@
         interest_type: editForm.interest_type,
         months: parseInt(editForm.months, 10) || 1,
         frequency: editForm.frequency,
-        first_due_date: firstDueStr
+        first_due_date: firstDueStr,
+        custom_installment: parseFloat(editForm.custom_installment) || 0
       });
       showEdit = false;
       await load();
@@ -558,6 +561,12 @@
       <div class="form-field">
         <label class="eyebrow" for="edit-months">{i18n.t('loans.numInstallments')}</label>
         <input id="edit-months" bind:value={editForm.months} inputmode="numeric" />
+      </div>
+
+      <div class="form-field">
+        <label class="eyebrow" for="edit-custom">Cuota personalizada</label>
+        <input id="edit-custom" bind:value={editForm.custom_installment} inputmode="decimal" placeholder="0 = cuota igual" />
+        <p class="hint-text">Si definís un monto, el sistema calcula cuántas cuotas caben y el resto va en la última.</p>
       </div>
 
       <div class="form-field">
