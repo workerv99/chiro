@@ -152,6 +152,146 @@
     await remove('loans', loanId);
     goto('/loans');
   }
+
+  async function generatePDF() {
+    const [{ jsPDF }, autoTableModule] = await Promise.all([import('jspdf'), import('jspdf-autotable')]);
+    const autoTable = autoTableModule.default || autoTableModule;
+    const doc = new jsPDF();
+    const pw = doc.internal.pageSize.getWidth();
+    const m = 14;
+    const cw = pw - m * 2;
+
+    doc.setFillColor(30, 41, 59);
+    doc.rect(0, 0, pw, 32, 'F');
+    doc.setFillColor(91, 124, 246);
+    doc.rect(0, 32, pw, 2, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.text('CHIRO', m, 12);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('REPORTE DE PRESTAMO', m, 24);
+
+    let y = 44;
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text(loan.person_name, m, y);
+    y += 6;
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text(`${loan.description || 'Sin descripcion'} · ${loan.frequency}`, m, y);
+    y += 5;
+    doc.text(`Ejecutado: ${toDisplay(loan.date)} · Primera cuota: ${toDisplay(loan.first_due_date)}`, m, y);
+    y += 10;
+
+    doc.setDrawColor(230, 230, 230);
+    doc.setLineWidth(0.5);
+    doc.line(m, y, pw - m, y);
+    y += 8;
+
+    const interestAmount = (loan.total_amount * (loan.interest_rate || 0)) / 100;
+    const cards = [
+      { label: 'CAPITAL', value: `$${loan.total_amount.toFixed(2)}` },
+      { label: 'INTERES', value: `$${interestAmount.toFixed(2)}`, sub: `${loan.interest_rate || 0}%` },
+      { label: 'TOTAL', value: `$${(loan.total_amount + interestAmount).toFixed(2)}` },
+      { label: 'SALDO', value: `$${remaining.toFixed(2)}`, color: remaining > 0 ? [239, 68, 68] : [34, 197, 94] }
+    ];
+
+    const cardW = (cw - 18) / 4;
+    cards.forEach((c, i) => {
+      const x = m + i * (cardW + 6);
+      doc.setFillColor(250, 250, 250);
+      doc.roundedRect(x, y, cardW, 24, 2, 2, 'F');
+      doc.setDrawColor(230, 230, 230);
+      doc.roundedRect(x, y, cardW, 24, 2, 2, 'S');
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(100, 116, 139);
+      doc.text(c.label, x + 5, y + 7);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(c.color ? c.color[0] : 0, c.color ? c.color[1] : 0, c.color ? c.color[2] : 0);
+      doc.text(c.value, x + 5, y + 17);
+    });
+    y += 32;
+
+    const progressPct = loan.total_amount > 0 ? Math.round((loan.total_paid / loan.total_amount) * 100) : 0;
+    doc.setFillColor(245, 245, 245);
+    doc.roundedRect(m, y, cw, 12, 2, 2, 'F');
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(30, 41, 59);
+    doc.text(`${schedule.length} cuotas · Abonado: $${loan.total_paid.toFixed(2)} · Progreso: ${progressPct}%`, m + 5, y + 7.5);
+    y += 18;
+
+    doc.setFillColor(230, 230, 230);
+    doc.roundedRect(m, y, cw, 6, 3, 3, 'F');
+    if (loan.total_amount > 0) {
+      const fillW = Math.max(0, Math.min(cw, (loan.total_paid / loan.total_amount) * cw));
+      if (fillW > 0) {
+        doc.setFillColor(34, 197, 94);
+        doc.roundedRect(m, y, fillW, 6, 3, 3, 'F');
+      }
+    }
+    y += 18;
+
+    const tableData = schedule.map((s) => {
+      const dueDate = toDisplay(s.due_date);
+      const paidDate = s.paid_date ? toDisplay(s.paid_date) : '—';
+      const amount = `$${s.amount.toFixed(2)}`;
+      const paidAmt = s.is_paid ? `$${(s.paid_amount || s.amount).toFixed(2)}` : '$0.00';
+      const status = s.is_paid ? 'Saldada' : 'Impaga';
+      let delay = '—';
+      if (s.is_paid && s.paid_date && s.due_date) {
+        const diff = Math.ceil((new Date(s.paid_date) - new Date(s.due_date)) / 864e5);
+        delay = diff > 0 ? `${diff} dia(s)` : 'A tiempo';
+      } else if (!s.is_paid) {
+        const diff = Math.ceil((new Date() - new Date(s.due_date)) / 864e5);
+        delay = diff > 0 ? `${diff} dia(s)` : 'Pendiente';
+      }
+      return [s.number, dueDate, amount, paidDate, paidAmt, status, delay];
+    });
+
+    autoTable(doc, {
+      startY: y,
+      head: [['#', 'VENCIMIENTO', 'MONTO', 'PAGO', 'ABONADO', 'ESTADO', 'DIAS']],
+      body: tableData,
+      theme: 'striped',
+      tableWidth: 'auto',
+      headStyles: { fillColor: accent, textColor: 255, fontStyle: 'bold', fontSize: 7 },
+      styles: { fontSize: 8, cellPadding: 3.5, textColor: [30, 41, 59], lineColor: [230, 230, 230], lineWidth: 0.3 },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      columnStyles: {
+        0: { halign: 'center', fontStyle: 'bold' },
+        2: { halign: 'right' },
+        4: { halign: 'right' },
+        5: { halign: 'center', fontStyle: 'bold' },
+        6: { halign: 'center' }
+      },
+      didParseCell: (data) => {
+        if (data.section === 'body') {
+          const row = data.row;
+          if (data.column.index === 5) {
+            const val = row.raw[5];
+            if (val === 'Saldada') data.cell.styles.textColor = [34, 197, 94];
+            else data.cell.styles.textColor = [100, 116, 139];
+          }
+          if (data.column.index === 6) {
+            const val = row.raw[6];
+            if (val.includes('dia(s)')) data.cell.styles.textColor = [239, 68, 68];
+            else if (val === 'A tiempo') data.cell.styles.textColor = [34, 197, 94];
+          }
+        }
+      }
+    });
+
+    doc.save(`prestamo-${loan.person_name.replace(/\s+/g, '_')}-${loanId}.pdf`);
+  }
 </script>
 
 <svelte:head><title>{loan ? loan.person_name : 'Préstamo'} · Chiro</title></svelte:head>
@@ -173,7 +313,7 @@
     </div>
     <div class="flex gap-2 mt-4 pt-4 border-t">
       <Button variant="outline" size="sm" onclick={openEdit}><Edit class="h-4 w-4 mr-1" /> Editar</Button>
-      <Button variant="outline" size="sm"><FileText class="h-4 w-4 mr-1" /> PDF</Button>
+      <Button variant="outline" size="sm" onclick={generatePDF}><FileText class="h-4 w-4 mr-1" /> PDF</Button>
     </div>
   </Card>
 
