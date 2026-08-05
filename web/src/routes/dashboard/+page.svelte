@@ -4,7 +4,9 @@
   import { api, A } from '$lib/api.svelte.js';
   import { money, signed, colorOf, monthLabel, toDisplay, todayISO } from '$lib/format.js';
   import ExpenseModal from '$lib/components/ExpenseModal.svelte';
-  import { ChevronLeft, ChevronRight } from 'lucide-svelte';
+  import Button from '$lib/components/ui/button.svelte';
+  import Card from '$lib/components/ui/card.svelte';
+  import { ChevronLeft, ChevronRight, Plus } from 'lucide-svelte';
 
   const now = new Date();
   let year = $state(now.getFullYear());
@@ -103,124 +105,131 @@
 
 <svelte:head><title>{i18n.t('expenses.title')} · Chiro</title></svelte:head>
 
-<div class="page-head">
-  <div>
-    <h1 class="headline">{i18n.t('expenses.title')}</h1>
-  </div>
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-bold">{i18n.t('expenses.title')}</h1>
 </div>
 
 {#if showOnboard}
-  <div class="card onboarding" style="margin-bottom:14px">
-    <h2 class="title">Bienvenido a Chiro</h2>
-    <p class="meta">Configurá tu cuenta en 2 pasos rápidos.</p>
+  <Card class="p-6 mb-4 bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
+    <h2 class="text-lg font-bold mb-1">Bienvenido a Chiro</h2>
+    <p class="text-sm text-muted-foreground mb-4">Configurá tu cuenta en 2 pasos rápidos.</p>
 
     {#if onboardStep === 1}
-      <div style="margin-top:16px">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-          <span class="step-num">1</span>
-          <div>
-            <strong style="font-size:0.95rem">Crear cuentas</strong>
-            <p class="meta" style="margin:0">Efectivo y Banco para empezar</p>
-          </div>
+      <div class="flex items-start gap-3 mb-4">
+        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">1</span>
+        <div>
+          <p class="font-semibold">Crear cuentas</p>
+          <p class="text-sm text-muted-foreground">Efectivo y Banco para empezar</p>
         </div>
-        <button class="btn btn-primary" style="width:100%" onclick={createDefaultAccount}>
-          Crear cuentas por defecto
-        </button>
-        <button class="btn btn-cancel" style="width:100%;margin-top:8px" onclick={() => { showOnboard = false; onboardStep = 0; }}>
-          Saltar por ahora
-        </button>
       </div>
+      <Button class="w-full" onclick={createDefaultAccount}>Crear cuentas por defecto</Button>
+      <Button variant="ghost" class="w-full mt-2" onclick={() => { showOnboard = false; onboardStep = 0; }}>
+        Saltar por ahora
+      </Button>
     {:else if onboardStep === 2}
-      <div style="margin-top:16px">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-          <span class="step-num">2</span>
-          <div>
-            <strong style="font-size:0.95rem">Crear categorías</strong>
-            <p class="meta" style="margin:0">Alimentación, Transporte y Salario</p>
-          </div>
+      <div class="flex items-start gap-3 mb-4">
+        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">2</span>
+        <div>
+          <p class="font-semibold">Crear categorías</p>
+          <p class="text-sm text-muted-foreground">Alimentación, Transporte y Salario</p>
         </div>
-        <button class="btn btn-primary" style="width:100%" onclick={createDefaultCategories}>
-          Crear categorías por defecto
-        </button>
-        <button class="btn btn-cancel" style="width:100%;margin-top:8px" onclick={() => { showOnboard = false; onboardStep = 0; }}>
-          Configurar manualmente
-        </button>
       </div>
+      <Button class="w-full" onclick={createDefaultCategories}>Crear categorías por defecto</Button>
+      <Button variant="ghost" class="w-full mt-2" onclick={() => { showOnboard = false; onboardStep = 0; }}>
+        Configurar manualmente
+      </Button>
     {/if}
-  </div>
+  </Card>
 {/if}
 
-<div class="month-nav">
-  <button class="icon-btn" onclick={() => shift(-1)} aria-label={i18n.t('common.prevMonth')}><ChevronLeft size={20} /></button>
-  <button class="month-label" onclick={today} title={i18n.t('common.goToday')}>{monthLabel(year, month)}</button>
-  <button class="icon-btn" onclick={() => shift(1)} aria-label={i18n.t('common.nextMonth')}><ChevronRight size={20} /></button>
+<div class="flex items-center justify-between bg-card rounded-lg border p-2 mb-4">
+  <Button variant="ghost" size="icon" onclick={() => shift(-1)} aria-label={i18n.t('common.prevMonth')}>
+    <ChevronLeft class="h-5 w-5" />
+  </Button>
+  <button class="text-sm font-bold" onclick={today} title={i18n.t('common.goToday')}>
+    {monthLabel(year, month)}
+  </button>
+  <Button variant="ghost" size="icon" onclick={() => shift(1)} aria-label={i18n.t('common.nextMonth')}>
+    <ChevronRight class="h-5 w-5" />
+  </Button>
 </div>
 
-<div class="card balance-hero">
-  <div class="balance-eyebrow">{i18n.t('summary.balance')}</div>
-  <div class="balance-amount" class:negative={S.summary.balance < 0} aria-label={`${i18n.t('summary.balance')}: ${money(S.summary.balance)}`}>{signed(S.summary.balance)}</div>
+<Card class="p-6 mb-4 bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
+  <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{i18n.t('summary.balance')}</p>
+  <p class="text-3xl font-extrabold" class:text-destructive={S.summary.balance < 0} class:text-green-500={S.summary.balance >= 0}>
+    {signed(S.summary.balance)}
+  </p>
   {#if delta != null}
-    <div class="balance-delta" class:positive={delta > 0} class:negative={delta < 0}>
+    <p class="text-sm font-bold mt-1" class:text-green-500={delta > 0} class:text-destructive={delta < 0}>
       {delta >= 0 ? '↑' : '↓'} {signed(Math.abs(delta))} {i18n.t('summary.vsLastMonth')}
-    </div>
+    </p>
   {/if}
+</Card>
+
+<div class="grid grid-cols-2 gap-3 mb-4">
+  <Card class="p-4">
+    <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{i18n.t('summary.income')}</p>
+    <p class="text-lg font-bold text-green-500">{signed(S.summary.income)}</p>
+  </Card>
+  <Card class="p-4">
+    <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{i18n.t('summary.expense')}</p>
+    <p class="text-lg font-bold text-destructive">{money(S.summary.expense)}</p>
+  </Card>
 </div>
 
-<div class="summary-secondary">
-  <div class="card stat-card">
-    <div class="stat-label">{i18n.t('summary.income')}</div>
-    <div class="stat-value positive" aria-label={`${i18n.t('summary.income')}: ${money(S.summary.income)}`}>{signed(S.summary.income)}</div>
-  </div>
-  <div class="card stat-card">
-    <div class="stat-label">{i18n.t('summary.expense')}</div>
-    <div class="stat-value negative" aria-label={`${i18n.t('summary.expense')}: ${money(S.summary.expense)}`}>{money(S.summary.expense)}</div>
-  </div>
-</div>
-
-<div class="card list-card">
+<Card class="overflow-hidden">
   {#if loading}
-    <p class="meta" style="padding:24px;text-align:center">{i18n.t('common.loading')}</p>
+    <p class="text-sm text-muted-foreground py-8 text-center">{i18n.t('common.loading')}</p>
   {:else if grouped().length === 0}
-    <div class="empty">
-      <p class="meta">{i18n.t('expenses.empty')}</p>
-      <button class="btn btn-primary" onclick={() => (showModal = true)}>{i18n.t('expenses.newExpense')}</button>
+    <div class="flex flex-col items-center gap-3 py-8">
+      <p class="text-sm text-muted-foreground">{i18n.t('expenses.empty')}</p>
+      <Button onclick={() => (showModal = true)}>{i18n.t('expenses.newExpense')}</Button>
     </div>
   {:else}
     {#each grouped as g (g.date)}
-      <div class="day-group">
-        <div class="day-head">
-          <span>{toDisplay(g.date)}</span>
-          <span class="day-total" class:negative={g.total < 0}>{signed(g.total)}</span>
+      <div class="border-t first:border-t-0">
+        <div class="flex justify-between items-center px-4 py-2 bg-muted/50">
+          <span class="text-xs font-bold text-muted-foreground uppercase">{toDisplay(g.date)}</span>
+          <span class="text-xs font-bold" class:text-green-500={g.total >= 0} class:text-destructive={g.total < 0}>
+            {signed(g.total)}
+          </span>
         </div>
         {#each g.rows as e (e.expense_id)}
-          <a class="row" href={`/expense/${e.expense_id}`}>
-            <div class="cat-dot" style="background:{colorOf(catOf(e.category_id))}"></div>
-            <div class="row-body">
-              <div class="row-title">{e.description}</div>
-              <div class="row-sub">
+          <a class="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors border-t first:border-t-0" href={`/expense/${e.expense_id}`}>
+            <div class="h-2.5 w-2.5 rounded-sm" style="background:{colorOf(catOf(e.category_id))}"></div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold truncate">{e.description}</p>
+              <p class="text-xs text-muted-foreground flex gap-1.5 items-center flex-wrap">
                 {#if e.transfer_pair_id}
-                  <span class="tag mini">{i18n.t('common.transfer')}</span>
+                  <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{i18n.t('common.transfer')}</span>
                 {/if}
                 {#if catOf(e.category_id)}
                   <span>{catOf(e.category_id).name}</span>
                 {/if}
                 {#each e.tags || [] as tg (tg.tag_id)}
-                  <span class="tag mini">{tg.name}</span>
+                  <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{tg.name}</span>
                 {/each}
-              </div>
+              </p>
             </div>
-            <div class="row-amount" class:negative={e.type === 'expense'} class:positive={e.type === 'income'}>
+            <p class="text-sm font-bold" class:text-green-500={e.type === 'income'} class:text-destructive={e.type === 'expense'}>
               {signed(e.type === 'expense' ? -e.amount : e.amount)}
-            </div>
+            </p>
           </a>
         {/each}
       </div>
     {/each}
   {/if}
-</div>
+</Card>
 
 {#if showModal}
-  <ExpenseModal onClose={() => (showModal = false)} />
+  <ExpenseModal bind:open={showModal} onClose={() => (showModal = false)} />
 {/if}
 
-<button class="fab" onclick={() => (showModal = true)} aria-label={i18n.t('expenses.newExpense')}>+</button>
+<Button
+  size="icon"
+  class="fixed right-5 bottom-20 h-14 w-14 rounded-2xl shadow-lg z-40"
+  onclick={() => (showModal = true)}
+  aria-label={i18n.t('expenses.newExpense')}
+>
+  <Plus class="h-6 w-6" />
+</Button>
