@@ -72,6 +72,7 @@ func (a *App) Handler(cfg config.Config) http.Handler {
 
 		// Personas y préstamos.
 		pr.Get("/api/persons", a.handleListPersons)
+		pr.Post("/api/persons", a.handleCreatePerson)
 		pr.Delete("/api/persons/{id}", a.handleDeletePerson)
 		pr.Get("/api/persons/{id}/loans", a.handlePersonLoans)
 

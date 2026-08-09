@@ -15,6 +15,42 @@ import (
 
 // ── Personas ──────────────────────────────────────────────────────────────────
 
+// handleCreatePerson crea una persona (port createPerson).
+func (a *App) handleCreatePerson(w http.ResponseWriter, r *http.Request) {
+	var row map[string]any
+	if !readJSON(w, r, &row) {
+		return
+	}
+	name, _ := row["name"].(string)
+	if name == "" {
+		writeErr(w, http.StatusBadRequest, "name requerido")
+		return
+	}
+	uid := auth.ContextUser(r.Context())
+	personID, _ := row["person_id"].(string)
+	if personID == "" {
+		personID = svc.GenID("per")
+	}
+	notes, _ := row["notes"].(string)
+	ts := time.Now().UnixMilli()
+	_, err := a.Store.Pool().Exec(r.Context(),
+		`INSERT INTO person (user_id, person_id, name, notes, updated_at, deleted)
+		 VALUES ($1, $2, $3, $4, $5, 0)
+		 ON CONFLICT (user_id, person_id) DO UPDATE SET name=$3, notes=$4, updated_at=$5, deleted=0`,
+		uid, personID, name, notes, ts)
+	if err != nil {
+		writeServerError(w, r, "error al crear persona", err)
+		return
+	}
+	writeJSON(w, http.StatusOK, model.PersonWithTotal{
+		PersonID:     personID,
+		Name:         name,
+		Notes:        &notes,
+		TotalLoaned:  0,
+		TotalPending: 0,
+	})
+}
+
 // handleListPersons lista personas con lo prestado y lo pendiente (port getPersons).
 func (a *App) handleListPersons(w http.ResponseWriter, r *http.Request) {
 	uid := auth.ContextUser(r.Context())
