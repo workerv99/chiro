@@ -18,20 +18,15 @@ import (
 const maxNameLen = 200
 const maxNotesLen = 1000
 
-type personInput struct {
-	PersonID string  `json:"person_id"`
-	Name     string  `json:"name"`
-	Notes    *string `json:"notes"`
-}
-
-func (p *personInput) validate() error {
-	if p.Name == "" {
+func validatePersonFields(row map[string]any) error {
+	name, _ := row["name"].(string)
+	if name == "" {
 		return errRequired("name")
 	}
-	if len(p.Name) > maxNameLen {
+	if len(name) > maxNameLen {
 		return errTooLong("name", maxNameLen)
 	}
-	if p.Notes != nil && len(*p.Notes) > maxNotesLen {
+	if notes, ok := row["notes"].(string); ok && len(notes) > maxNotesLen {
 		return errTooLong("notes", maxNotesLen)
 	}
 	return nil
@@ -39,39 +34,38 @@ func (p *personInput) validate() error {
 
 // handleCreatePerson crea una persona (port createPerson).
 func (a *App) handleCreatePerson(w http.ResponseWriter, r *http.Request) {
-	var in personInput
-	if !readJSON(w, r, &in) {
+	var row map[string]any
+	if !readJSON(w, r, &row) {
 		return
 	}
-	if err := in.validate(); err != nil {
+	if err := validatePersonFields(row); err != nil {
 		writeErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	uid := auth.ContextUser(r.Context())
-	if in.PersonID == "" {
-		in.PersonID = svc.GenID("per")
+	personID, _ := row["person_id"].(string)
+	if personID == "" {
+		personID = svc.GenID("per")
 	}
-	if len(in.PersonID) > 100 {
+	if len(personID) > 100 {
 		writeErr(w, http.StatusBadRequest, "person_id demasiado largo")
 		return
 	}
+	name, _ := row["name"].(string)
+	notes, _ := row["notes"].(string)
 	ts := time.Now().UnixMilli()
 	_, err := a.Store.Pool().Exec(r.Context(),
 		`INSERT INTO person (user_id, person_id, name, notes, updated_at, deleted)
 		 VALUES ($1, $2, $3, $4, $5, 0)
 		 ON CONFLICT (user_id, person_id) DO UPDATE SET name=$3, notes=$4, updated_at=$5, deleted=0`,
-		uid, in.PersonID, in.Name, in.Notes, ts)
+		uid, personID, name, notes, ts)
 	if err != nil {
 		writeServerError(w, r, "error al crear persona", err)
 		return
 	}
-	notes := ""
-	if in.Notes != nil {
-		notes = *in.Notes
-	}
 	writeJSON(w, http.StatusOK, model.PersonWithTotal{
-		PersonID:     in.PersonID,
-		Name:         in.Name,
+		PersonID:     personID,
+		Name:         name,
 		Notes:        &notes,
 		TotalLoaned:  0,
 		TotalPending: 0,
@@ -80,21 +74,23 @@ func (a *App) handleCreatePerson(w http.ResponseWriter, r *http.Request) {
 
 // handleUpdatePerson actualiza una persona (port updatePerson).
 func (a *App) handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
-	var in personInput
-	if !readJSON(w, r, &in) {
+	var row map[string]any
+	if !readJSON(w, r, &row) {
 		return
 	}
-	if err := in.validate(); err != nil {
+	if err := validatePersonFields(row); err != nil {
 		writeErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	uid := auth.ContextUser(r.Context())
 	personID := chi.URLParam(r, "id")
+	name, _ := row["name"].(string)
+	notes, _ := row["notes"].(string)
 	ts := time.Now().UnixMilli()
 	res, err := a.Store.Pool().Exec(r.Context(),
 		`UPDATE person SET name=$3, notes=$4, updated_at=$5
 		 WHERE user_id=$1 AND person_id=$2 AND deleted=0`,
-		uid, personID, in.Name, in.Notes, ts)
+		uid, personID, name, notes, ts)
 	if err != nil {
 		writeServerError(w, r, "error al actualizar persona", err)
 		return
@@ -103,13 +99,9 @@ func (a *App) handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusNotFound, "persona no encontrada")
 		return
 	}
-	notes := ""
-	if in.Notes != nil {
-		notes = *in.Notes
-	}
 	writeJSON(w, http.StatusOK, model.PersonWithTotal{
 		PersonID:     personID,
-		Name:         in.Name,
+		Name:         name,
 		Notes:        &notes,
 		TotalLoaned:  0,
 		TotalPending: 0,
