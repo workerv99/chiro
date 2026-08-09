@@ -45,7 +45,6 @@
     const p = parseFloat(amount);
     if (!personId) return (err = i18n.t('loans.personRequired'));
     if (!p || p <= 0) return (err = i18n.t('loans.amountRequired'));
-    if (!description.trim()) return (err = i18n.t('common.required'));
     const n = parseInt(months, 10);
     if (!n || n <= 0) return (err = i18n.t('loans.installmentsRequired'));
     const custom = parseFloat(customInstallment) || 0;

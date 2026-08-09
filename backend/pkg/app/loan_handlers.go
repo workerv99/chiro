@@ -264,9 +264,12 @@ func (a *App) handleCreateLoan(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &in) {
 		return
 	}
-	if in.Description == "" || in.Amount <= 0 || in.PersonID == "" {
-		writeErr(w, http.StatusBadRequest, "description, amount y person_id requeridos")
+	if in.Amount <= 0 || in.PersonID == "" {
+		writeErr(w, http.StatusBadRequest, "amount y person_id requeridos")
 		return
+	}
+	if in.Description == "" {
+		in.Description = "Préstamo"
 	}
 	// Validaciones de campos.
 	if err := svc.ValidateAmountPositive(in.Amount); err != nil {
