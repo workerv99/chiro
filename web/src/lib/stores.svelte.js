@@ -230,21 +230,6 @@ export async function unpayInstallment(id) {
 }
 
 // ── Personas ──────────────────────────────────────────────────────────────────
-export function genId(prefix) {
-  return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
-}
-
-// La API no expone POST/PUT de personas; se crean/editan vía /api/sync.
-export async function savePerson(row) {
-  if (!row.person_id) row.person_id = genId('per');
-  await api('/api/sync', {
-    method: 'POST',
-    body: { tables: { person: [{ ...row, deleted: 0 }] }, since: 0 }
-  });
-  const data = await api('/api/persons');
-  S.db.persons = data ?? [];
-  return row;
-}
 
 // ── Facturas recurrentes ──────────────────────────────────────────────────────
 export async function payBill(id) {

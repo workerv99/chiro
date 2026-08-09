@@ -1,7 +1,7 @@
 <script>
   import { goto } from '$app/navigation';
   import { i18n } from '$lib/i18n.svelte.js';
-  import { S, logout, create, update, remove, savePerson, payBill, skipBill, dueBills, activatePro, fetchSubscription, deleteAccount, exportData } from '$lib/stores.svelte.js';
+  import { S, logout, create, update, remove, payBill, skipBill, dueBills, activatePro, fetchSubscription, deleteAccount, exportData } from '$lib/stores.svelte.js';
   import { toDisplay, todayISO, money } from '$lib/format.js';
   import UndoToast from '$lib/components/UndoToast.svelte';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
