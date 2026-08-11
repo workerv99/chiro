@@ -87,6 +87,7 @@ func (a *App) Handler(cfg config.Config) http.Handler {
 		pr.Post("/api/installments/{id}/pay", a.handlePayInstallment)
 		pr.Post("/api/installments/{id}/cascade", a.handleCascadeInstallment)
 		pr.Post("/api/installments/{id}/unpay", a.handleUnpayInstallment)
+		pr.Put("/api/installments/{id}", a.handleUpdateInstallment)
 
 		// Facturas recurrentes.
 		pr.Get("/api/bills/due", a.handleDueBills)

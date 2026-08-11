@@ -56,6 +56,12 @@ const devJWTSecret = "dev-only-secret-change-me"
 //   - Supabase pooler:   postgresql://postgres.[ref]:[pw]@aws-0-[region].pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true
 // pgxpool parsea la URL y respeta sslmode/connect_timeout/etc.
 func Load(requireSecret bool) (Config, error) {
+	if envBool("REQUIRE_SECRET", requireSecret) {
+		requireSecret = true
+	} else {
+		requireSecret = false
+	}
+
 	secret := env("JWT_SECRET", "")
 	if requireSecret && (secret == "" || secret == devJWTSecret) {
 		return Config{}, errors.New("JWT_SECRET requerido y no puede ser el default 'dev-only-secret-change-me'")

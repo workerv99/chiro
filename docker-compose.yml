@@ -17,5 +17,27 @@ services:
       timeout: 3s
       retries: 10
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: chiro-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://chiro:chiro@db:5432/chiro?sslmode=disable
+      JWT_SECRET: dev-secret-local-1234
+      REQUIRE_SECRET: "false"
+      PORT: "8080"
+      CORS_ORIGINS: http://localhost:5173,http://localhost:4173
+      WEB_DIST: /app/web/build
+    volumes:
+      - ./backend:/src
+      - /src/tmp
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   chiro_pgdata:

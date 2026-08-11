@@ -33,7 +33,8 @@ const TABLE_PATHS = {
   budgets: '/api/budgets',
   piggy: '/api/piggy',
   bills: '/api/bills',
-  tags: '/api/tags'
+  tags: '/api/tags',
+  loans: '/api/loans'
 };
 
 const PK = {
@@ -227,6 +228,10 @@ export async function cascadeInstallment(id, { amount, date }) {
 
 export async function unpayInstallment(id) {
   return api(`/api/installments/${id}/unpay`, { method: 'POST' });
+}
+
+export async function updateInstallment(id, row) {
+  return api(`/api/installments/${id}`, { method: 'PUT', body: row });
 }
 
 // ── Personas ──────────────────────────────────────────────────────────────────

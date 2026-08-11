@@ -3,29 +3,28 @@
 -- Multi-tenant: cada FK incluye user_id para aislamiento.
 
 -- ── Limpiar huérfanos antes de crear constraints ───────────────────────────────
+-- Se usan DELETEs porque VALIDATE CONSTRAINT revisa TODAS las filas (incluyendo
+-- soft-deleted). Un soft-delete no resuelve la violación de FK.
 
--- installments sin loan vivo
-UPDATE installment SET deleted = 1, updated_at = EXTRACT(EPOCH FROM now())::bigint * 1000
-WHERE installment_id IN (
-  SELECT i.installment_id FROM installment i
-  LEFT JOIN loan l ON l.user_id = i.user_id AND l.loan_id = i.loan_id
-  WHERE i.deleted = 0 AND (l.loan_id IS NULL OR l.deleted = 1)
+-- installments sin loan vivo (o loan eliminado)
+DELETE FROM installment i
+WHERE NOT EXISTS (
+  SELECT 1 FROM loan l
+  WHERE l.user_id = i.user_id AND l.loan_id = i.loan_id AND l.deleted = 0
 );
 
--- payments sin loan vivo
-UPDATE payment SET deleted = 1, updated_at = EXTRACT(EPOCH FROM now())::bigint * 1000
-WHERE payment_id IN (
-  SELECT p.payment_id FROM payment p
-  LEFT JOIN loan l ON l.user_id = p.user_id AND l.loan_id = p.loan_id
-  WHERE p.deleted = 0 AND (l.loan_id IS NULL OR l.deleted = 1)
+-- payments sin loan vivo (o loan eliminado)
+DELETE FROM payment p
+WHERE NOT EXISTS (
+  SELECT 1 FROM loan l
+  WHERE l.user_id = p.user_id AND l.loan_id = p.loan_id AND l.deleted = 0
 );
 
--- loans sin person vivo
-UPDATE loan SET deleted = 1, updated_at = EXTRACT(EPOCH FROM now())::bigint * 1000
-WHERE loan_id IN (
-  SELECT l.loan_id FROM loan l
-  LEFT JOIN person p ON p.user_id = l.user_id AND p.person_id = l.person_id
-  WHERE l.deleted = 0 AND (p.person_id IS NULL OR p.deleted = 1)
+-- loans sin person vivo (o person eliminada)
+DELETE FROM loan l
+WHERE NOT EXISTS (
+  SELECT 1 FROM person p
+  WHERE p.user_id = l.user_id AND p.person_id = l.person_id AND p.deleted = 0
 );
 
 -- expenses sin category vivo (setear category_id = NULL en vez de borrar)
@@ -57,18 +56,16 @@ WHERE account_id IS NOT NULL AND deleted = 0
   );
 
 -- expense_tags sin expense vivo
-UPDATE expense_tag SET deleted = 1, updated_at = EXTRACT(EPOCH FROM now())::bigint * 1000
-WHERE deleted = 0
-  AND NOT EXISTS (
-    SELECT 1 FROM expense e WHERE e.user_id = expense_tag.user_id AND e.expense_id = expense_tag.expense_id AND e.deleted = 0
-  );
+DELETE FROM expense_tag et
+WHERE NOT EXISTS (
+  SELECT 1 FROM expense e WHERE e.user_id = et.user_id AND e.expense_id = et.expense_id AND e.deleted = 0
+);
 
 -- expense_tags sin tag vivo
-UPDATE expense_tag SET deleted = 1, updated_at = EXTRACT(EPOCH FROM now())::bigint * 1000
-WHERE deleted = 0
-  AND NOT EXISTS (
-    SELECT 1 FROM tag t WHERE t.user_id = expense_tag.user_id AND t.tag_id = expense_tag.tag_id AND t.deleted = 0
-  );
+DELETE FROM expense_tag et
+WHERE NOT EXISTS (
+  SELECT 1 FROM tag t WHERE t.user_id = et.user_id AND t.tag_id = et.tag_id AND t.deleted = 0
+);
 
 -- ── Foreign Keys ───────────────────────────────────────────────────────────────
 

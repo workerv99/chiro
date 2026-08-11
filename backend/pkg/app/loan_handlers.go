@@ -218,7 +218,7 @@ func (a *App) handleListLoans(w http.ResponseWriter, r *http.Request) {
 	sql := `SELECT l.loan_id, l.person_id, COALESCE(p.name,'') AS person_name, l.description, l.amount, to_char(l.date,'YYYY-MM-DD'),
 	               l.is_paid, l.interest_rate, l.interest_type, l.months, l.frequency, to_char(l.first_due_date,'YYYY-MM-DD'),
 	               COALESCE(inst_agg.total_paid, 0) AS total_paid,
-	               CAST(l.amount + l.amount * COALESCE(l.interest_rate,0)/100.0 AS float8) AS total_interest,
+	               CAST(l.amount * COALESCE(l.interest_rate,0)/100.0 AS float8) AS total_interest,
 	               CAST(l.amount + l.amount * COALESCE(l.interest_rate,0)/100.0 AS float8) AS total_amount
 	        FROM loan l
 	        LEFT JOIN person p ON p.user_id = l.user_id AND p.person_id = l.person_id
@@ -497,6 +497,56 @@ func (a *App) handleLoanInstallments(w http.ResponseWriter, r *http.Request) {
 type payReq struct {
 	Amount float64 `json:"amount"`
 	Date   string  `json:"date"`
+}
+
+type updateInstallmentReq struct {
+	DueDate    string   `json:"due_date"`
+	Amount     float64  `json:"amount"`
+	PaidDate   *string  `json:"paid_date"`
+	PaidAmount *float64 `json:"paid_amount"`
+}
+
+func (a *App) handleUpdateInstallment(w http.ResponseWriter, r *http.Request) {
+	uid := auth.ContextUser(r.Context())
+	id := chi.URLParam(r, "id")
+	var in updateInstallmentReq
+	if !readJSON(w, r, &in) {
+		return
+	}
+	if in.DueDate != "" {
+		if err := svc.ValidateDate(in.DueDate); err != nil {
+			writeErr(w, http.StatusBadRequest, "fecha de vencimiento: "+err.Error())
+			return
+		}
+	}
+	if in.PaidDate != nil && *in.PaidDate != "" {
+		if err := svc.ValidateDate(*in.PaidDate); err != nil {
+			writeErr(w, http.StatusBadRequest, "fecha de pago: "+err.Error())
+			return
+		}
+	}
+	err := a.Store.ExecAll(r.Context(), func(tx pgx.Tx) error {
+		res, err := tx.Exec(r.Context(),
+			`UPDATE installment SET due_date=$3, amount=$4, paid_date=$5, paid_amount=$6, updated_at=$7
+			 WHERE user_id=$1 AND installment_id=$2 AND deleted=0`,
+			uid, id, in.DueDate, in.Amount, in.PaidDate, in.PaidAmount, time.Now().UnixMilli())
+		if err != nil {
+			return err
+		}
+		if res.RowsAffected() == 0 {
+			return errNotFound
+		}
+		return nil
+	})
+	if err != nil {
+		if err == errNotFound {
+			writeErr(w, http.StatusNotFound, "cuota no encontrada")
+			return
+		}
+		writeServerError(w, r, "error interno del servidor", err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
 func (a *App) handlePayInstallment(w http.ResponseWriter, r *http.Request) {

@@ -3,7 +3,7 @@
   import { goto } from '$app/navigation';
   import { i18n } from '$lib/i18n.svelte.js';
   import { api } from '$lib/api.svelte.js';
-  import { payInstallment, cascadeInstallment, unpayInstallment, remove, updateLoan } from '$lib/stores.svelte.js';
+  import { payInstallment, cascadeInstallment, unpayInstallment, remove, updateLoan, updateInstallment } from '$lib/stores.svelte.js';
   import { money, toDisplay, toISO, todayISO } from '$lib/format.js';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
   import Button from '$lib/components/ui/button.svelte';
@@ -38,6 +38,19 @@
   let editDueDay = $state('');
   let editDueMonth = $state('');
   let editDueYear = $state('');
+
+  let showEditInstallment = $state(false);
+  let editingInstallment = $state(null);
+  let installmentForm = $state({
+    due_date: '', amount: '', paid_date: '', paid_amount: ''
+  });
+  let instDay = $state('');
+  let instMonth = $state('');
+  let instYear = $state('');
+  let instPaidDay = $state('');
+  let instPaidMonth = $state('');
+  let instPaidYear = $state('');
+  let instErr = $state('');
 
   async function load() {
     const [loans, s] = await Promise.all([api('/api/loans'), api(`/api/loans/${loanId}/installments`)]);
@@ -88,6 +101,53 @@
       showEdit = false;
       await load();
     } catch (e) { editErr = e.message; }
+  }
+
+  function openEditInstallment(inst) {
+    editingInstallment = inst;
+    const d = new Date(inst.due_date);
+    instDay = String(d.getDate()).padStart(2, '0');
+    instMonth = String(d.getMonth() + 1).padStart(2, '0');
+    instYear = String(d.getFullYear());
+    if (inst.paid_date) {
+      const pd = new Date(inst.paid_date);
+      instPaidDay = String(pd.getDate()).padStart(2, '0');
+      instPaidMonth = String(pd.getMonth() + 1).padStart(2, '0');
+      instPaidYear = String(pd.getFullYear());
+    } else {
+      instPaidDay = '';
+      instPaidMonth = '';
+      instPaidYear = '';
+    }
+    installmentForm = {
+      due_date: inst.due_date,
+      amount: String(inst.amount),
+      paid_date: inst.paid_date || '',
+      paid_amount: String(inst.paid_amount || 0)
+    };
+    instErr = '';
+    showEditInstallment = true;
+  }
+
+  async function saveInstallment() {
+    instErr = '';
+    if (!instDay || !instMonth || !instYear) return (instErr = 'Fecha de vencimiento requerida');
+    const dueDateStr = `${instYear}-${instMonth}-${instDay}`;
+    const amt = parseFloat(installmentForm.amount);
+    if (!amt || amt <= 0) return (instErr = 'Monto inválido');
+    let paidDateStr = null;
+    if (instPaidDay && instPaidMonth && instPaidYear) paidDateStr = `${instPaidYear}-${instPaidMonth}-${instPaidDay}`;
+    const paidAmt = parseFloat(installmentForm.paid_amount) || 0;
+    try {
+      await updateInstallment(editingInstallment.installment_id, {
+        due_date: dueDateStr,
+        amount: amt,
+        paid_date: paidDateStr,
+        paid_amount: paidAmt
+      });
+      showEditInstallment = false;
+      await load();
+    } catch (e) { instErr = e.message; }
   }
 
   $effect(() => { loading = true; load().finally(() => (loading = false)); });
@@ -195,11 +255,11 @@
     doc.line(m, y, pw - m, y);
     y += 8;
 
-    const interestAmount = (loan.total_amount * (loan.interest_rate || 0)) / 100;
+    const interestAmount = loan.total_interest || (loan.amount * (loan.interest_rate || 0)) / 100;
     const cards = [
-      { label: 'CAPITAL', value: `$${loan.total_amount.toFixed(2)}` },
+      { label: 'CAPITAL', value: `$${loan.amount.toFixed(2)}` },
       { label: 'INTERES', value: `$${interestAmount.toFixed(2)}`, sub: `${loan.interest_rate || 0}%` },
-      { label: 'TOTAL', value: `$${(loan.total_amount + interestAmount).toFixed(2)}` },
+      { label: 'TOTAL', value: `$${(loan.amount + interestAmount).toFixed(2)}` },
       { label: 'SALDO', value: `$${remaining.toFixed(2)}`, color: remaining > 0 ? [239, 68, 68] : [34, 197, 94] }
     ];
 
@@ -396,6 +456,9 @@
             {:else}<span class="text-muted-foreground">Pendiente</span>{/if}
           </p>
         </div>
+        <button class="p-1 hover:bg-muted rounded" onclick={() => openEditInstallment(s)}>
+          <Edit class="h-4 w-4 text-muted-foreground" />
+        </button>
       </div>
     {/each}
   </Card>
@@ -417,6 +480,28 @@
         <option value="monthly">Mensual</option><option value="biweekly">Quincenal</option><option value="weekly">Semanal</option>
       </select>
     </div>
+    <div class="space-y-2"><Label>Fecha de ejecución</Label>
+      <div class="grid grid-cols-3 gap-2">
+        <div><Label class="text-xs">DD</Label><Input bind:value={editDay} placeholder="DD" maxlength="2" /></div>
+        <div><Label class="text-xs">MM</Label><Input bind:value={editMonth} placeholder="MM" maxlength="2" /></div>
+        <div><Label class="text-xs">AAAA</Label><Input bind:value={editYear} placeholder="AAAA" maxlength="4" /></div>
+      </div>
+    </div>
+    <div class="space-y-2"><Label>Primera cuota</Label>
+      <div class="grid grid-cols-3 gap-2">
+        <div><Label class="text-xs">DD</Label><Input bind:value={editDueDay} placeholder="DD" maxlength="2" /></div>
+        <div><Label class="text-xs">MM</Label><Input bind:value={editDueMonth} placeholder="MM" maxlength="2" /></div>
+        <div><Label class="text-xs">AAAA</Label><Input bind:value={editDueYear} placeholder="AAAA" maxlength="4" /></div>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div class="space-y-2"><Label>Interés %</Label><Input bind:value={editForm.interest_rate} inputmode="decimal" /></div>
+      <div class="space-y-2"><Label>Tipo de interés</Label>
+        <select bind:value={editForm.interest_type} class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+          <option value="simple">Simple</option><option value="compound">Compuesto</option>
+        </select>
+      </div>
+    </div>
     {#if editErr}<p class="text-sm text-destructive">{editErr}</p>{/if}
   </div>
   <DialogFooter>
@@ -432,3 +517,38 @@
 {#if confirmPay && pendingAction}
   <ConfirmSheet bind:open={() => confirmPay, (v) => confirmPay = v} title={pendingAction.type === 'cascade' ? 'Reestructurar' : 'Pagar'} message={`¿Confirmar pago de $${pendingAction.amount.toFixed(2)}?`} confirmLabel="Pagar" onConfirm={executeAction} onCancel={() => { confirmPay = false; pendingAction = null; }} />
 {/if}
+
+<Dialog bind:open={showEditInstallment}>
+  <DialogHeader><DialogTitle>Editar cuota #{editingInstallment?.number}</DialogTitle></DialogHeader>
+  <div class="space-y-4">
+    <div class="space-y-2">
+      <Label>Monto de la cuota</Label>
+      <Input bind:value={installmentForm.amount} inputmode="decimal" />
+    </div>
+    <div class="space-y-2">
+      <Label>Fecha de vencimiento</Label>
+      <div class="grid grid-cols-3 gap-2">
+        <div><Label class="text-xs">DD</Label><Input bind:value={instDay} placeholder="DD" maxlength="2" /></div>
+        <div><Label class="text-xs">MM</Label><Input bind:value={instMonth} placeholder="MM" maxlength="2" /></div>
+        <div><Label class="text-xs">AAAA</Label><Input bind:value={instYear} placeholder="AAAA" maxlength="4" /></div>
+      </div>
+    </div>
+    <div class="space-y-2">
+      <Label>Monto pagado</Label>
+      <Input bind:value={installmentForm.paid_amount} inputmode="decimal" />
+    </div>
+    <div class="space-y-2">
+      <Label>Fecha de pago (opcional)</Label>
+      <div class="grid grid-cols-3 gap-2">
+        <div><Label class="text-xs">DD</Label><Input bind:value={instPaidDay} placeholder="DD" maxlength="2" /></div>
+        <div><Label class="text-xs">MM</Label><Input bind:value={instPaidMonth} placeholder="MM" maxlength="2" /></div>
+        <div><Label class="text-xs">AAAA</Label><Input bind:value={instPaidYear} placeholder="AAAA" maxlength="4" /></div>
+      </div>
+    </div>
+    {#if instErr}<p class="text-sm text-destructive">{instErr}</p>{/if}
+  </div>
+  <DialogFooter>
+    <Button variant="outline" onclick={() => (showEditInstallment = false)}>Cancelar</Button>
+    <Button onclick={saveInstallment}>Guardar</Button>
+  </DialogFooter>
+</Dialog>
