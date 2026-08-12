@@ -172,11 +172,7 @@
     const target = nextPending;
     if (!target) return;
     confirmPay = false;
-    if (pendingAction.amount < target.amount) {
-      await cascadeInstallment(target.installment_id, { amount: pendingAction.amount, date: pendingAction.date });
-    } else {
-      await payInstallment(target.installment_id, { amount: pendingAction.amount, date: pendingAction.date });
-    }
+    await cascadeInstallment(target.installment_id, { amount: pendingAction.amount, date: pendingAction.date });
     pendingAction = null;
     await load();
   }
@@ -430,8 +426,8 @@
                 onclick={() => payType = 'normal'}
               >
                 <div class="flex-1">
-                  <span class="text-sm font-semibold block">Solo esta cuota</span>
-                  <span class="text-xs text-muted-foreground">Paga únicamente la cuota seleccionada</span>
+                  <span class="text-sm font-semibold block">Pago normal</span>
+                  <span class="text-xs text-muted-foreground">El excedente paga las siguientes cuotas</span>
                 </div>
                 {#if payType === 'normal'}
                   <div class="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
