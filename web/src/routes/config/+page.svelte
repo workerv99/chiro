@@ -137,7 +137,7 @@
 <svelte:head><title>{i18n.t('config.title')} · Chiro</title></svelte:head>
 
 <div class="flex items-center justify-between mb-4">
-  <h1 class="text-2xl font-bold">{i18n.t('config.title')}</h1>
+  <h1 class="text-xl md:text-2xl font-bold">{i18n.t('config.title')}</h1>
 </div>
 
 <div class="flex gap-2 overflow-x-auto mb-4 pb-2">
@@ -340,7 +340,7 @@
     <div class="w-full max-w-md bg-background border rounded-t-2xl sm:rounded-2xl p-6" onclick={(e) => e.stopPropagation()}>
       <h2 class="text-lg font-bold mb-4">Actualizar a Pro</h2>
       <div class="text-center py-4">
-        <p class="text-3xl font-extrabold text-primary mb-2">$4.99/mes</p>
+        <p class="text-2xl md:text-3xl font-extrabold text-primary mb-2">$4.99/mes</p>
         <p class="text-sm text-muted-foreground mb-6">Gastos, cuentas y préstamos ilimitados</p>
         <ul class="text-sm text-left space-y-2 mb-6">
           <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Gastos ilimitados por mes</li>

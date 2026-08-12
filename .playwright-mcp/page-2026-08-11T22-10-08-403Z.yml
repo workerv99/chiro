@@ -1,0 +1,46 @@
+- generic [ref=f24e2]:
+  - navigation [ref=f24e3]:
+    - generic [ref=f24e4]:
+      - generic [ref=f24e5]: C
+      - generic [ref=f24e6]: Chiro
+    - link "Expenses" [ref=f24e7] [cursor=pointer]:
+      - /url: /dashboard
+    - link "Stats" [ref=f24e8] [cursor=pointer]:
+      - /url: /stats
+    - link "Budgets" [ref=f24e9] [cursor=pointer]:
+      - /url: /budgets
+    - link "Loans" [ref=f24e10] [cursor=pointer]:
+      - /url: /loans
+    - link "Settings" [ref=f24e11] [cursor=pointer]:
+      - /url: /config
+    - button "Log out" [ref=f24e13]
+  - main [ref=f24e14]:
+    - link "← Loans" [ref=f24e94] [cursor=pointer]:
+      - /url: /loans
+    - heading "Jesica Juank" [level=1] [ref=f24e95]
+    - generic [ref=f24e96]:
+      - generic [ref=f24e97]:
+        - paragraph [ref=f24e98]: Remaining
+        - paragraph [ref=f24e99]: $187.68
+      - generic [ref=f24e100]:
+        - paragraph [ref=f24e101]: Paid
+        - paragraph [ref=f24e102]: $345.32
+      - generic [ref=f24e103]:
+        - paragraph [ref=f24e104]: Installments
+        - paragraph [ref=f24e105]: 1/2
+    - generic [ref=f24e106]:
+      - link [ref=f24e107] [cursor=pointer]:
+        - /url: /loans/loan_91a7e1508b0873ecdf23423d
+        - generic [ref=f24e109]:
+          - paragraph [ref=f24e110]: Credito de consumo
+          - paragraph [ref=f24e111]: "Installments: 6"
+        - paragraph [ref=f24e113]: $195.00
+      - link [ref=f24e114] [cursor=pointer]:
+        - /url: /loans/loan_0b322cf5-6bba-4f45-902d-632486750a5c
+        - generic [ref=f24e116]:
+          - paragraph [ref=f24e117]: Redmi Note 14 Pro
+          - paragraph [ref=f24e118]: "Installments: 9"
+        - generic [ref=f24e119]:
+          - paragraph [ref=f24e120]: ✓
+          - paragraph [ref=f24e121]: Paid
+  - generic [ref=f24e93]: Jesica Juank · Chiro

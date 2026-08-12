@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
 
   let showBanner = $state(false);
+  let showSettings = $state(false);
   let analyticsConsent = $state(false);
   let functionalConsent = $state(true);
 
@@ -18,11 +19,7 @@
     saveConsent();
   }
 
-  function acceptSelected() {
-    saveConsent();
-  }
-
-  function rejectAll() {
+  function acceptNecessary() {
     analyticsConsent = false;
     functionalConsent = true;
     saveConsent();
@@ -35,121 +32,37 @@
       timestamp: new Date().toISOString()
     }));
     showBanner = false;
+    showSettings = false;
   }
 </script>
 
 {#if showBanner}
-  <div class="cookie-banner">
-    <div class="cookie-content">
-      <div class="cookie-text">
-        <h3>Usamos cookies</h3>
-        <p>Utilizamos cookies para mejorar tu experiencia. Las cookies estrictamente necesarias son siempre activas. Puedes configurar las opcionales.</p>
-      </div>
-      <div class="cookie-actions">
-        <button class="btn btn-small" onclick={rejectAll}>Rechazar opcionales</button>
-        <button class="btn btn-small" onclick={acceptSelected}>Aceptar seleccionadas</button>
-        <button class="btn btn-small btn-primary" onclick={acceptAll}>Aceptar todas</button>
-      </div>
+  <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-48px)] max-w-2xl bg-card border border-border rounded-2xl p-5 shadow-lg sm:flex sm:items-center sm:justify-between sm:gap-5">
+    <p class="text-sm text-foreground mb-4 sm:mb-0 sm:flex-1">
+      We use cookies to ensure you get the best experience on our website.
+    </p>
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 sm:flex-shrink-0">
+      <button class="px-4 py-2.5 text-sm font-medium bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors" onclick={() => showSettings = !showSettings}>Settings</button>
+      <button class="px-4 py-2.5 text-sm font-medium text-secondary-foreground hover:opacity-70 transition-opacity" onclick={acceptNecessary}>Accept necessary</button>
+      <button class="px-5 py-2.5 text-sm font-medium bg-foreground text-background rounded-lg hover:opacity-90 transition-opacity" onclick={acceptAll}>Accept all</button>
     </div>
-    <div class="cookie-options">
-      <label class="cookie-option">
-        <input type="checkbox" checked disabled />
-        <span>Estrictamente necesarias (siempre activas)</span>
-      </label>
-      <label class="cookie-option">
-        <input type="checkbox" bind:checked={functionalConsent} />
-        <span>Funcionales (idioma, preferencias)</span>
-      </label>
-      <label class="cookie-option">
-        <input type="checkbox" bind:checked={analyticsConsent} />
-        <span>Analytics (estadísticas de uso)</span>
-      </label>
-    </div>
-    <a href="/legal/privacy" class="cookie-link" target="_blank">Más información</a>
+
+    {#if showSettings}
+      <div class="flex flex-col gap-3 mt-4 pt-4 border-t border-border sm:flex-row sm:items-center sm:mt-4 sm:pt-4">
+        <label class="flex items-center gap-2 text-xs text-secondary-foreground cursor-pointer">
+          <input type="checkbox" checked disabled class="w-4 h-4 accent-primary" />
+          <span>Necessary</span>
+        </label>
+        <label class="flex items-center gap-2 text-xs text-secondary-foreground cursor-pointer">
+          <input type="checkbox" bind:checked={functionalConsent} class="w-4 h-4 accent-primary" />
+          <span>Functional</span>
+        </label>
+        <label class="flex items-center gap-2 text-xs text-secondary-foreground cursor-pointer">
+          <input type="checkbox" bind:checked={analyticsConsent} class="w-4 h-4 accent-primary" />
+          <span>Analytics</span>
+        </label>
+        <button class="sm:ml-auto px-4 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors" onclick={saveConsent}>Save preferences</button>
+      </div>
+    {/if}
   </div>
 {/if}
-
-<style>
-  .cookie-banner {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    padding: 16px 24px;
-    z-index: 100;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-  }
-
-  .cookie-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    max-width: 960px;
-    margin: 0 auto;
-  }
-
-  .cookie-text h3 {
-    font-size: 0.95rem;
-    font-weight: 700;
-    margin-bottom: 4px;
-  }
-
-  .cookie-text p {
-    color: var(--ink-dim);
-    font-size: 0.82rem;
-    margin: 0;
-  }
-
-  .cookie-actions {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
-  .cookie-options {
-    display: flex;
-    gap: 16px;
-    max-width: 960px;
-    margin: 12px auto 0;
-    padding-top: 12px;
-    border-top: 1px solid var(--border);
-  }
-
-  .cookie-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.78rem;
-    color: var(--ink-dim);
-    cursor: pointer;
-  }
-
-  .cookie-option input {
-    width: 14px;
-    height: 14px;
-    accent-color: var(--indigo);
-  }
-
-  .cookie-link {
-    display: block;
-    text-align: center;
-    color: var(--indigo);
-    font-size: 0.75rem;
-    margin-top: 8px;
-    text-decoration: underline;
-  }
-
-  @media (max-width: 640px) {
-    .cookie-content {
-      flex-direction: column;
-      text-align: center;
-    }
-    .cookie-options {
-      flex-direction: column;
-      align-items: center;
-    }
-  }
-</style>

@@ -4,12 +4,12 @@
 
 <svelte:head><title>Política de Privacidad · Chiro</title></svelte:head>
 
-<div class="legal-page">
-  <a class="back-link" href="/">← Volver</a>
-  <h1 class="headline">Política de Privacidad</h1>
-  <p class="meta">Última actualización: 5 de agosto de 2026</p>
+<div class="max-w-3xl mx-auto px-4 py-8">
+  <a class="text-sm text-muted-foreground hover:text-foreground font-semibold mb-4 inline-block" href="/">← Volver</a>
+  <h1 class="text-xl md:text-2xl font-bold mb-2">Política de Privacidad</h1>
+  <p class="text-xs text-muted-foreground mb-8">Última actualización: 5 de agosto de 2026</p>
 
-  <div class="legal-content">
+  <div class="prose prose-sm max-w-none">
     <h2>1. Información que Recopilamos</h2>
     <p><strong>Información de cuenta:</strong> Nombre, dirección de email y contraseña (almacenada de forma hasheada).</p>
     <p><strong>Datos financieros:</strong> Ingresos, gastos, categorías, presupuestos, préstamos, cuotas, cuentas y transacciones que usted registra voluntariamente.</p>
@@ -18,18 +18,20 @@
 
     <h2>2. Base Legal del Procesamiento (GDPR)</h2>
     <p>Procesamos sus datos bajo las siguientes bases legales:</p>
-    <table>
-      <thead>
-        <tr><th>Actividad</th><th>Base Legal</th><th>Artículo GDPR</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Creación de cuenta</td><td>Ejecución de contrato</td><td>Art. 6(1)(b)</td></tr>
-        <tr><td>Procesamiento de datos financieros</td><td>Ejecución de contrato + consentimiento explícito</td><td>Art. 6(1)(b), Art. 9(2)(a)</td></tr>
-        <tr><td>Emails transaccionales</td><td>Ejecución de contrato</td><td>Art. 6(1)(b)</td></tr>
-        <tr><td>Mejora del servicio</td><td>Interés legítimo</td><td>Art. 6(1)(f)</td></tr>
-        <tr><td>Comunicaciones de marketing</td><td>Consentimiento</td><td>Art. 6(1)(a)</td></tr>
-      </tbody>
-    </table>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm border border-border">
+        <thead class="bg-muted">
+          <tr><th class="p-2 text-left">Actividad</th><th class="p-2 text-left">Base Legal</th><th class="p-2 text-left">Artículo GDPR</th></tr>
+        </thead>
+        <tbody>
+          <tr class="border-t border-border"><td class="p-2">Creación de cuenta</td><td class="p-2">Ejecución de contrato</td><td class="p-2">Art. 6(1)(b)</td></tr>
+          <tr class="border-t border-border"><td class="p-2">Procesamiento de datos financieros</td><td class="p-2">Ejecución de contrato + consentimiento explícito</td><td class="p-2">Art. 6(1)(b), Art. 9(2)(a)</td></tr>
+          <tr class="border-t border-border"><td class="p-2">Emails transaccionales</td><td class="p-2">Ejecución de contrato</td><td class="p-2">Art. 6(1)(b)</td></tr>
+          <tr class="border-t border-border"><td class="p-2">Mejora del servicio</td><td class="p-2">Interés legítimo</td><td class="p-2">Art. 6(1)(f)</td></tr>
+          <tr class="border-t border-border"><td class="p-2">Comunicaciones de marketing</td><td class="p-2">Consentimiento</td><td class="p-2">Art. 6(1)(a)</td></tr>
+        </tbody>
+      </table>
+    </div>
 
     <h2>3. Cómo Usamos su Información</h2>
     <ul>
@@ -43,16 +45,18 @@
 
     <h2>4. Divulgación a Terceros</h2>
     <p>Compartimos su información únicamente con los siguientes sub-procesadores:</p>
-    <table>
-      <thead>
-        <tr><th>Proveedor</th><th>Propósito</th><th>País</th><th>Protecciones</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Supabase</td><td>Base de datos</td><td>EE.UU.</td><td>SCCs, cifrado en tránsito y reposo</td></tr>
-        <tr><td>Vercel</td><td>Hosting y CDN</td><td>EE.UU.</td><td>SCCs, cifrado en tránsito</td></tr>
-        <tr><td>Resend</td><td>Emails transaccionales</td><td>EE.UU.</td><td>SCCs, cifrado</td></tr>
-      </tbody>
-    </table>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm border border-border">
+        <thead class="bg-muted">
+          <tr><th class="p-2 text-left">Proveedor</th><th class="p-2 text-left">Propósito</th><th class="p-2 text-left">País</th><th class="p-2 text-left">Protecciones</th></tr>
+        </thead>
+        <tbody>
+          <tr class="border-t border-border"><td class="p-2">Supabase</td><td class="p-2">Base de datos</td><td class="p-2">EE.UU.</td><td class="p-2">SCCs, cifrado en tránsito y reposo</td></tr>
+          <tr class="border-t border-border"><td class="p-2">Vercel</td><td class="p-2">Hosting y CDN</td><td class="p-2">EE.UU.</td><td class="p-2">SCCs, cifrado en tránsito</td></tr>
+          <tr class="border-t border-border"><td class="p-2">Resend</td><td class="p-2">Emails transaccionales</td><td class="p-2">EE.UU.</td><td class="p-2">SCCs, cifrado</td></tr>
+        </tbody>
+      </table>
+    </div>
     <p><strong>No vendemos</strong> su información personal a terceros bajo ninguna circunstancia.</p>
 
     <h2>5. Transferencias Internacionales de Datos</h2>
@@ -93,16 +97,18 @@
     <p><strong>No vendemos ni compartimos</strong> su información personal con terceros para fines de marketing.</p>
 
     <h2>8. Cookies y Tecnologías de Rastreo</h2>
-    <table>
-      <thead>
-        <tr><th>Categoría</th><th>Propósito</th><th>Duración</th><th>Consentimiento</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Estrictamente necesarias</td><td>Autenticación, sesión, seguridad</td><td>Sesión</td><td>No requerido</td></tr>
-        <tr><td>Funcionales</td><td>Idioma, preferencias, AMOLED mode</td><td>1 año</td><td>Sí</td></tr>
-        <tr><td>Analytics</td><td>Estadísticas de uso (si está habilitado)</td><td>2 años</td><td>Sí</td></tr>
-      </tbody>
-    </table>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm border border-border">
+        <thead class="bg-muted">
+          <tr><th class="p-2 text-left">Categoría</th><th class="p-2 text-left">Propósito</th><th class="p-2 text-left">Duración</th><th class="p-2 text-left">Consentimiento</th></tr>
+        </thead>
+        <tbody>
+          <tr class="border-t border-border"><td class="p-2">Estrictamente necesarias</td><td class="p-2">Autenticación, sesión, seguridad</td><td class="p-2">Sesión</td><td class="p-2">No requerido</td></tr>
+          <tr class="border-t border-border"><td class="p-2">Funcionales</td><td class="p-2">Idioma, preferencias, AMOLED mode</td><td class="p-2">1 año</td><td class="p-2">Sí</td></tr>
+          <tr class="border-t border-border"><td class="p-2">Analytics</td><td class="p-2">Estadísticas de uso (si está habilitado)</td><td class="p-2">2 años</td><td class="p-2">Sí</td></tr>
+        </tbody>
+      </table>
+    </div>
     <p>Puede gestionar sus preferencias de cookies desde la configuración del navegador.</p>
 
     <h2>9. Seguridad de los Datos</h2>
@@ -126,18 +132,20 @@
     </ul>
 
     <h2>11. Retención de Datos</h2>
-    <table>
-      <thead>
-        <tr><th>Tipo de Dato</th><th>Período de Retención</th><th>Justificación</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Datos de cuenta</td><td>Duración de la cuenta + 30 días</td><td>Ejecución de contrato</td></tr>
-        <tr><td>Datos financieros</td><td>5 años después de la eliminación</td><td>Obligaciones fiscales (SRI Ecuador)</td></tr>
-        <tr><td>Logs de uso</td><td>12 meses</td><td>Interés legítimo (seguridad)</td></tr>
-        <tr><td>Consentimiento de marketing</td><td>Hasta su revocación</td><td>Consentimiento</td></tr>
-        <tr><td>Datos de facturación</td><td>5 años</td><td>Obligaciones contables</td></tr>
-      </tbody>
-    </table>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm border border-border">
+        <thead class="bg-muted">
+          <tr><th class="p-2 text-left">Tipo de Dato</th><th class="p-2 text-left">Período de Retención</th><th class="p-2 text-left">Justificación</th></tr>
+        </thead>
+        <tbody>
+          <tr class="border-t border-border"><td class="p-2">Datos de cuenta</td><td class="p-2">Duración de la cuenta + 30 días</td><td class="p-2">Ejecución de contrato</td></tr>
+          <tr class="border-t border-border"><td class="p-2">Datos financieros</td><td class="p-2">5 años después de la eliminación</td><td class="p-2">Obligaciones fiscales (SRI Ecuador)</td></tr>
+          <tr class="border-t border-border"><td class="p-2">Logs de uso</td><td class="p-2">12 meses</td><td class="p-2">Interés legítimo (seguridad)</td></tr>
+          <tr class="border-t border-border"><td class="p-2">Consentimiento de marketing</td><td class="p-2">Hasta su revocación</td><td class="p-2">Consentimiento</td></tr>
+          <tr class="border-t border-border"><td class="p-2">Datos de facturación</td><td class="p-2">5 años</td><td class="p-2">Obligaciones contables</td></tr>
+        </tbody>
+      </table>
+    </div>
 
     <h2>12. Datos de Menores</h2>
     <p>El Servicio no está dirigido a menores de 16 años. No recopilamos intencionalmente información de menores. Si descubrimos que hemos recopilado datos de un menor, eliminaremos esa información inmediatamente.</p>

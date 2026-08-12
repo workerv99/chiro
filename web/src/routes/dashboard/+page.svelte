@@ -106,7 +106,7 @@
 <svelte:head><title>{i18n.t('expenses.title')} · Chiro</title></svelte:head>
 
 <div class="flex items-center justify-between mb-4">
-  <h1 class="text-2xl font-bold">{i18n.t('expenses.title')}</h1>
+  <h1 class="text-xl md:text-2xl font-bold">{i18n.t('expenses.title')}</h1>
 </div>
 
 {#if showOnboard}
@@ -156,7 +156,7 @@
 
 <Card class="p-6 mb-4 bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
   <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{i18n.t('summary.balance')}</p>
-  <p class="text-3xl font-extrabold" class:text-destructive={S.summary.balance < 0} class:text-green-500={S.summary.balance >= 0}>
+  <p class="text-2xl md:text-3xl font-extrabold" class:text-destructive={S.summary.balance < 0} class:text-green-500={S.summary.balance >= 0}>
     {signed(S.summary.balance)}
   </p>
   {#if delta != null}
@@ -201,13 +201,13 @@
               <p class="text-sm font-semibold truncate">{e.description}</p>
               <p class="text-xs text-muted-foreground flex gap-1.5 items-center flex-wrap">
                 {#if e.transfer_pair_id}
-                  <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{i18n.t('common.transfer')}</span>
+                  <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">{i18n.t('common.transfer')}</span>
                 {/if}
                 {#if catOf(e.category_id)}
                   <span>{catOf(e.category_id).name}</span>
                 {/if}
                 {#each e.tags || [] as tg (tg.tag_id)}
-                  <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{tg.name}</span>
+                  <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">{tg.name}</span>
                 {/each}
               </p>
             </div>

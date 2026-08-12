@@ -1,0 +1,22 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]: C
+    - heading "Welcome back" [level=1] [ref=e7]
+    - paragraph [ref=e8]: Track your money, today.
+  - generic [ref=e9]:
+    - button "ES" [ref=e10] [cursor=pointer]
+    - button "EN" [ref=e11] [cursor=pointer]
+  - generic [ref=e12]:
+    - generic [ref=e13]:
+      - generic [ref=e14]: Email
+      - textbox "Email" [ref=e15]:
+        - /placeholder: you@email.com
+        - text: admin@chiro.app
+    - generic [ref=e16]:
+      - generic [ref=e17]: Password
+      - textbox "Password" [ref=e18]:
+        - /placeholder: Min 6 characters
+        - text: Chiro123!
+    - alert [ref=e22]: Wrong email or password
+    - button "Log in" [ref=e19] [cursor=pointer]
+  - button "Create account" [ref=e20] [cursor=pointer]

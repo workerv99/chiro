@@ -1,0 +1,110 @@
+- generic [ref=f24e2]:
+  - navigation [ref=f24e3]:
+    - generic [ref=f24e4]:
+      - generic [ref=f24e5]: C
+      - generic [ref=f24e6]: Chiro
+    - link "Expenses" [ref=f24e7] [cursor=pointer]:
+      - /url: /dashboard
+    - link "Stats" [ref=f24e8] [cursor=pointer]:
+      - /url: /stats
+    - link "Budgets" [ref=f24e9] [cursor=pointer]:
+      - /url: /budgets
+    - link "Loans" [ref=f24e10] [cursor=pointer]:
+      - /url: /loans
+    - link "Settings" [ref=f24e11] [cursor=pointer]:
+      - /url: /config
+    - button "Log out" [ref=f24e13]
+  - main [ref=f24e14]:
+    - link "← Jesica Juank" [ref=f24e122] [cursor=pointer]:
+      - /url: /loans/person/per_0d1a3581-1a10-43bc-988d-16b4119b3e16
+    - heading "Credito de consumo" [level=1] [ref=f24e123]
+    - generic [ref=f24e124]:
+      - generic [ref=f24e125]:
+        - generic [ref=f24e126]:
+          - text: Persona
+          - paragraph [ref=f24e127]: Jesica Juank
+        - generic [ref=f24e128]:
+          - text: Capital
+          - paragraph [ref=f24e129]: $150.00
+        - generic [ref=f24e130]:
+          - text: Ejecutado
+          - paragraph [ref=f24e131]: 23/04/2026
+        - generic [ref=f24e132]:
+          - text: Primera cuota
+          - paragraph [ref=f24e133]: 28/08/2026
+        - generic [ref=f24e134]:
+          - text: Frecuencia
+          - paragraph [ref=f24e135]: monthly
+        - generic [ref=f24e136]:
+          - text: Cuotas
+          - paragraph [ref=f24e137]: 0/6
+      - generic [ref=f24e138]:
+        - button "Editar" [ref=f24e139]
+        - button "PDF" [ref=f24e141]
+    - generic [ref=f24e143]:
+      - paragraph [ref=f24e144]: Pendiente
+      - paragraph [ref=f24e145]: $195.00
+      - paragraph [ref=f24e146]: $0.00 pagado de $195.00
+      - generic [ref=f24e148]:
+        - generic [ref=f24e149]: 0/6 cuotas
+        - generic [ref=f24e150]: 0%
+    - generic [ref=f24e151]:
+      - generic [ref=f24e152]:
+        - generic [ref=f24e153]: "Cuota #1"
+        - generic [ref=f24e154]: 28/08/2026
+      - paragraph [ref=f24e155]: $32.50
+      - 'button "Pagar cuota #1" [ref=f24e156]'
+      - group [ref=f24e157]:
+        - generic "Pago personalizado" [ref=f24e158] [cursor=pointer]
+    - generic [ref=f24e159]:
+      - heading "Calendario de cuotas" [level=3] [ref=f24e160]
+      - generic [ref=f24e161]:
+        - generic [ref=f24e163]:
+          - paragraph [ref=f24e164]: Cuota 1
+          - paragraph [ref=f24e165]: "Vence: 28/08/2026"
+        - generic [ref=f24e166]:
+          - paragraph [ref=f24e167]: $32.50
+          - paragraph [ref=f24e168]: Pendiente
+        - button [ref=f24e169]
+      - generic [ref=f24e171]:
+        - generic [ref=f24e173]:
+          - paragraph [ref=f24e174]: Cuota 2
+          - paragraph [ref=f24e175]: "Vence: 28/09/2026"
+        - generic [ref=f24e176]:
+          - paragraph [ref=f24e177]: $32.50
+          - paragraph [ref=f24e178]: Pendiente
+        - button [ref=f24e179]
+      - generic [ref=f24e181]:
+        - generic [ref=f24e183]:
+          - paragraph [ref=f24e184]: Cuota 3
+          - paragraph [ref=f24e185]: "Vence: 28/10/2026"
+        - generic [ref=f24e186]:
+          - paragraph [ref=f24e187]: $32.50
+          - paragraph [ref=f24e188]: Pendiente
+        - button [ref=f24e189]
+      - generic [ref=f24e191]:
+        - generic [ref=f24e193]:
+          - paragraph [ref=f24e194]: Cuota 4
+          - paragraph [ref=f24e195]: "Vence: 28/11/2026"
+        - generic [ref=f24e196]:
+          - paragraph [ref=f24e197]: $32.50
+          - paragraph [ref=f24e198]: Pendiente
+        - button [ref=f24e199]
+      - generic [ref=f24e201]:
+        - generic [ref=f24e203]:
+          - paragraph [ref=f24e204]: Cuota 5
+          - paragraph [ref=f24e205]: "Vence: 28/12/2026"
+        - generic [ref=f24e206]:
+          - paragraph [ref=f24e207]: $32.50
+          - paragraph [ref=f24e208]: Pendiente
+        - button [ref=f24e209]
+      - generic [ref=f24e211]:
+        - generic [ref=f24e213]:
+          - paragraph [ref=f24e214]: Cuota 6
+          - paragraph [ref=f24e215]: "Vence: 28/01/2027"
+        - generic [ref=f24e216]:
+          - paragraph [ref=f24e217]: $32.50
+          - paragraph [ref=f24e218]: Pendiente
+        - button [ref=f24e219]
+    - button "Eliminar préstamo" [ref=f24e221]
+  - generic [ref=f24e93]: Préstamo · Chiro

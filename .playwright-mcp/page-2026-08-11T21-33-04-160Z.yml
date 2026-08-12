@@ -1,0 +1,145 @@
+- generic [ref=f15e2]:
+  - navigation [ref=f15e3]:
+    - generic [ref=f15e4]:
+      - generic [ref=f15e5]: C
+      - generic [ref=f15e6]: Chiro
+    - link "Expenses" [ref=f15e7] [cursor=pointer]:
+      - /url: /dashboard
+    - link "Stats" [ref=f15e8] [cursor=pointer]:
+      - /url: /stats
+    - link "Budgets" [ref=f15e9] [cursor=pointer]:
+      - /url: /budgets
+    - link "Loans" [ref=f15e10] [cursor=pointer]:
+      - /url: /loans
+    - link "Settings" [ref=f15e11] [cursor=pointer]:
+      - /url: /config
+    - button "Log out" [ref=f15e13]
+  - main [ref=f15e14]:
+    - link "← Jesica Juank" [ref=f15e15] [cursor=pointer]:
+      - /url: /loans/person/per_0d1a3581-1a10-43bc-988d-16b4119b3e16
+    - heading "Credito de consumo" [level=1] [ref=f15e16]
+    - generic [ref=f15e17]:
+      - generic [ref=f15e18]:
+        - generic [ref=f15e19]:
+          - text: Persona
+          - paragraph [ref=f15e20]: Jesica Juank
+        - generic [ref=f15e21]:
+          - text: Capital
+          - paragraph [ref=f15e22]: $150.00
+        - generic [ref=f15e23]:
+          - text: Ejecutado
+          - paragraph [ref=f15e24]: 25/04/2026
+        - generic [ref=f15e25]:
+          - text: Primera cuota
+          - paragraph [ref=f15e26]: 28/08/2026
+        - generic [ref=f15e27]:
+          - text: Frecuencia
+          - paragraph [ref=f15e28]: monthly
+        - generic [ref=f15e29]:
+          - text: Cuotas
+          - paragraph [ref=f15e30]: 0/6
+      - generic [ref=f15e31]:
+        - button "Editar" [ref=f15e32]
+        - button "PDF" [ref=f15e34]
+    - generic [ref=f15e36]:
+      - paragraph [ref=f15e37]: Pendiente
+      - paragraph [ref=f15e38]: $195.00
+      - paragraph [ref=f15e39]: $0.00 pagado de $195.00
+      - generic [ref=f15e41]:
+        - generic [ref=f15e42]: 0/6 cuotas
+        - generic [ref=f15e43]: 0%
+    - generic [ref=f15e44]:
+      - generic [ref=f15e45]:
+        - generic [ref=f15e46]: "Cuota #1"
+        - generic [ref=f15e47]: 28/08/2026
+      - paragraph [ref=f15e48]: $32.50
+      - 'button "Pagar cuota #1" [ref=f15e49]'
+      - group [ref=f15e50]:
+        - generic "Pago personalizado" [ref=f15e51] [cursor=pointer]
+    - generic [ref=f15e52]:
+      - heading "Calendario de cuotas" [level=3] [ref=f15e53]
+      - generic [ref=f15e54]:
+        - generic [ref=f15e56]:
+          - paragraph [ref=f15e57]: Cuota 1
+          - paragraph [ref=f15e58]: "Vence: 28/08/2026"
+        - generic [ref=f15e59]:
+          - paragraph [ref=f15e60]: $32.50
+          - paragraph [ref=f15e61]: Pendiente
+        - button [active] [ref=f15e62]
+      - generic [ref=f15e64]:
+        - generic [ref=f15e66]:
+          - paragraph [ref=f15e67]: Cuota 2
+          - paragraph [ref=f15e68]: "Vence: 28/09/2026"
+        - generic [ref=f15e69]:
+          - paragraph [ref=f15e70]: $32.50
+          - paragraph [ref=f15e71]: Pendiente
+        - button [ref=f15e72]
+      - generic [ref=f15e74]:
+        - generic [ref=f15e76]:
+          - paragraph [ref=f15e77]: Cuota 3
+          - paragraph [ref=f15e78]: "Vence: 28/10/2026"
+        - generic [ref=f15e79]:
+          - paragraph [ref=f15e80]: $32.50
+          - paragraph [ref=f15e81]: Pendiente
+        - button [ref=f15e82]
+      - generic [ref=f15e84]:
+        - generic [ref=f15e86]:
+          - paragraph [ref=f15e87]: Cuota 4
+          - paragraph [ref=f15e88]: "Vence: 28/11/2026"
+        - generic [ref=f15e89]:
+          - paragraph [ref=f15e90]: $32.50
+          - paragraph [ref=f15e91]: Pendiente
+        - button [ref=f15e92]
+      - generic [ref=f15e94]:
+        - generic [ref=f15e96]:
+          - paragraph [ref=f15e97]: Cuota 5
+          - paragraph [ref=f15e98]: "Vence: 28/12/2026"
+        - generic [ref=f15e99]:
+          - paragraph [ref=f15e100]: $32.50
+          - paragraph [ref=f15e101]: Pendiente
+        - button [ref=f15e102]
+      - generic [ref=f15e104]:
+        - generic [ref=f15e106]:
+          - paragraph [ref=f15e107]: Cuota 6
+          - paragraph [ref=f15e108]: "Vence: 28/01/2027"
+        - generic [ref=f15e109]:
+          - paragraph [ref=f15e110]: $32.50
+          - paragraph [ref=f15e111]: Pendiente
+        - button [ref=f15e112]
+    - button "Eliminar préstamo" [ref=f15e114]
+    - dialog [ref=f15e116]:
+      - 'heading "Editar cuota #1" [level=2] [ref=f15e118]'
+      - generic [ref=f15e119]:
+        - generic [ref=f15e120]:
+          - generic [ref=f15e121]: Monto de la cuota
+          - textbox [ref=f15e122]: "32.5"
+        - generic [ref=f15e123]:
+          - generic [ref=f15e124]: Fecha de vencimiento
+          - generic [ref=f15e125]:
+            - generic [ref=f15e126]:
+              - generic [ref=f15e127]: DD
+              - textbox "DD" [ref=f15e128]: "27"
+            - generic [ref=f15e129]:
+              - generic [ref=f15e130]: MM
+              - textbox "MM" [ref=f15e131]: "08"
+            - generic [ref=f15e132]:
+              - generic [ref=f15e133]: AAAA
+              - textbox "AAAA" [ref=f15e134]: "2026"
+        - generic [ref=f15e135]:
+          - generic [ref=f15e136]: Monto pagado
+          - textbox [ref=f15e137]: "0"
+        - generic [ref=f15e138]:
+          - generic [ref=f15e139]: Fecha de pago (opcional)
+          - generic [ref=f15e140]:
+            - generic [ref=f15e141]:
+              - generic [ref=f15e142]: DD
+              - textbox "DD" [ref=f15e143]
+            - generic [ref=f15e144]:
+              - generic [ref=f15e145]: MM
+              - textbox "MM" [ref=f15e146]
+            - generic [ref=f15e147]:
+              - generic [ref=f15e148]: AAAA
+              - textbox "AAAA" [ref=f15e149]
+      - generic [ref=f15e150]:
+        - button "Cancelar" [ref=f15e151]
+        - button "Guardar" [ref=f15e152]

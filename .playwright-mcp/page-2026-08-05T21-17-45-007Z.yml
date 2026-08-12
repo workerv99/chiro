@@ -1,0 +1,168 @@
+- generic [ref=f1e2]:
+  - navigation [ref=f1e5]:
+    - generic [ref=f1e6]:
+      - generic [ref=f1e7]: C
+      - generic [ref=f1e8]: Chiro
+    - link "Expenses" [ref=f1e9] [cursor=pointer]:
+      - /url: /dashboard
+    - link "Stats" [ref=f1e10] [cursor=pointer]:
+      - /url: /stats
+    - link "Budgets" [ref=f1e11] [cursor=pointer]:
+      - /url: /budgets
+    - link "Loans" [ref=f1e12] [cursor=pointer]:
+      - /url: /loans
+    - link "Settings" [ref=f1e13] [cursor=pointer]:
+      - /url: /config
+    - button "Log out" [ref=f1e15]
+  - main [ref=f1e16]:
+    - link "← Gabriel Juank" [ref=f1e129] [cursor=pointer]:
+      - /url: /loans/person/per_1765f6a7-c63a-41f9-97a4-2d813d13670a
+    - heading "Consumo" [level=1] [ref=f1e130]
+    - generic [ref=f1e131]:
+      - generic [ref=f1e132]:
+        - generic [ref=f1e133]:
+          - text: Persona
+          - paragraph [ref=f1e134]: Gabriel Juank
+        - generic [ref=f1e135]:
+          - text: Capital
+          - paragraph [ref=f1e136]: $500.00
+        - generic [ref=f1e137]:
+          - text: Ejecutado
+          - paragraph [ref=f1e138]: 30/05/2026
+        - generic [ref=f1e139]:
+          - text: Primera cuota
+          - paragraph [ref=f1e140]: 28/10/2025
+        - generic [ref=f1e141]:
+          - text: Frecuencia
+          - paragraph [ref=f1e142]: monthly
+        - generic [ref=f1e143]:
+          - text: Cuotas
+          - paragraph [ref=f1e144]: 10/12
+      - generic [ref=f1e145]:
+        - button "Editar" [ref=f1e146]
+        - button "PDF" [active] [ref=f1e148]
+    - generic [ref=f1e150]:
+      - paragraph [ref=f1e151]: Pendiente
+      - paragraph [ref=f1e152]: $107.47
+      - paragraph [ref=f1e153]: $542.53 pagado de $650.00
+      - generic [ref=f1e156]:
+        - generic [ref=f1e157]: 10/12 cuotas
+        - generic [ref=f1e158]: 83%
+    - generic [ref=f1e159]:
+      - generic [ref=f1e160]:
+        - generic [ref=f1e161]: "Cuota #11"
+        - generic [ref=f1e162]: 28/08/2026
+      - paragraph [ref=f1e163]: $54.17
+      - 'button "Pagar cuota #11" [ref=f1e164]'
+      - group [ref=f1e165]:
+        - generic "Pago personalizado" [ref=f1e166] [cursor=pointer]
+      - button "Deshacer ultimo pago" [ref=f1e167]
+    - generic [ref=f1e168]:
+      - heading "Calendario de cuotas" [level=3] [ref=f1e169]
+      - generic [ref=f1e170]:
+        - generic [ref=f1e172]:
+          - paragraph [ref=f1e173]: Cuota 1
+          - paragraph [ref=f1e174]: "Vence: 28/10/2025 Pagado: 31/10/2025"
+        - generic [ref=f1e175]:
+          - paragraph [ref=f1e176]: $54.17
+          - paragraph [ref=f1e177]: Saldada
+      - generic [ref=f1e178]:
+        - generic [ref=f1e180]:
+          - paragraph [ref=f1e181]: Cuota 2
+          - paragraph [ref=f1e182]: "Vence: 28/11/2025 Pagado: 01/12/2025"
+        - generic [ref=f1e183]:
+          - paragraph [ref=f1e184]: $54.17
+          - paragraph [ref=f1e185]: Saldada
+      - generic [ref=f1e186]:
+        - generic [ref=f1e188]:
+          - paragraph [ref=f1e189]: Cuota 3
+          - paragraph [ref=f1e190]: "Vence: 28/12/2025 Pagado: 30/12/2025"
+        - generic [ref=f1e191]:
+          - paragraph [ref=f1e192]: $54.17
+          - paragraph [ref=f1e193]: Saldada
+      - generic [ref=f1e194]:
+        - generic [ref=f1e196]:
+          - paragraph [ref=f1e197]: Cuota 4
+          - paragraph [ref=f1e198]: "Vence: 28/01/2026 Pagado: 31/01/2026"
+        - generic [ref=f1e199]:
+          - paragraph [ref=f1e200]: $54.17
+          - paragraph [ref=f1e201]: Saldada
+      - generic [ref=f1e202]:
+        - generic [ref=f1e204]:
+          - paragraph [ref=f1e205]: Cuota 5
+          - paragraph [ref=f1e206]: "Vence: 28/02/2026 Pagado: 28/02/2026"
+        - generic [ref=f1e207]:
+          - paragraph [ref=f1e208]: $54.17
+          - paragraph [ref=f1e209]: Saldada
+      - generic [ref=f1e210]:
+        - generic [ref=f1e212]:
+          - paragraph [ref=f1e213]: Cuota 6
+          - paragraph [ref=f1e214]: "Vence: 28/03/2026 Pagado: 08/04/2026"
+        - generic [ref=f1e215]:
+          - paragraph [ref=f1e216]: $54.17
+          - paragraph [ref=f1e217]: Saldada
+      - generic [ref=f1e218]:
+        - generic [ref=f1e220]:
+          - paragraph [ref=f1e221]: Cuota 7
+          - paragraph [ref=f1e222]: "Vence: 28/04/2026 Pagado: 28/04/2026"
+        - generic [ref=f1e223]:
+          - paragraph [ref=f1e224]: $54.17
+          - paragraph [ref=f1e225]: Saldada
+      - generic [ref=f1e226]:
+        - generic [ref=f1e228]:
+          - paragraph [ref=f1e229]: Cuota 8
+          - paragraph [ref=f1e230]: "Vence: 28/05/2026 Pagado: 28/05/2026"
+        - generic [ref=f1e231]:
+          - paragraph [ref=f1e232]: $54.17
+          - paragraph [ref=f1e233]: Saldada
+      - generic [ref=f1e234]:
+        - generic [ref=f1e236]:
+          - paragraph [ref=f1e237]: Cuota 9
+          - paragraph [ref=f1e238]: "Vence: 28/06/2026 Pagado: 01/07/2026"
+        - generic [ref=f1e239]:
+          - paragraph [ref=f1e240]: $54.17
+          - paragraph [ref=f1e241]: Saldada
+      - generic [ref=f1e242]:
+        - generic [ref=f1e244]:
+          - paragraph [ref=f1e245]: Cuota 10
+          - paragraph [ref=f1e246]: "Vence: 28/07/2026 Pagado: 31/07/2026"
+        - generic [ref=f1e247]:
+          - paragraph [ref=f1e248]: $54.17
+          - paragraph [ref=f1e249]: Saldada
+      - generic [ref=f1e250]:
+        - generic [ref=f1e252]:
+          - paragraph [ref=f1e253]: Cuota 11
+          - paragraph [ref=f1e254]: "Vence: 28/08/2026"
+        - generic [ref=f1e255]:
+          - paragraph [ref=f1e256]: $54.17
+          - paragraph [ref=f1e257]: Pendiente
+      - generic [ref=f1e258]:
+        - generic [ref=f1e260]:
+          - paragraph [ref=f1e261]: Cuota 12
+          - paragraph [ref=f1e262]: "Vence: 28/09/2026"
+        - generic [ref=f1e263]:
+          - paragraph [ref=f1e264]: $54.13
+          - paragraph [ref=f1e265]: Pendiente
+    - button "Eliminar préstamo" [ref=f1e266]
+  - generic [ref=f1e89]:
+    - generic [ref=f1e90]:
+      - generic [ref=f1e91]:
+        - heading "Usamos cookies" [level=3] [ref=f1e92]
+        - paragraph [ref=f1e93]: Utilizamos cookies para mejorar tu experiencia. Las cookies estrictamente necesarias son siempre activas. Puedes configurar las opcionales.
+      - generic [ref=f1e94]:
+        - button "Rechazar opcionales" [ref=f1e95]
+        - button "Aceptar seleccionadas" [ref=f1e96]
+        - button "Aceptar todas" [ref=f1e97]
+    - generic [ref=f1e98]:
+      - generic [ref=f1e99] [cursor=pointer]:
+        - checkbox "Estrictamente necesarias (siempre activas)" [checked] [disabled] [ref=f1e100]
+        - generic [ref=f1e101]: Estrictamente necesarias (siempre activas)
+      - generic [ref=f1e102] [cursor=pointer]:
+        - checkbox "Funcionales (idioma, preferencias)" [checked] [ref=f1e103]
+        - generic [ref=f1e104]: Funcionales (idioma, preferencias)
+      - generic [ref=f1e105] [cursor=pointer]:
+        - checkbox "Analytics (estadísticas de uso)" [ref=f1e106]
+        - generic [ref=f1e107]: Analytics (estadísticas de uso)
+    - link "Más información" [ref=f1e108] [cursor=pointer]:
+      - /url: /legal/privacy
+  - generic [ref=f1e4]: Préstamo · Chiro

@@ -43,7 +43,7 @@
 <svelte:head><title>{i18n.t('stats.title')} · Chiro</title></svelte:head>
 
 <div class="flex items-center justify-between mb-4">
-  <h1 class="text-2xl font-bold">{i18n.t('stats.title')}</h1>
+  <h1 class="text-xl md:text-2xl font-bold">{i18n.t('stats.title')}</h1>
 </div>
 
 <div class="flex items-center justify-between bg-card rounded-lg border p-2 mb-4">
@@ -84,7 +84,7 @@
       {#each months as m (m.month)}
         <div class="flex-1 flex flex-col items-center justify-end gap-1" title={monthNames[m.month - 1]}>
           <div class="w-full rounded-sm bg-primary" style="height:{m.expense > 0 ? Math.max(4, (m.expense / maxMonth) * 100) : 2}%"></div>
-          <span class="text-[10px] text-muted-foreground">{monthNames[m.month - 1]}</span>
+          <span class="text-xs text-muted-foreground">{monthNames[m.month - 1]}</span>
         </div>
       {/each}
     </div>

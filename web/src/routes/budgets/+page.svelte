@@ -83,7 +83,7 @@
 <svelte:head><title>{i18n.t('budgets.title')} · Chiro</title></svelte:head>
 
 <div class="flex items-center justify-between mb-4">
-  <h1 class="text-2xl font-bold">{i18n.t('budgets.title')}</h1>
+  <h1 class="text-xl md:text-2xl font-bold">{i18n.t('budgets.title')}</h1>
 </div>
 
 <div class="flex items-center justify-between bg-card rounded-lg border p-2 mb-4">

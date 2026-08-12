@@ -3,6 +3,8 @@
   import { api } from '$lib/api.svelte.js';
   import { S } from '$lib/stores.svelte.js';
   import { onMount } from 'svelte';
+  import Card from '$lib/components/ui/card.svelte';
+  import Button from '$lib/components/ui/button.svelte';
 
   let stats = $state(null);
   let users = $state([]);
@@ -41,64 +43,60 @@
 
 <svelte:head><title>Admin · Chiro</title></svelte:head>
 
-<div class="page-head">
-  <h1 class="headline">Dashboard Admin</h1>
-</div>
+<h1 class="text-xl md:text-2xl font-bold mb-4">Dashboard Admin</h1>
 
 {#if loading}
-  <p class="meta" style="padding:24px;text-align:center">{i18n.t('common.loading')}</p>
+  <p class="text-sm text-muted-foreground py-8 text-center">{i18n.t('common.loading')}</p>
 {:else if err}
-  <div class="card empty">
-    <p class="error-text">{err}</p>
-  </div>
+  <Card class="p-4 text-center">
+    <p class="text-sm text-destructive">{err}</p>
+  </Card>
 {:else}
-  <div class="summary-cards">
-    <div class="card stat-card">
-      <div class="stat-label">Usuarios</div>
-      <div class="stat-value">{stats.total_users}</div>
-    </div>
-    <div class="card stat-card">
-      <div class="stat-label">Gastos totales</div>
-      <div class="stat-value">{stats.total_expenses}</div>
-    </div>
-    <div class="card stat-card">
-      <div class="stat-label">Préstamos</div>
-      <div class="stat-value">{stats.total_loans}</div>
-    </div>
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+    <Card class="p-4">
+      <p class="text-xs font-bold text-muted-foreground uppercase mb-1">Usuarios</p>
+      <p class="text-2xl font-extrabold">{stats.total_users}</p>
+    </Card>
+    <Card class="p-4">
+      <p class="text-xs font-bold text-muted-foreground uppercase mb-1">Gastos totales</p>
+      <p class="text-2xl font-extrabold">{stats.total_expenses}</p>
+    </Card>
+    <Card class="p-4">
+      <p class="text-xs font-bold text-muted-foreground uppercase mb-1">Préstamos</p>
+      <p class="text-2xl font-extrabold">{stats.total_loans}</p>
+    </Card>
   </div>
 
-  <div class="summary-cards" style="margin-top:10px">
-    <div class="card stat-card">
-      <div class="stat-label">Pro</div>
-      <div class="stat-value positive">{stats.pro_users}</div>
-    </div>
-    <div class="card stat-card">
-      <div class="stat-label">Free</div>
-      <div class="stat-value">{stats.free_users}</div>
-    </div>
+  <div class="grid grid-cols-2 gap-3 mb-4">
+    <Card class="p-4">
+      <p class="text-xs font-bold text-muted-foreground uppercase mb-1">Pro</p>
+      <p class="text-2xl font-extrabold text-green-500">{stats.pro_users}</p>
+    </Card>
+    <Card class="p-4">
+      <p class="text-xs font-bold text-muted-foreground uppercase mb-1">Free</p>
+      <p class="text-2xl font-extrabold">{stats.free_users}</p>
+    </Card>
   </div>
 
-  <div class="card list-card" style="margin-top:14px">
-    <h3 class="card-title" style="padding:12px 16px 0">Usuarios</h3>
+  <Card class="overflow-hidden">
+    <h3 class="font-bold p-4 pb-0">Usuarios</h3>
     {#each users as u (u.user_id)}
-      <div class="row">
-        <div class="cat-dot" style="background:{u.plan === 'pro' ? 'var(--green)' : 'var(--ink-dim)'}"></div>
-        <div class="row-body">
-          <div class="row-title">{u.name || u.email}</div>
-          <div class="row-sub">
-            <span>{u.email}</span>
+      <div class="flex items-center gap-3 px-4 py-3 border-t first:border-t-0">
+        <div class="h-2.5 w-2.5 rounded-full" style="background:{u.plan === 'pro' ? '#22c55e' : '#94a3b8'}"></div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold truncate">{u.name || u.email}</p>
+          <p class="text-xs text-muted-foreground truncate">
+            {u.email}
             {#if u.role === 'admin'}
-              <span class="tag mini">admin</span>
+              <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary ml-1">admin</span>
             {/if}
-            <span class="tag mini" class:active={u.plan === 'pro'}>{u.plan}</span>
-          </div>
+            <span class="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold text-secondary-foreground ml-1">{u.plan}</span>
+          </p>
         </div>
-        <div class="row-right">
-          <button class="btn btn-small" onclick={() => toggleStatus(u)}>
-            {u.status === 'active' ? 'Desactivar' : 'Activar'}
-          </button>
-        </div>
+        <Button variant="outline" size="sm" onclick={() => toggleStatus(u)}>
+          {u.status === 'active' ? 'Desactivar' : 'Activar'}
+        </Button>
       </div>
     {/each}
-  </div>
+  </Card>
 {/if}

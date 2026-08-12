@@ -20,7 +20,7 @@
 <svelte:head><title>{i18n.t('expenses.editExpense')} · Chiro</title></svelte:head>
 
 <a class="text-sm text-muted-foreground hover:text-foreground font-semibold mb-2 inline-block" href="/">← {i18n.t('expenses.title')}</a>
-<h1 class="text-2xl font-bold mb-4">{i18n.t('expenses.editExpense')}</h1>
+<h1 class="text-xl md:text-2xl font-bold mb-4">{i18n.t('expenses.editExpense')}</h1>
 
 {#if loading}
   <p class="text-sm text-muted-foreground py-8 text-center">{i18n.t('common.loading')}</p>

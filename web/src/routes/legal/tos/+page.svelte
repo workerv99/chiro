@@ -4,12 +4,12 @@
 
 <svelte:head><title>Términos de Servicio · Chiro</title></svelte:head>
 
-<div class="legal-page">
-  <a class="back-link" href="/">← Volver</a>
-  <h1 class="headline">Términos de Servicio</h1>
-  <p class="meta">Última actualización: 5 de agosto de 2026</p>
+<div class="max-w-3xl mx-auto px-4 py-8">
+  <a class="text-sm text-muted-foreground hover:text-foreground font-semibold mb-4 inline-block" href="/">← Volver</a>
+  <h1 class="text-xl md:text-2xl font-bold mb-2">Términos de Servicio</h1>
+  <p class="text-xs text-muted-foreground mb-8">Última actualización: 5 de agosto de 2026</p>
 
-  <div class="legal-content">
+  <div class="prose prose-sm max-w-none">
     <h2>1. Aceptación de los Términos</h2>
     <p>Al acceder o usar Chiro ("el Servicio"), usted acepta estar sujeto a estos Términos de Servicio ("Términos"). Si no está de acuerdo con estos Términos, no use el Servicio. Estos Términos constituyen un acuerdo legal entre usted y Chiro.</p>
     <p>Al crear una cuenta, usted confirma que tiene al menos 18 años de edad o la edad mayoría legal en su jurisdicción.</p>
@@ -79,7 +79,7 @@
     </ul>
 
     <h2>9. Disponibilidad del Servicio</h2>
-    <p>No garantizamos disponibilidad continua del Servicio. Podemos suspendTemporalmente el Servicio para mantenimiento, actualizaciones o por razones fuera de nuestro control. No seremos responsables por interrupciones del servicio.</p>
+    <p>No garantizamos disponibilidad continua del Servicio. Podemos suspTemporalmente el Servicio para mantenimiento, actualizaciones o por razones fuera de nuestro control. No seremos responsables por interrupciones del servicio.</p>
 
     <h2>10. Terminación</h2>
     <p><strong>Por usted:</strong> Puede cancelar su cuenta en cualquier momento desde la configuración. La cancelación es efectiva inmediatamente y no genera reembolso del período actual.</p>

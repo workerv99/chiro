@@ -366,7 +366,7 @@
   <p class="text-sm text-muted-foreground py-8 text-center">{i18n.t('common.loading')}</p>
 {:else}
   <a class="text-sm text-muted-foreground hover:text-foreground font-semibold mb-2 inline-block" href={`/loans/person/${loan.person_id}`}>← {loan.person_name}</a>
-  <h1 class="text-2xl font-bold mb-4">{loan.description || 'Préstamo'}</h1>
+  <h1 class="text-xl md:text-2xl font-bold mb-4">{loan.description || 'Préstamo'}</h1>
 
   <Card class="p-4 mb-4">
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
@@ -385,7 +385,7 @@
 
   <Card class="p-4 mb-4">
     <p class="text-xs font-bold text-muted-foreground uppercase mb-1">Pendiente</p>
-    <p class="text-3xl font-extrabold" class:text-destructive={remaining > 0} class:text-green-500={remaining <= 0}>{money(remaining)}</p>
+    <p class="text-2xl md:text-3xl font-extrabold" class:text-destructive={remaining > 0} class:text-green-500={remaining <= 0}>{money(remaining)}</p>
     <p class="text-xs text-muted-foreground mt-1">{money(loan.total_paid)} pagado de {money(loan.total_amount)}</p>
     <div class="h-1.5 bg-border rounded-full overflow-hidden mt-3">
       <div class="h-full bg-green-500 rounded-full transition-all" style="width:{progressPct}%"></div>
@@ -431,7 +431,7 @@
               >
                 <div class="flex-1">
                   <span class="text-sm font-semibold block">Solo esta cuota</span>
-                  <span class="text-[10px] text-muted-foreground">Paga únicamente la cuota seleccionada</span>
+                  <span class="text-xs text-muted-foreground">Paga únicamente la cuota seleccionada</span>
                 </div>
                 {#if payType === 'normal'}
                   <div class="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
@@ -446,7 +446,7 @@
               >
                 <div class="flex-1">
                   <span class="text-sm font-semibold block">Adelantar cuotas</span>
-                  <span class="text-[10px] text-muted-foreground">El excedente paga las siguientes</span>
+                  <span class="text-xs text-muted-foreground">El excedente paga las siguientes</span>
                 </div>
                 {#if payType === 'cascade'}
                   <div class="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
@@ -488,7 +488,7 @@
           <p class="text-sm font-semibold">
             Cuota {s.number}
             {#if !s.is_paid && s.is_overdue}
-              <span class="inline-flex items-center rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-bold text-destructive ml-1">Vencida</span>
+              <span class="inline-flex items-center rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-bold text-destructive ml-1">Vencida</span>
             {/if}
           </p>
           <p class="text-xs text-muted-foreground">
