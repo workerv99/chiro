@@ -22,6 +22,7 @@
   let loading = $state(true);
   let payAmount = $state('');
   let payDate = $state(toDisplay(todayISO()));
+  let payType = $state('normal');
   let confirmDel = $state(false);
   let confirmPay = $state(false);
   let pendingAction = $state(null);
@@ -409,13 +410,57 @@
       <p class="text-2xl font-extrabold mb-4">{money(nextPending.amount)}</p>
       <Button class="w-full h-12" onclick={() => pay(true)}>Pagar cuota #{nextPending.number}</Button>
       <details class="mt-4">
-        <summary class="cursor-pointer text-sm font-semibold text-muted-foreground py-2">Pago personalizado</summary>
-        <div class="space-y-3 pt-2">
+        <summary class="cursor-pointer text-sm font-semibold text-muted-foreground py-2">Otro monto</summary>
+        <div class="space-y-4 pt-2">
           <div class="grid grid-cols-2 gap-3">
-            <div><Label class="text-xs">Importe</Label><Input bind:value={payAmount} inputmode="decimal" /></div>
+            <div><Label class="text-xs">Monto</Label><Input bind:value={payAmount} inputmode="decimal" placeholder="0.00" /></div>
             <div><Label class="text-xs">Fecha</Label><Input bind:value={payDate} placeholder="DD/MM/YYYY" /></div>
           </div>
-          <Button class="w-full" variant="outline" onclick={() => pay(false)} disabled={!payAmount}>Aplicar pago</Button>
+          
+          <div class="space-y-2">
+            <Label class="text-xs">Tipo de pago</Label>
+            <div class="flex flex-col sm:grid sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                class="flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left {payType === 'normal' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}"
+                onclick={() => payType = 'normal'}
+              >
+                <div class="flex-1">
+                  <span class="text-sm font-semibold block">Solo esta cuota</span>
+                  <span class="text-[10px] text-muted-foreground">Paga únicamente la cuota seleccionada</span>
+                </div>
+                {#if payType === 'normal'}
+                  <div class="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                    <svg class="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                {/if}
+              </button>
+              <button
+                type="button"
+                class="flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left {payType === 'cascade' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}"
+                onclick={() => payType = 'cascade'}
+              >
+                <div class="flex-1">
+                  <span class="text-sm font-semibold block">Adelantar cuotas</span>
+                  <span class="text-[10px] text-muted-foreground">El excedente paga las siguientes</span>
+                </div>
+                {#if payType === 'cascade'}
+                  <div class="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                    <svg class="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                {/if}
+              </button>
+            </div>
+          </div>
+
+          <Button 
+            class="w-full h-11" 
+            variant={payType === 'cascade' ? 'default' : 'outline'} 
+            onclick={() => payType === 'cascade' ? cascade() : pay(false)} 
+            disabled={!payAmount}
+          >
+            {payType === 'cascade' ? 'Adelantar cuotas' : 'Aplicar pago'}
+          </Button>
         </div>
       </details>
       {#if paidCount > 0}
