@@ -172,7 +172,11 @@
     const target = nextPending;
     if (!target) return;
     confirmPay = false;
-    await payInstallment(target.installment_id, { amount: pendingAction.amount, date: pendingAction.date });
+    if (pendingAction.amount < target.amount) {
+      await cascadeInstallment(target.installment_id, { amount: pendingAction.amount, date: pendingAction.date });
+    } else {
+      await payInstallment(target.installment_id, { amount: pendingAction.amount, date: pendingAction.date });
+    }
     pendingAction = null;
     await load();
   }
