@@ -1,5 +1,5 @@
 // Cliente HTTP hacia la API Go (auth Bearer, JSON).
-const BASE = import.meta.env.VITE_API_BASE_URL || '';
+export const BASE = import.meta.env.VITE_API_BASE_URL || '';
 const TOKEN_KEY = 'chiro_token';
 
 export const A = $state({ token: '' });

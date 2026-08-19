@@ -6,13 +6,14 @@
   import ExpenseModal from '$lib/components/ExpenseModal.svelte';
   import Button from '$lib/components/ui/button.svelte';
   import Card from '$lib/components/ui/card.svelte';
-  import { ChevronLeft, ChevronRight, Plus } from 'lucide-svelte';
+  import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Plus } from 'lucide-svelte';
 
   const now = new Date();
   let year = $state(now.getFullYear());
   let month = $state(now.getMonth() + 1);
   let showModal = $state(false);
   let loading = $state(true);
+  let loadError = $state('');
   let prevBalance = $state(null);
   let abortCtrl = null;
   let onboardStep = $state(0);
@@ -30,13 +31,16 @@
     abortCtrl = new AbortController();
     const signal = abortCtrl.signal;
     loading = true;
+    loadError = '';
     const py = month === 1 ? year - 1 : year;
     const pm = month === 1 ? 12 : month - 1;
     Promise.all([
-      loadMonth(year, month),
+      loadMonth(year, month, { signal }),
       A.token ? api(`/api/summary?year=${py}&month=${pm}`, { signal }).catch(() => null) : Promise.resolve(null)
     ]).then(([, prev]) => {
       if (!signal.aborted) prevBalance = prev ? prev.balance : null;
+    }).catch((e) => {
+      if (!signal.aborted) loadError = e.message || i18n.t('common.loadError');
     }).finally(() => { if (!signal.aborted) loading = false; });
   });
 
@@ -109,7 +113,11 @@
   <h1 class="text-xl md:text-2xl font-bold">{i18n.t('expenses.title')}</h1>
 </div>
 
-{#if showOnboard}
+{#if loadError}
+  <Card class="p-6 mb-4 border-destructive/40">
+    <p class="text-sm text-destructive">{loadError}</p>
+  </Card>
+{:else if showOnboard}
   <Card class="p-6 mb-4 bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
     <h2 class="text-lg font-bold mb-1">Bienvenido a Chiro</h2>
     <p class="text-sm text-muted-foreground mb-4">Configurá tu cuenta en 2 pasos rápidos.</p>
@@ -161,7 +169,8 @@
   </p>
   {#if delta != null}
     <p class="text-sm font-bold mt-1" class:text-green-500={delta > 0} class:text-destructive={delta < 0}>
-      {delta >= 0 ? '↑' : '↓'} {signed(Math.abs(delta))} {i18n.t('summary.vsLastMonth')}
+      {#if delta >= 0}<ArrowUp size={16} class="inline" />{:else}<ArrowDown size={16} class="inline" />{/if}
+      {signed(Math.abs(delta))} {i18n.t('summary.vsLastMonth')}
     </p>
   {/if}
 </Card>

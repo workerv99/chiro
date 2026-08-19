@@ -14,18 +14,31 @@
 
   let { open = $bindable(false), expense = null, onClose } = $props();
 
-  let type = $state(expense?.transfer_pair_id ? 'transfer' : expense?.type || 'expense');
-  let description = $state(expense?.description || '');
-  let amount = $state(expense ? String(expense.amount) : '');
-  let date = $state(expense ? toDisplay(expense.date) : toDisplay(todayISO()));
-  let categoryId = $state(expense?.category_id || '');
-  let accountId = $state(expense?.account_id || '');
-  let destAccountId = $state(expense?.destination_account_id || '');
-  let notes = $state(expense?.notes || '');
-  let selectedTags = $state(expense?.tags || []);
+  let type = $state('expense');
+  let description = $state('');
+  let amount = $state('');
+  let date = $state(toDisplay(todayISO()));
+  let categoryId = $state('');
+  let accountId = $state('');
+  let destAccountId = $state('');
+  let notes = $state('');
+  let selectedTags = $state([]);
   let saving = $state(false);
   let err = $state('');
   let confirmDel = $state(false);
+
+  $effect(() => {
+    if (!open) return;
+    type = expense?.transfer_pair_id ? 'transfer' : expense?.type || 'expense';
+    description = expense?.description || '';
+    amount = expense ? String(expense.amount) : '';
+    date = expense ? toDisplay(expense.date) : toDisplay(todayISO());
+    categoryId = expense?.category_id || '';
+    accountId = expense?.account_id || '';
+    destAccountId = expense?.destination_account_id || '';
+    notes = expense?.notes || '';
+    selectedTags = expense?.tags || [];
+  });
 
   const cats = $derived(type === 'income' ? S.db.categories.filter((c) => c.type === 'income') : S.db.categories.filter((c) => c.type === 'expense'));
 

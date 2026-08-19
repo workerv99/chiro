@@ -6,8 +6,12 @@
   import { S, me, fetchAll, logout, loadMonth, fetchSubscription } from '$lib/stores.svelte.js';
   import { A, loadToken } from '$lib/api.svelte.js';
   import CookieBanner from '$lib/components/CookieBanner.svelte';
+  import { initTheme } from '$lib/theme.svelte.js';
 
+  let { children } = $props();
   let ready = $state(false);
+
+  $effect(() => initTheme());
 
   $effect(() => {
     if (typeof document !== 'undefined') document.documentElement.lang = i18n.lang;
@@ -58,7 +62,7 @@
     {i18n.t('common.loading')}
   </div>
 {:else if isPublicPage}
-  <slot />
+  {@render children?.()}
   <CookieBanner />
 {:else if S.user}
   <nav class="sticky top-0 z-20 flex items-center gap-1 px-3 py-2 bg-background/80 backdrop-blur-xl border-b border-border">
@@ -91,7 +95,7 @@
     </div>
   </nav>
   <main class="max-w-[760px] mx-auto px-4 pb-28 pt-4 sm:pt-4">
-    <slot />
+    {@render children?.()}
   </main>
   <CookieBanner />
 {/if}

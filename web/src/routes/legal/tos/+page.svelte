@@ -1,11 +1,12 @@
 <script>
   import { i18n } from '$lib/i18n.svelte.js';
+  import { ArrowLeft } from 'lucide-svelte';
 </script>
 
 <svelte:head><title>Términos de Servicio · Chiro</title></svelte:head>
 
 <div class="max-w-3xl mx-auto px-4 py-8">
-  <a class="text-sm text-muted-foreground hover:text-foreground font-semibold mb-4 inline-block" href="/">← Volver</a>
+  <a class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground font-semibold mb-4" href="/"><ArrowLeft size={16} /> Volver</a>
   <h1 class="text-xl md:text-2xl font-bold mb-2">Términos de Servicio</h1>
   <p class="text-xs text-muted-foreground mb-8">Última actualización: 5 de agosto de 2026</p>
 

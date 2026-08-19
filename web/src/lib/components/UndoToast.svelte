@@ -2,6 +2,7 @@
   import { i18n } from '$lib/i18n.svelte.js';
   import Toast from '$lib/components/ui/toast.svelte';
   import Button from '$lib/components/ui/button.svelte';
+  import { X } from 'lucide-svelte';
 
   let { message, secondsLeft, onUndo, onClose } = $props();
 </script>
@@ -15,7 +16,7 @@
       </Button>
     {/if}
     <Button variant="ghost" size="sm" class="h-8 w-8 p-0 text-muted-foreground" onclick={onClose} aria-label={i18n.t('common.close')}>
-      ×
+      <X size={16} />
     </Button>
   </Toast>
 </div>

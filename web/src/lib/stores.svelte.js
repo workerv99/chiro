@@ -1,5 +1,5 @@
 // Stores globales: sesión + datos por tabla + operaciones CRUD.
-import { api, setToken, A } from './api.svelte.js';
+import { api, BASE, setToken, A } from './api.svelte.js';
 
 export const S = $state({
   user: null,
@@ -123,9 +123,13 @@ export async function deleteAccount() {
 }
 
 export async function exportData() {
-  const res = await fetch('/api/export', {
+  const res = await fetch(BASE + '/api/export', {
     headers: { Authorization: 'Bearer ' + A.token }
   });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error || `Error ${res.status}`);
+  }
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -144,12 +148,12 @@ export async function fetchAll() {
   S.lastSync = Date.now();
 }
 
-export async function loadMonth(year, month) {
+export async function loadMonth(year, month, { signal } = {}) {
   S.view.year = year;
   S.view.month = month;
   const [sum, exps] = await Promise.all([
-    api(`/api/summary?year=${year}&month=${month}`),
-    api(`/api/expenses?year=${year}&month=${month}`)
+    api(`/api/summary?year=${year}&month=${month}`, { signal }),
+    api(`/api/expenses?year=${year}&month=${month}`, { signal })
   ]);
   S.summary = sum ?? { income: 0, expense: 0, balance: 0 };
   S.monthExpenses = exps ?? [];

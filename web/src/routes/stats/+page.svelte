@@ -12,14 +12,23 @@
   let month = $state(now.getMonth() + 1);
   let stats = $state({ months: [], breakdown: [], outstanding: 0 });
   let loading = $state(true);
+  let loadError = $state('');
+  let abortCtrl = null;
 
   $effect(() => {
+    if (abortCtrl) abortCtrl.abort();
+    abortCtrl = new AbortController();
+    const signal = abortCtrl.signal;
     loading = true;
-    Promise.all([loadMonth(year, month), api(`/api/stats?year=${year}&month=${month}`)])
+    loadError = '';
+    Promise.all([loadMonth(year, month, { signal }), api(`/api/stats?year=${year}&month=${month}`, { signal })])
       .then(([, s]) => {
-        stats = s;
+        if (!signal.aborted) stats = s;
       })
-      .finally(() => (loading = false));
+      .catch((e) => {
+        if (!signal.aborted) loadError = e.message || i18n.t('common.loadError');
+      })
+      .finally(() => { if (!signal.aborted) loading = false; });
   });
 
   function shift(delta) {
@@ -56,7 +65,11 @@
   </Button>
 </div>
 
-{#if loading}
+{#if loadError}
+  <Card class="p-6 border-destructive/40">
+    <p class="text-sm text-destructive">{loadError}</p>
+  </Card>
+{:else if loading}
   <p class="text-sm text-muted-foreground py-8 text-center">{i18n.t('common.loading')}</p>
 {:else}
   <Card class="p-4 mb-4">

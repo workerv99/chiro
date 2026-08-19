@@ -3,7 +3,7 @@ export const messages = {
   es: {
     tabs: { expenses: 'Gastos', stats: 'Estadísticas', budgets: 'Presupuestos', loans: 'Préstamos', config: 'Ajustes' },
     common: {
-      save: 'Guardar', cancel: 'Cancelar', delete: 'Eliminar', add: 'Añadir', loading: 'Cargando…',
+      save: 'Guardar', cancel: 'Cancelar', delete: 'Eliminar', add: 'Añadir', loading: 'Cargando…', loadError: 'No se pudieron cargar los datos',
       logout: 'Cerrar sesión', pay: 'Pagar', skip: 'Saltar', expense: 'Gasto', income: 'Ingreso',
       transfer: 'Transferencia', required: 'Completa todos los campos',
       prevMonth: 'Mes anterior', nextMonth: 'Mes siguiente', goToday: 'Volver al mes actual',
@@ -62,7 +62,8 @@ export const messages = {
       type: 'Tipo', color: 'Color', notes: 'Notas', target: 'Objetivo', current: 'Actual', amount: 'Importe',
       nextDate: 'Próxima fecha', frequency: 'Frecuencia', day: 'Día',
       dueBills: 'Facturas por pagar', noDueBills: 'Nada pendiente', editItem: 'Editar',
-      deleteConfirm: '¿Eliminar?', empty: 'Sin elementos', session: 'Sesión', loggedAs: 'Conectado como'
+      deleteConfirm: '¿Eliminar?', empty: 'Sin elementos', session: 'Sesión', loggedAs: 'Conectado como',
+      theme: 'Tema', themeDescription: 'Elige cómo quieres ver la aplicación.', themeLight: 'Claro', themeDark: 'Oscuro', themeSystem: 'Sistema'
     },
     onboard: {
       title: 'Empieza en 3 pasos',
@@ -79,7 +80,7 @@ export const messages = {
   en: {
     tabs: { expenses: 'Expenses', stats: 'Stats', budgets: 'Budgets', loans: 'Loans', config: 'Settings' },
     common: {
-      save: 'Save', cancel: 'Cancel', delete: 'Delete', add: 'Add', loading: 'Loading…',
+      save: 'Save', cancel: 'Cancel', delete: 'Delete', add: 'Add', loading: 'Loading…', loadError: 'Could not load the data',
       logout: 'Log out', pay: 'Pay', skip: 'Skip', expense: 'Expense', income: 'Income',
       transfer: 'Transfer', required: 'Fill in all fields',
       prevMonth: 'Previous month', nextMonth: 'Next month', goToday: 'Back to current month',
@@ -138,7 +139,8 @@ export const messages = {
       type: 'Type', color: 'Color', notes: 'Notes', target: 'Target', current: 'Current', amount: 'Amount',
       nextDate: 'Next date', frequency: 'Frequency', day: 'Day',
       dueBills: 'Bills due', noDueBills: 'Nothing due', editItem: 'Edit',
-      deleteConfirm: 'Delete?', empty: 'Nothing here yet', session: 'Session', loggedAs: 'Signed in as'
+      deleteConfirm: 'Delete?', empty: 'Nothing here yet', session: 'Session', loggedAs: 'Signed in as',
+      theme: 'Theme', themeDescription: 'Choose how you want to view the app.', themeLight: 'Light', themeDark: 'Dark', themeSystem: 'System'
     },
     onboard: {
       title: 'Start in 3 steps',

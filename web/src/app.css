@@ -4,6 +4,7 @@
 
 /* Modern Theme - Inspired by Skeleton UI */
 :root {
+  color-scheme: light;
   /* Light Mode */
   --background: 0 0% 100%;
   --foreground: 240 10% 3.9%;
@@ -35,6 +36,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   /* Dark Mode */
   --background: 240 10% 3.9%;
   --foreground: 0 0% 98%;

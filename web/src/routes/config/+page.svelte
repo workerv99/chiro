@@ -10,6 +10,8 @@
   import Input from '$lib/components/ui/input.svelte';
   import Label from '$lib/components/ui/label.svelte';
   import Badge from '$lib/components/ui/badge.svelte';
+  import ThemeSwitch from '$lib/components/ThemeSwitch.svelte';
+  import { Check, Plus } from 'lucide-svelte';
 
   let section = $state('accounts');
   let showForm = $state(false);
@@ -42,7 +44,7 @@
   }
 
   function emptyForm() {
-    return { name: '', currency: 'USD', type: 'expense', color: '#5B7CF6', notes: '', target_amount: 0, current_amount: 0, amount: 0, next_date: '', frequency: 'monthly' };
+    return { name: '', currency: 'USD', account_type: 'asset', type: 'expense', color: '#5B7CF6', notes: '', target_amount: 0, current_amount: 0, amount: 0, next_date: '', frequency: 'monthly' };
   }
 
   function openNew() {
@@ -64,8 +66,9 @@
     err = '';
     if (!form.name.trim()) return (err = i18n.t('common.required'));
     try {
-      if (editing) await update(section, editing.key, form);
-      else await create(section, form);
+      const payload = section === 'accounts' ? (({ type, ...account }) => account)(form) : form;
+      if (editing) await update(section, editing.key, payload);
+      else await create(section, payload);
       showForm = false;
     } catch (e) {
       err = e.message;
@@ -140,6 +143,16 @@
   <h1 class="text-xl md:text-2xl font-bold">{i18n.t('config.title')}</h1>
 </div>
 
+<Card class="p-4 mb-4">
+  <div class="flex items-center justify-between gap-4">
+    <div>
+      <h3 class="font-bold">{i18n.t('config.theme')}</h3>
+      <p class="text-xs text-muted-foreground">{i18n.t('config.themeDescription')}</p>
+    </div>
+    <ThemeSwitch />
+  </div>
+</Card>
+
 <div class="flex gap-2 overflow-x-auto mb-4 pb-2">
   {#each tabs as tab (tab.id)}
     <Button
@@ -157,7 +170,7 @@
     <Button variant={i18n.lang === 'es' ? 'default' : 'outline'} size="sm" onclick={() => i18n.setLang('es')}>ES</Button>
     <Button variant={i18n.lang === 'en' ? 'default' : 'outline'} size="sm" onclick={() => i18n.setLang('en')}>EN</Button>
   </div>
-  <Button onclick={openNew}>+ {i18n.t('common.add')}</Button>
+  <Button onclick={openNew}><Plus size={16} /> {i18n.t('common.add')}</Button>
 </div>
 
 <Card class="p-4 mb-4">
@@ -212,23 +225,32 @@
     </div>
   {:else}
     {#each items as item (item.key)}
-      <button class="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-muted/50 transition-colors border-t first:border-t-0" onclick={() => openEdit(item)}>
+      <div class="flex items-center gap-3 w-full px-4 py-3 border-t first:border-t-0">
+        <button class="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-muted/50 transition-colors" onclick={() => openEdit(item)}>
         <div class="h-2.5 w-2.5 rounded-full" style="background:{item.color || 'var(--primary)'}"></div>
         <div class="flex-1 min-w-0">
           <p class="text-sm font-semibold truncate">{item.label}</p>
           <p class="text-xs text-muted-foreground truncate">{item.sub}</p>
         </div>
-        <Button variant="ghost" size="sm" class="text-destructive" onclick={(e) => { e.stopPropagation(); askDelete(item); }}>
+        </button>
+        <Button variant="ghost" size="sm" class="text-destructive" onclick={() => askDelete(item)}>
           {i18n.t('common.delete')}
         </Button>
-      </button>
+      </div>
     {/each}
   {/if}
 </Card>
 
 {#if showForm}
   <div class="fixed inset-0 z-50 bg-black/80 flex items-end sm:items-center justify-center">
-    <div class="w-full max-w-md bg-background border rounded-t-2xl sm:rounded-2xl p-6 max-h-[92vh] overflow-y-auto" onclick={(e) => e.stopPropagation()}>
+    <div
+      class="w-full max-w-md bg-background border rounded-t-2xl sm:rounded-2xl p-6 max-h-[92vh] overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-label={editing ? i18n.t('config.editItem') : i18n.t('common.add')}
+      tabindex="-1"
+      onkeydown={(event) => { if (event.key === 'Escape') showForm = false; }}
+    >
       <h2 class="text-lg font-bold mb-4">
         {editing ? i18n.t('config.editItem') : i18n.t('common.add')}
       </h2>
@@ -337,17 +359,24 @@
 
 {#if showUpgrade}
   <div class="fixed inset-0 z-50 bg-black/80 flex items-end sm:items-center justify-center">
-    <div class="w-full max-w-md bg-background border rounded-t-2xl sm:rounded-2xl p-6" onclick={(e) => e.stopPropagation()}>
+    <div
+      class="w-full max-w-md bg-background border rounded-t-2xl sm:rounded-2xl p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Actualizar a Pro"
+      tabindex="-1"
+      onkeydown={(event) => { if (event.key === 'Escape') showUpgrade = false; }}
+    >
       <h2 class="text-lg font-bold mb-4">Actualizar a Pro</h2>
       <div class="text-center py-4">
         <p class="text-2xl md:text-3xl font-extrabold text-primary mb-2">$4.99/mes</p>
         <p class="text-sm text-muted-foreground mb-6">Gastos, cuentas y préstamos ilimitados</p>
         <ul class="text-sm text-left space-y-2 mb-6">
-          <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Gastos ilimitados por mes</li>
-          <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Cuentas ilimitadas</li>
-          <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Préstamos ilimitados</li>
-          <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Reportes PDF</li>
-          <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Soporte prioritario</li>
+          <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> Gastos ilimitados por mes</li>
+          <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> Cuentas ilimitadas</li>
+          <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> Préstamos ilimitados</li>
+          <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> Reportes PDF</li>
+          <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> Soporte prioritario</li>
         </ul>
         <Button class="w-full" onclick={handleUpgrade}>Activar Pro (simulado)</Button>
         <Button variant="ghost" class="w-full mt-2" onclick={() => (showUpgrade = false)}>Cancelar</Button>

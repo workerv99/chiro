@@ -3,7 +3,7 @@
   import { A, loadToken } from '$lib/api.svelte.js';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
-  import { DollarSign, Hash, Percent, Users, FileText, Shield } from 'lucide-svelte';
+  import { DollarSign, Hash, Percent, Users, FileText, Shield, Check } from 'lucide-svelte';
   import Button from '$lib/components/ui/button.svelte';
   import Card from '$lib/components/ui/card.svelte';
 
@@ -82,7 +82,7 @@
         {#each features as f}
           <Card class="p-6">
             <div class="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
-              <svelte:component this={f.icon} size={20} />
+              <f.icon size={20} />
             </div>
             <h3 class="font-bold mb-1">{f.title}</h3>
             <p class="text-sm text-muted-foreground">{f.desc}</p>
@@ -126,7 +126,7 @@
             <p class="text-sm text-muted-foreground mb-6">{plan.period}</p>
             <ul class="text-sm text-left space-y-3 mb-8">
               {#each plan.features as feat}
-                <li class="flex items-center gap-2"><span class="text-primary">✓</span> {feat}</li>
+                <li class="flex items-center gap-2"><Check size={16} class="text-primary shrink-0" /> {feat}</li>
               {/each}
             </ul>
             <a href="/login">

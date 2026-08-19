@@ -3,9 +3,11 @@
   import { i18n } from '$lib/i18n.svelte.js';
   import { S } from '$lib/stores.svelte.js';
   import { money } from '$lib/format.js';
+  import Button from '$lib/components/ui/button.svelte';
   import Card from '$lib/components/ui/card.svelte';
+  import { ArrowLeft, Check, Plus } from 'lucide-svelte';
 
-  const personId = String(page.params.id);
+  const personId = $derived(String(page.params.id));
 
   const person = $derived(S.db.persons.find(p => p.person_id === personId));
   const loans = $derived(S.db.loans.filter(l => l.person_id === personId));
@@ -20,8 +22,13 @@
 
 <svelte:head><title>{person?.name || i18n.t('loans.title')} · Chiro</title></svelte:head>
 
-<a class="text-sm text-muted-foreground hover:text-foreground font-semibold mb-2 inline-block" href="/loans">← {i18n.t('tabs.loans')}</a>
-<h1 class="text-xl md:text-2xl font-bold mb-4">{person?.name || '—'}</h1>
+<a class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground font-semibold mb-2" href="/loans"><ArrowLeft size={16} /> {i18n.t('tabs.loans')}</a>
+<div class="flex items-center justify-between gap-3 mb-4">
+  <h1 class="text-xl md:text-2xl font-bold">{person?.name || '—'}</h1>
+  <a href={`/loans?new=1&person=${personId}`}>
+    <Button size="sm"><Plus size={16} /> {i18n.t('loans.newLoan')}</Button>
+  </a>
+</div>
 
 <div class="grid grid-cols-3 gap-2 mb-4">
   <Card class="p-3 min-w-0">
@@ -41,7 +48,9 @@
 {#if loans.length === 0}
   <Card class="flex flex-col items-center gap-3 py-8">
     <p class="text-sm text-muted-foreground">{i18n.t('loans.noLoansForPerson')}</p>
-    <a href="/loans" class="inline-flex items-center justify-center h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90">{i18n.t('loans.newLoan')}</a>
+    <a href={`/loans?new=1&person=${personId}`}>
+      <Button><Plus size={16} /> {i18n.t('loans.newLoan')}</Button>
+    </a>
   </Card>
 {:else}
   <Card class="overflow-hidden">
@@ -56,7 +65,7 @@
           </p>
         </div>
         <div class="text-right">
-          <p class="text-sm font-bold" class:text-destructive={!l.is_paid}>{l.is_paid ? '✓' : money(loanRemaining)}</p>
+          <p class="text-sm font-bold" class:text-destructive={!l.is_paid}>{#if l.is_paid}<Check size={16} class="inline text-green-500" />{:else}{money(loanRemaining)}{/if}</p>
           {#if l.is_paid}
             <p class="text-xs text-green-500 font-semibold">{i18n.t('loans.paid')}</p>
           {/if}
