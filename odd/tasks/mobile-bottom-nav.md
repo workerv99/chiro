@@ -26,8 +26,8 @@ Frontend only (`web/src`). The decisions below were approved by the user.
 
 ## Tasks
 - [x] T1: The layout shows a bottom tab bar on mobile and the top nav from `sm:`.
-- [ ] T2: Logout and the Admin link appear in Settings on mobile.
-- [ ] T3: FABs, UndoToast and CookieBanner sit above the bottom bar on mobile. Main content padding clears the bar.
+- [x] T2: Logout and the Admin link appear in Settings on mobile.
+- [x] T3: FABs, UndoToast and CookieBanner sit above the bottom bar on mobile. Main content padding clears the bar.
 
 ## Acceptance criteria
 - At 375px: bottom bar visible, 5 tabs of at least 44px, active tab marked (`aria-current`), no horizontal overflow, nothing overlapping.
@@ -46,6 +46,10 @@ Frontend only (`web/src`). The decisions below were approved by the user.
 
 ## Progress
 - Branch `feat/mobile-bottom-nav` created from main (84608d8).
+- T1 done: bottom tab bar (Receipt/ChartPie/PiggyBank/HandCoins/Settings icons), top nav now `hidden sm:flex`, `isActive()` uses startsWith for nested routes, main `pb` grown to clear the bar on mobile. Commit ba0596b2.
+- T2 done: config page's Session card gained an `sm:hidden` block with an Admin link (Shield icon, admin role only) and a destructive-styled Logout button (LogOut icon); existing `sm:` logout button kept for desktop. Commit 5838889e.
+- T3 done: dashboard/budgets/loans FABs got `sm:bottom-6` (mobile offset of 5rem already clears the 3.5rem bar by 1.5rem margin, verified by calc, no change needed there); CookieBanner raised to `bottom-[calc(4.5rem+safe-area)]` on mobile / `sm:bottom-[calc(1.5rem+safe-area)]` so it clears the bar; UndoToast's existing 6rem offset already clears the bar, left unchanged. Commit 226ce39f.
+- Verification (from `web/`): `npm run check` → 0 errors (baseline: 0). `npm run lint` → 28 errors, same files/lines/messages as the pre-existing baseline, no new errors. `npm run build` → succeeded. Playwright visual checks at 375px/1024px deferred to the parent per its instructions (dev server / Playwright not run here).
 
 ## Next step
-T1.
+Parent to do visual verification at 375px and 1024px; otherwise the feature is complete and ready for review/PR.
