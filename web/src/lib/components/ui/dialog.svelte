@@ -36,7 +36,7 @@
     tabindex="-1"
     onkeydown={(event) => { if (event.key === 'Escape') open = false; }}
     class={cn(
-      "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg sm:rounded-lg",
+      "fixed inset-x-0 bottom-0 z-50 grid w-full max-h-[85dvh] gap-4 overflow-y-auto border bg-background p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-lg rounded-t-xl sm:inset-x-auto sm:left-[50%] sm:top-[50%] sm:bottom-auto sm:max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg sm:pb-6",
       className
     )}
     {...restProps}

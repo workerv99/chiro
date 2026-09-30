@@ -29,10 +29,11 @@ Frontend only (`web/src`). No backend changes, no visual redesign.
   - `loans/[id]/+page.svelte:519`: the icon edit button.
   - `config/+page.svelte:280`: the color input.
   - Also fixed `ThemeSwitch.svelte` toggle buttons and the landing page login link (both were `h-9`).
-- [ ] T3: Safe area and dynamic viewport units.
+- [x] T3: Safe area and dynamic viewport units.
   - FABs (dashboard, budgets, loans), UndoToast, CookieBanner and the main `pb-28` add `env(safe-area-inset-bottom)`.
-  - `min-h-screen` becomes `min-h-dvh`.
-  - `max-h-[92vh]` becomes `dvh`.
+  - `min-h-screen` becomes `min-h-dvh` (login, +layout, root +page).
+  - `max-h-[92vh]` becomes `dvh` (config sheet).
+  - The sticky nav header is `sticky`, not `fixed`, so it was left alone (no safe-area-inset-top needed).
 - [ ] T4: Dialog behaves as a bottom sheet on mobile and a centered dialog from `sm:`, with `max-h-[85dvh] overflow-y-auto`. This reuses the config sheet pattern.
 - [ ] T5: Low-priority polish.
   - Admin `text-[10px]` badges become `text-xs`.
@@ -52,6 +53,7 @@ Frontend only (`web/src`). No backend changes, no visual redesign.
 - Audit done (engram obs #82).
 - T1 done: commit f776eec.
 - T2 done: commit fecc8f4.
+- T3 done: commit b8a114f.
 
 ## Next step
-T3.
+T4.
