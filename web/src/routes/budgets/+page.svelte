@@ -108,7 +108,7 @@
       {@const exceeded = b.spent > b.amount}
       <button class="w-full text-left p-4 hover:bg-muted/50 transition-colors border-t first:border-t-0" onclick={() => openEdit(b)}>
         <div class="flex justify-between items-center mb-2">
-          <span class="text-sm font-semibold">{b.category_name}</span>
+          <span class="text-sm font-semibold">{b.category_id ? b.category_name : i18n.t('budgets.allCategories')}</span>
           <span class="text-sm font-bold" class:text-destructive={exceeded}>{money(b.spent)} / {money(b.amount)}</span>
         </div>
         <div class="h-2 bg-border rounded-full overflow-hidden">

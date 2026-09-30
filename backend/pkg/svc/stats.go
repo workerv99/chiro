@@ -196,20 +196,24 @@ func OutstandingTotal(ctx context.Context, st *store.Store, userID string) (floa
 	return total, err
 }
 
-// BudgetProgress devuelve presupuestos con su progreso de gasto.
+// BudgetProgress devuelve presupuestos con su progreso de gasto. Un budget con
+// category_id vacío representa "todas las categorías": suma el gasto del
+// período completo en vez de restringirlo a una categoría.
 func BudgetProgress(ctx context.Context, st *store.Store, userID string, year, month int) ([]model.BudgetWithProgress, error) {
 	rows, err := st.Pool().Query(ctx,
-		`SELECT b.budget_id, b.category_id, c.name AS category_name, c.color AS category_color,
+		`SELECT b.budget_id, b.category_id, COALESCE(c.name, '') AS category_name,
+		        COALESCE(c.color, '') AS category_color,
 		        b.amount, b.month, b.year,
 		        CAST(COALESCE((
 		          SELECT SUM(e.amount) FROM expense e
-		          WHERE e.user_id=b.user_id AND e.category_id=b.category_id
+		          WHERE e.user_id=b.user_id
+		            AND (b.category_id = '' OR e.category_id = b.category_id)
 		            AND e.deleted=0 AND e.transfer_pair_id IS NULL
 		            AND EXTRACT(YEAR FROM e.date)::int = b.year
 		            AND EXTRACT(MONTH FROM e.date)::int = b.month
 		        ),0) AS float8) AS spent
 		 FROM budget b
-		 JOIN category c ON c.user_id = b.user_id AND c.category_id = b.category_id
+		 LEFT JOIN category c ON c.user_id = b.user_id AND c.category_id = b.category_id
 		 WHERE b.user_id=$1 AND b.deleted=0 AND b.year=$2 AND b.month=$3
 		 ORDER BY b.amount DESC`, userID, year, month)
 	if err != nil {
