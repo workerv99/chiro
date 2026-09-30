@@ -84,13 +84,13 @@
       <div class="flex items-center gap-3 px-4 py-3 border-t first:border-t-0">
         <div class="h-2.5 w-2.5 rounded-full" style="background:{u.plan === 'pro' ? '#22c55e' : '#94a3b8'}"></div>
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-semibold truncate">{u.name || u.email}</p>
-          <p class="text-xs text-muted-foreground truncate">
+          <p class="text-sm font-semibold truncate" title={u.name || u.email}>{u.name || u.email}</p>
+          <p class="text-xs text-muted-foreground truncate" title={u.email}>
             {u.email}
             {#if u.role === 'admin'}
-              <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary ml-1">admin</span>
+              <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary ml-1">admin</span>
             {/if}
-            <span class="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold text-secondary-foreground ml-1">{u.plan}</span>
+            <span class="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-bold text-secondary-foreground ml-1">{u.plan}</span>
           </p>
         </div>
         <Button variant="outline" size="sm" onclick={() => toggleStatus(u)}>

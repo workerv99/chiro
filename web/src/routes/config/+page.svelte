@@ -229,8 +229,8 @@
         <button class="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-muted/50 transition-colors" onclick={() => openEdit(item)}>
         <div class="h-2.5 w-2.5 rounded-full" style="background:{item.color || 'var(--primary)'}"></div>
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-semibold truncate">{item.label}</p>
-          <p class="text-xs text-muted-foreground truncate">{item.sub}</p>
+          <p class="text-sm font-semibold truncate" title={item.label}>{item.label}</p>
+          <p class="text-xs text-muted-foreground truncate" title={item.sub}>{item.sub}</p>
         </div>
         </button>
         <Button variant="ghost" size="sm" class="text-destructive" onclick={() => askDelete(item)}>

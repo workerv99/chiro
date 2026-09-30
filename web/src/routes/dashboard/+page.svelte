@@ -207,7 +207,7 @@
           <a class="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors border-t first:border-t-0" href={`/expense/${e.expense_id}`}>
             <div class="h-2.5 w-2.5 rounded-sm" style="background:{colorOf(catOf(e.category_id))}"></div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold truncate">{e.description}</p>
+              <p class="text-sm font-semibold truncate" title={e.description}>{e.description}</p>
               <p class="text-xs text-muted-foreground flex gap-1.5 items-center flex-wrap">
                 {#if e.transfer_pair_id}
                   <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">{i18n.t('common.transfer')}</span>

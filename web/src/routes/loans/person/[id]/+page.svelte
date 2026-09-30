@@ -59,7 +59,7 @@
       <a class="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors border-t first:border-t-0" href={`/loans/${l.loan_id}`}>
         <div class="h-2.5 w-2.5 rounded-full" style="background:{l.is_paid ? '#22c55e' : '#f59e0b'}"></div>
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-semibold truncate">{l.description || i18n.t('loans.loan')}</p>
+          <p class="text-sm font-semibold truncate" title={l.description || i18n.t('loans.loan')}>{l.description || i18n.t('loans.loan')}</p>
           <p class="text-xs text-muted-foreground">
             {i18n.t('loans.installments')}: {l.months || '?'}
           </p>

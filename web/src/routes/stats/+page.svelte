@@ -80,7 +80,7 @@
       <div class="space-y-3">
         {#each breakdown as c (c.category_name)}
           <div class="flex items-center gap-3">
-            <span class="text-sm w-24 truncate">{c.category_name}</span>
+            <span class="text-sm w-24 truncate" title={c.category_name}>{c.category_name}</span>
             <div class="flex-1 h-2 bg-border rounded-full overflow-hidden">
               <div class="h-full rounded-full" style="width:{Math.max(4, (c.total / maxCat) * 100)}%;background:{c.category_color}"></div>
             </div>

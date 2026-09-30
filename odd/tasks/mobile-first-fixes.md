@@ -34,7 +34,7 @@ Frontend only (`web/src`). No backend changes, no visual redesign.
   - `min-h-screen` becomes `min-h-dvh` (login, +layout, root +page).
   - `max-h-[92vh]` becomes `dvh` (config sheet).
   - The sticky nav header is `sticky`, not `fixed`, so it was left alone (no safe-area-inset-top needed).
-- [ ] T4: Dialog behaves as a bottom sheet on mobile and a centered dialog from `sm:`, with `max-h-[85dvh] overflow-y-auto`. This reuses the config sheet pattern.
+- [x] T4: Dialog behaves as a bottom sheet on mobile and a centered dialog from `sm:`, with `max-h-[85dvh] overflow-y-auto`. This reuses the config sheet pattern.
 - [ ] T5: Low-priority polish.
   - Admin `text-[10px]` badges become `text-xs`.
   - Truncated strings get a `title` attribute.
@@ -54,6 +54,7 @@ Frontend only (`web/src`). No backend changes, no visual redesign.
 - T1 done: commit f776eec.
 - T2 done: commit fecc8f4.
 - T3 done: commit b8a114f.
+- T4 done: commit b11d52c.
 
 ## Next step
-T4.
+T5.
