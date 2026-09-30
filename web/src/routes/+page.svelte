@@ -50,7 +50,7 @@
 </svelte:head>
 
 {#if ready}
-  <div class="min-h-screen">
+  <div class="min-h-dvh">
     <nav class="flex items-center justify-between px-6 py-4 border-b">
       <div class="flex items-center gap-2">
         <div class="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 text-primary font-bold text-sm flex items-center justify-center">C</div>

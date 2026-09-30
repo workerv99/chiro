@@ -37,7 +37,7 @@
 </script>
 
 {#if showBanner}
-  <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-48px)] max-w-2xl bg-card border border-border rounded-2xl p-5 shadow-lg sm:flex sm:items-center sm:justify-between sm:gap-5">
+  <div class="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50 w-[calc(100%-48px)] max-w-2xl bg-card border border-border rounded-2xl p-5 shadow-lg sm:flex sm:items-center sm:justify-between sm:gap-5">
     <p class="text-sm text-foreground mb-4 sm:mb-0 sm:flex-1">
       We use cookies to ensure you get the best experience on our website.
     </p>

@@ -121,7 +121,7 @@
 
 <Button
   size="icon"
-  class="fixed right-5 bottom-20 h-14 w-14 rounded-2xl shadow-lg z-40"
+  class="fixed right-5 bottom-[calc(5rem+env(safe-area-inset-bottom))] h-14 w-14 rounded-2xl shadow-lg z-40"
   onclick={openNew}
   aria-label={i18n.t('budgets.newBudget')}
 >

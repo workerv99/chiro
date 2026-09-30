@@ -7,7 +7,7 @@
   let { message, secondsLeft, onUndo, onClose } = $props();
 </script>
 
-<div class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50">
+<div class="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50">
   <Toast>
     <span class="text-sm">{message}</span>
     {#if secondsLeft > 0}

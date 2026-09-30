@@ -244,7 +244,7 @@
 {#if showForm}
   <div class="fixed inset-0 z-50 bg-black/80 flex items-end sm:items-center justify-center">
     <div
-      class="w-full max-w-md bg-background border rounded-t-2xl sm:rounded-2xl p-6 max-h-[92vh] overflow-y-auto"
+      class="w-full max-w-md bg-background border rounded-t-2xl sm:rounded-2xl p-6 max-h-[92dvh] overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-label={editing ? i18n.t('config.editItem') : i18n.t('common.add')}

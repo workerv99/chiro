@@ -58,7 +58,7 @@
 </script>
 
 {#if !ready}
-  <div class="flex items-center justify-center min-h-screen text-muted-foreground">
+  <div class="flex items-center justify-center min-h-dvh text-muted-foreground">
     {i18n.t('common.loading')}
   </div>
 {:else if isPublicPage}
@@ -94,7 +94,7 @@
       </button>
     </div>
   </nav>
-  <main class="max-w-[760px] mx-auto px-4 pb-28 pt-4 sm:pt-4">
+  <main class="max-w-[760px] mx-auto px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4 sm:pt-4">
     {@render children?.()}
   </main>
   <CookieBanner />

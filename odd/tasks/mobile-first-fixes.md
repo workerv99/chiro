@@ -22,12 +22,13 @@ Frontend only (`web/src`). No backend changes, no visual redesign.
 
 ## Tasks
 - [x] T1: Form controls use 16px text. `ui/input.svelte`, native `<select>`/`<textarea>` (ExpenseModal, config, others) switch from `text-sm` to `text-base`.
-- [ ] T2: Touch targets are at least 44px.
+- [x] T2: Touch targets are at least 44px.
   - `ui/button.svelte`: the default, `sm` and `icon` sizes.
   - `+layout.svelte`: nav tabs and logout.
   - `UndoToast.svelte`: undo and close.
   - `loans/[id]/+page.svelte:519`: the icon edit button.
   - `config/+page.svelte:280`: the color input.
+  - Also fixed `ThemeSwitch.svelte` toggle buttons and the landing page login link (both were `h-9`).
 - [ ] T3: Safe area and dynamic viewport units.
   - FABs (dashboard, budgets, loans), UndoToast, CookieBanner and the main `pb-28` add `env(safe-area-inset-bottom)`.
   - `min-h-screen` becomes `min-h-dvh`.
@@ -50,6 +51,7 @@ Frontend only (`web/src`). No backend changes, no visual redesign.
 ## Progress
 - Audit done (engram obs #82).
 - T1 done: commit f776eec.
+- T2 done: commit fecc8f4.
 
 ## Next step
-T2.
+T3.

@@ -45,7 +45,7 @@
 
 <svelte:head><title>{mode === 'login' ? i18n.t('auth.login') : i18n.t('auth.register')} · Chiro</title></svelte:head>
 
-<div class="min-h-screen flex items-center justify-center p-4">
+<div class="min-h-dvh flex items-center justify-center p-4">
   <Card class="w-full max-w-sm p-8">
     <div class="text-center mb-6">
       <div class="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 text-primary font-black text-xl mx-auto mb-3 flex items-center justify-center">
