@@ -7,6 +7,7 @@
   import { A, loadToken } from '$lib/api.svelte.js';
   import CookieBanner from '$lib/components/CookieBanner.svelte';
   import { initTheme } from '$lib/theme.svelte.js';
+  import { Receipt, ChartPie, PiggyBank, HandCoins, Settings } from 'lucide-svelte';
 
   let { children } = $props();
   let ready = $state(false);
@@ -49,12 +50,16 @@
     page.url.pathname.startsWith('/legal')
   );
   const routes = $derived([
-    { href: '/dashboard', label: i18n.t('tabs.expenses') },
-    { href: '/stats', label: i18n.t('tabs.stats') },
-    { href: '/budgets', label: i18n.t('tabs.budgets') },
-    { href: '/loans', label: i18n.t('tabs.loans') },
-    { href: '/config', label: i18n.t('tabs.config') }
+    { href: '/dashboard', label: i18n.t('tabs.expenses'), icon: Receipt },
+    { href: '/stats', label: i18n.t('tabs.stats'), icon: ChartPie },
+    { href: '/budgets', label: i18n.t('tabs.budgets'), icon: PiggyBank },
+    { href: '/loans', label: i18n.t('tabs.loans'), icon: HandCoins },
+    { href: '/config', label: i18n.t('tabs.config'), icon: Settings }
   ]);
+
+  function isActive(href) {
+    return page.url.pathname === href || page.url.pathname.startsWith(href + '/');
+  }
 </script>
 
 {#if !ready}
@@ -65,7 +70,7 @@
   {@render children?.()}
   <CookieBanner />
 {:else if S.user}
-  <nav class="sticky top-0 z-20 flex items-center gap-1 px-3 py-2 bg-background/80 backdrop-blur-xl border-b border-border">
+  <nav class="hidden sm:flex sticky top-0 z-20 items-center gap-1 px-3 py-2 bg-background/80 backdrop-blur-xl border-b border-border">
     <div class="flex items-center gap-2 mr-3">
       <div class="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 text-primary font-bold text-xs flex items-center justify-center">C</div>
       <span class="font-bold text-sm hidden sm:block">Chiro</span>
@@ -94,7 +99,22 @@
       </button>
     </div>
   </nav>
-  <main class="max-w-[760px] mx-auto px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4 sm:pt-4">
+  <nav
+    class="sm:hidden fixed inset-x-0 bottom-0 z-30 flex bg-background/90 backdrop-blur-xl border-t border-border pb-[env(safe-area-inset-bottom)]"
+    aria-label={i18n.t('common.mainNav')}
+  >
+    {#each routes as r (r.href)}
+      <a
+        href={r.href}
+        class="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-14 text-[11px] font-medium transition-colors {isActive(r.href) ? 'text-primary' : 'text-muted-foreground'}"
+        aria-current={isActive(r.href) ? 'page' : undefined}
+      >
+        <r.icon class="h-5 w-5" />
+        <span>{r.label}</span>
+      </a>
+    {/each}
+  </nav>
+  <main class="max-w-[760px] mx-auto px-4 pb-[calc(10.5rem+env(safe-area-inset-bottom))] sm:pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4 sm:pt-4">
     {@render children?.()}
   </main>
   <CookieBanner />

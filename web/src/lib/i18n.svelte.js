@@ -8,7 +8,7 @@ export const messages = {
       transfer: 'Transferencia', required: 'Completa todos los campos',
       prevMonth: 'Mes anterior', nextMonth: 'Mes siguiente', goToday: 'Volver al mes actual',
       deleted: 'Eliminado', undo: 'Deshacer', close: 'Cerrar',
-      moreOptions: 'Más opciones'
+      moreOptions: 'Más opciones', mainNav: 'Navegación principal'
     },
     summary: { income: 'Ingresos', expense: 'Gastos', balance: 'Balance', vsLastMonth: 'vs mes anterior' },
     expenses: {
@@ -85,7 +85,7 @@ export const messages = {
       transfer: 'Transfer', required: 'Fill in all fields',
       prevMonth: 'Previous month', nextMonth: 'Next month', goToday: 'Back to current month',
       deleted: 'Deleted', undo: 'Undo', close: 'Close',
-      moreOptions: 'More options'
+      moreOptions: 'More options', mainNav: 'Main navigation'
     },
     summary: { income: 'Income', expense: 'Expenses', balance: 'Balance', vsLastMonth: 'vs last month' },
     expenses: {
