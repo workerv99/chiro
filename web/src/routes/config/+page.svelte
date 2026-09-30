@@ -270,7 +270,7 @@
           <div class="grid grid-cols-2 gap-4">
             <div class="space-y-2">
               <Label for="cfg-type">{i18n.t('config.type')}</Label>
-              <select id="cfg-type" bind:value={form.type} class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+              <select id="cfg-type" bind:value={form.type} class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base">
                 <option value="expense">{i18n.t('common.expense')}</option>
                 <option value="income">{i18n.t('common.income')}</option>
               </select>

@@ -136,7 +136,7 @@
   <div class="space-y-4">
     <div class="space-y-2">
       <Label for="bud-cat">{i18n.t('budgets.category')}</Label>
-      <select id="bud-cat" bind:value={catId} class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+      <select id="bud-cat" bind:value={catId} class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base">
         <option value="">{i18n.t('budgets.allCategories')}</option>
         {#each S.db.categories as c (c.category_id)}
           <option value={c.category_id}>{c.name}</option>

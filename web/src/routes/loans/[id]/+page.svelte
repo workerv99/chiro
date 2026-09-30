@@ -477,7 +477,7 @@
     </div>
     <div class="space-y-2"><Label>Cuota personalizada</Label><Input bind:value={editForm.custom_installment} inputmode="decimal" placeholder="0 = cuota igual" /></div>
     <div class="space-y-2"><Label>Frecuencia</Label>
-      <select bind:value={editForm.frequency} class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+      <select bind:value={editForm.frequency} class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base">
         <option value="monthly">Mensual</option><option value="biweekly">Quincenal</option><option value="weekly">Semanal</option>
       </select>
     </div>
@@ -498,7 +498,7 @@
     <div class="grid grid-cols-2 gap-3">
       <div class="space-y-2"><Label>Interés %</Label><Input bind:value={editForm.interest_rate} inputmode="decimal" /></div>
       <div class="space-y-2"><Label>Tipo de interés</Label>
-        <select bind:value={editForm.interest_type} class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+        <select bind:value={editForm.interest_type} class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base">
           <option value="simple">Simple</option><option value="compound">Compuesto</option>
         </select>
       </div>
