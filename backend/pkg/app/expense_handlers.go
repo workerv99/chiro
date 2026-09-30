@@ -84,6 +84,17 @@ func (a *App) handleUpdateExpense(w http.ResponseWriter, r *http.Request) {
 
 // saveExpenseWithTags guarda la transacción y sincroniza expense_tag.
 func (a *App) saveExpenseWithTags(w http.ResponseWriter, r *http.Request, row map[string]any) {
+	amount, _ := row["amount"].(float64)
+	if err := svc.ValidateAmountPositive(amount); err != nil {
+		writeErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	date, _ := row["date"].(string)
+	if err := svc.ValidateDate(date); err != nil {
+		writeErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	uid := auth.ContextUser(r.Context())
 	ts := time.Now().UnixMilli()
 
