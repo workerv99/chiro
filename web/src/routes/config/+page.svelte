@@ -11,7 +11,7 @@
   import Label from '$lib/components/ui/label.svelte';
   import Badge from '$lib/components/ui/badge.svelte';
   import ThemeSwitch from '$lib/components/ThemeSwitch.svelte';
-  import { Check, Plus } from 'lucide-svelte';
+  import { Check, Plus, Shield, LogOut } from 'lucide-svelte';
 
   let section = $state('accounts');
   let showForm = $state(false);
@@ -321,7 +321,17 @@
   {#if S.user}
     <p class="text-sm text-muted-foreground mb-3">{i18n.t('config.loggedAs')}: {S.user.name} ({S.user.email})</p>
   {/if}
-  <Button variant="outline" onclick={() => { logout(); goto('/login'); }}>{i18n.t('common.logout')}</Button>
+  <Button variant="outline" class="hidden sm:inline-flex" onclick={() => { logout(); goto('/login'); }}>{i18n.t('common.logout')}</Button>
+  <div class="flex flex-col gap-2 sm:hidden">
+    {#if S.user?.role === 'admin'}
+      <Button variant="outline" class="justify-start gap-2" onclick={() => goto('/admin')}>
+        <Shield size={16} /> Admin
+      </Button>
+    {/if}
+    <Button variant="destructive" class="justify-start gap-2" onclick={() => { logout(); goto('/login'); }}>
+      <LogOut size={16} /> {i18n.t('common.logout')}
+    </Button>
+  </div>
 </Card>
 
 <Card class="p-4 mt-4 border-destructive/50">
