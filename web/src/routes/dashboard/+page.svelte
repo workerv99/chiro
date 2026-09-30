@@ -189,7 +189,7 @@
 <Card class="overflow-hidden">
   {#if loading}
     <p class="text-sm text-muted-foreground py-8 text-center">{i18n.t('common.loading')}</p>
-  {:else if grouped().length === 0}
+  {:else if grouped.length === 0}
     <div class="flex flex-col items-center gap-3 py-8">
       <p class="text-sm text-muted-foreground">{i18n.t('expenses.empty')}</p>
       <Button onclick={() => (showModal = true)}>{i18n.t('expenses.newExpense')}</Button>
