@@ -63,7 +63,18 @@ Frontend only (`web/src`). No backend changes, no visual redesign.
 - `gentle-ai review assess --base-ref main --committed-only --untracked-scope=exclude` returned: risk medium (executable_change), 153 changed lines, `review_due: false` (`under_budget`). No native review is due yet.
 - Parent spot check: `npm run build` passes. The loans/[id] commit holds only this feature's hunks, and the unrelated edits stay unstaged.
 
+## Visual check (Playwright, 375x812, local stack)
+- No horizontal overflow on dashboard, loans, budgets, stats or config.
+- Nav tabs, logout and the default and sm buttons measure 44px tall. All form controls use 16px text.
+- The ExpenseModal Dialog is anchored at the bottom (top 122, bottom 812), scrolls (overflow-y auto) and can be dismissed.
+- Remaining gaps:
+  - The base `Input`/`<select>` are h-10 (40px). Input height was not in the T2 scope.
+  - CookieBanner buttons are 40px.
+  - Config account-list buttons are 36px.
+  - The dashboard month label button is 20px tall.
+- Pre-existing bug on main, not from this branch: `dashboard/+page.svelte:192` calls `grouped()` on a `$derived.by` value. The runtime error is `$.get(...) is not a function` and the list stays on "Loading...".
+
 ## Next step
-- Manual visual check at a 375px viewport, especially the Dialog bottom sheet and the FABs above the home indicator.
+- Decide whether to fix the remaining gaps and the dashboard bug.
 - One leftover `text-[10px]` at `loans/[id]/+page.svelte:463`, out of scope.
 - Push and PR are the user's call.
