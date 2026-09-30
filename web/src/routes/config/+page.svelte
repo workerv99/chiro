@@ -226,7 +226,7 @@
   {:else}
     {#each items as item (item.key)}
       <div class="flex items-center gap-3 w-full px-4 py-3 border-t first:border-t-0">
-        <button class="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-muted/50 transition-colors" onclick={() => openEdit(item)}>
+        <button class="flex items-center gap-3 flex-1 min-w-0 min-h-11 text-left hover:bg-muted/50 transition-colors" onclick={() => openEdit(item)}>
         <div class="h-2.5 w-2.5 rounded-full" style="background:{item.color || 'var(--primary)'}"></div>
         <div class="flex-1 min-w-0">
           <p class="text-sm font-semibold truncate" title={item.label}>{item.label}</p>
@@ -270,7 +270,7 @@
           <div class="grid grid-cols-2 gap-4">
             <div class="space-y-2">
               <Label for="cfg-type">{i18n.t('config.type')}</Label>
-              <select id="cfg-type" bind:value={form.type} class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base">
+              <select id="cfg-type" bind:value={form.type} class="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base">
                 <option value="expense">{i18n.t('common.expense')}</option>
                 <option value="income">{i18n.t('common.income')}</option>
               </select>

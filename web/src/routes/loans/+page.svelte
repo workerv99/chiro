@@ -176,7 +176,7 @@
   <div class="space-y-4">
     <div class="space-y-2">
       <Label for="loan-person">{i18n.t('loans.person')}</Label>
-      <select id="loan-person" bind:value={personId} class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base">
+      <select id="loan-person" bind:value={personId} class="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base">
         <option value="">—</option>
         {#each S.db.persons as p (p.person_id)}
           <option value={p.person_id}>{p.name}</option>
@@ -224,7 +224,7 @@
 
     <div class="space-y-2">
       <Label for="loan-freq">{i18n.t('loans.frequency')}</Label>
-      <select id="loan-freq" bind:value={frequency} class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base">
+      <select id="loan-freq" bind:value={frequency} class="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base">
         <option value="weekly">{i18n.t('loans.weekly')}</option>
         <option value="biweekly">{i18n.t('loans.biweekly')}</option>
         <option value="monthly">{i18n.t('loans.monthly')}</option>
@@ -245,7 +245,7 @@
           </div>
           <div class="space-y-2">
             <Label for="loan-interest">{i18n.t('loans.interest')}</Label>
-            <select id="loan-interest" bind:value={interestType} class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base">
+            <select id="loan-interest" bind:value={interestType} class="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base">
               <option value="simple">{i18n.t('loans.interestSimple')}</option>
               <option value="compound">{i18n.t('loans.interestCompound')}</option>
             </select>

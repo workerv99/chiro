@@ -154,7 +154,7 @@
   <Button variant="ghost" size="icon" onclick={() => shift(-1)} aria-label={i18n.t('common.prevMonth')}>
     <ChevronLeft class="h-5 w-5" />
   </Button>
-  <button class="text-sm font-bold" onclick={today} title={i18n.t('common.goToday')}>
+  <button class="min-h-11 px-3 text-sm font-bold" onclick={today} title={i18n.t('common.goToday')}>
     {monthLabel(year, month)}
   </button>
   <Button variant="ghost" size="icon" onclick={() => shift(1)} aria-label={i18n.t('common.nextMonth')}>

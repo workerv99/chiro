@@ -42,9 +42,9 @@
       We use cookies to ensure you get the best experience on our website.
     </p>
     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 sm:flex-shrink-0">
-      <button class="px-4 py-2.5 text-sm font-medium bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors" onclick={() => showSettings = !showSettings}>Settings</button>
-      <button class="px-4 py-2.5 text-sm font-medium text-secondary-foreground hover:opacity-70 transition-opacity" onclick={acceptNecessary}>Accept necessary</button>
-      <button class="px-5 py-2.5 text-sm font-medium bg-foreground text-background rounded-lg hover:opacity-90 transition-opacity" onclick={acceptAll}>Accept all</button>
+      <button class="min-h-11 px-4 py-2.5 text-sm font-medium bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors" onclick={() => showSettings = !showSettings}>Settings</button>
+      <button class="min-h-11 px-4 py-2.5 text-sm font-medium text-secondary-foreground hover:opacity-70 transition-opacity" onclick={acceptNecessary}>Accept necessary</button>
+      <button class="min-h-11 px-5 py-2.5 text-sm font-medium bg-foreground text-background rounded-lg hover:opacity-90 transition-opacity" onclick={acceptAll}>Accept all</button>
     </div>
 
     {#if showSettings}
@@ -61,7 +61,7 @@
           <input type="checkbox" bind:checked={analyticsConsent} class="w-4 h-4 accent-primary" />
           <span>Analytics</span>
         </label>
-        <button class="sm:ml-auto px-4 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors" onclick={saveConsent}>Save preferences</button>
+        <button class="sm:ml-auto min-h-11 px-4 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors" onclick={saveConsent}>Save preferences</button>
       </div>
     {/if}
   </div>
