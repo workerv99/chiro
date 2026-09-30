@@ -21,7 +21,7 @@ Frontend only (`web/src`). No backend changes, no visual redesign.
 - Branch: `fix/mobile-first-ux`. The working tree holds pre-existing uncommitted work (ports, payment history, loans/[id] page). Stage only this feature's hunks.
 
 ## Tasks
-- [ ] T1: Form controls use 16px text. `ui/input.svelte`, native `<select>`/`<textarea>` (ExpenseModal, config, others) switch from `text-sm` to `text-base`.
+- [x] T1: Form controls use 16px text. `ui/input.svelte`, native `<select>`/`<textarea>` (ExpenseModal, config, others) switch from `text-sm` to `text-base`.
 - [ ] T2: Touch targets are at least 44px.
   - `ui/button.svelte`: the default, `sm` and `icon` sizes.
   - `+layout.svelte`: nav tabs and logout.
@@ -49,6 +49,7 @@ Frontend only (`web/src`). No backend changes, no visual redesign.
 
 ## Progress
 - Audit done (engram obs #82).
+- T1 done: commit f776eec.
 
 ## Next step
-T1.
+T2.

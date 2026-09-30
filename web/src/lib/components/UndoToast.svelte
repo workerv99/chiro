@@ -11,11 +11,11 @@
   <Toast>
     <span class="text-sm">{message}</span>
     {#if secondsLeft > 0}
-      <Button variant="ghost" size="sm" class="h-8 px-2 text-primary" onclick={onUndo}>
+      <Button variant="ghost" size="sm" class="px-2 text-primary" onclick={onUndo}>
         {i18n.t('common.undo')}
       </Button>
     {/if}
-    <Button variant="ghost" size="sm" class="h-8 w-8 p-0 text-muted-foreground" onclick={onClose} aria-label={i18n.t('common.close')}>
+    <Button variant="ghost" size="sm" class="h-11 w-11 p-0 text-muted-foreground" onclick={onClose} aria-label={i18n.t('common.close')}>
       <X size={16} />
     </Button>
   </Toast>

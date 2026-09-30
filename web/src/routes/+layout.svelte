@@ -73,7 +73,7 @@
     {#each routes as r (r.href)}
       <a
         href={r.href}
-        class="flex-1 sm:flex-none sm:min-w-[80px] flex items-center justify-center h-9 rounded-full text-xs font-semibold transition-colors {page.url.pathname === r.href ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}"
+        class="flex-1 sm:flex-none sm:min-w-[80px] flex items-center justify-center h-11 rounded-full text-xs font-semibold transition-colors {page.url.pathname === r.href ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}"
         aria-current={page.url.pathname === r.href ? 'page' : undefined}
       >
         {r.label}
@@ -82,14 +82,14 @@
     {#if S.user?.role === 'admin'}
       <a
         href="/admin"
-        class="flex-1 sm:flex-none sm:min-w-[80px] flex items-center justify-center h-9 rounded-full text-xs font-semibold transition-colors {page.url.pathname === '/admin' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}"
+        class="flex-1 sm:flex-none sm:min-w-[80px] flex items-center justify-center h-11 rounded-full text-xs font-semibold transition-colors {page.url.pathname === '/admin' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}"
         aria-current={page.url.pathname === '/admin' ? 'page' : undefined}
       >
         Admin
       </a>
     {/if}
     <div class="flex-1 sm:flex-none sm:ml-auto">
-      <button class="w-full sm:w-auto flex items-center justify-center h-9 px-3 rounded-full text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" onclick={() => { logout(); goto('/login'); }}>
+      <button class="w-full sm:w-auto flex items-center justify-center h-11 px-3 rounded-full text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" onclick={() => { logout(); goto('/login'); }}>
         {i18n.t('common.logout')}
       </button>
     </div>

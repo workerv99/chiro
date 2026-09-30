@@ -59,7 +59,7 @@
       <div class="flex items-center gap-6">
         <a href="#features" class="text-sm text-muted-foreground hover:text-foreground">Características</a>
         <a href="#pricing" class="text-sm text-muted-foreground hover:text-foreground">Precios</a>
-        <a href="/login" class="inline-flex items-center justify-center h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90">Iniciar sesión</a>
+        <a href="/login" class="inline-flex items-center justify-center h-11 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90">Iniciar sesión</a>
       </div>
     </nav>
 

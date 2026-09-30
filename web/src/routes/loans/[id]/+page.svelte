@@ -457,7 +457,7 @@
             {:else}<span class="text-muted-foreground">Pendiente</span>{/if}
           </p>
         </div>
-        <button class="p-1 hover:bg-muted rounded" onclick={() => openEditInstallment(s)}>
+        <button class="inline-flex items-center justify-center min-h-11 min-w-11 hover:bg-muted rounded" onclick={() => openEditInstallment(s)}>
           <Edit class="h-4 w-4 text-muted-foreground" />
         </button>
       </div>

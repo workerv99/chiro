@@ -277,7 +277,7 @@
             </div>
             <div class="space-y-2">
               <Label for="cfg-color">{i18n.t('config.color')}</Label>
-              <Input id="cfg-color" type="color" bind:value={form.color} class="h-10 p-1 cursor-pointer" />
+              <Input id="cfg-color" type="color" bind:value={form.color} class="h-11 p-1 cursor-pointer" />
             </div>
           </div>
         {:else if section === 'piggy'}
