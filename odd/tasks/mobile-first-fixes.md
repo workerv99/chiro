@@ -59,5 +59,11 @@ Frontend only (`web/src`). No backend changes, no visual redesign.
 - T5 done: commit fee8db1.
 - Verification: `npm run check` 0 errors/0 warnings; `npm run lint` 28 errors, identical to base (no new errors); `npm run build` succeeded.
 
+## Review assessment
+- `gentle-ai review assess --base-ref main --committed-only --untracked-scope=exclude` returned: risk medium (executable_change), 153 changed lines, `review_due: false` (`under_budget`). No native review is due yet.
+- Parent spot check: `npm run build` passes. The loans/[id] commit holds only this feature's hunks, and the unrelated edits stay unstaged.
+
 ## Next step
-None. All tasks (T1-T5) and verification complete.
+- Manual visual check at a 375px viewport, especially the Dialog bottom sheet and the FABs above the home indicator.
+- One leftover `text-[10px]` at `loans/[id]/+page.svelte:463`, out of scope.
+- Push and PR are the user's call.
