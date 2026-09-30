@@ -295,6 +295,10 @@ func (a *App) handleCreateLoan(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	uid := auth.ContextUser(r.Context())
+	if err := a.checkLimits(r.Context(), uid, "loan"); err != nil {
+		writeErr(w, http.StatusForbidden, err.Error())
+		return
+	}
 	// Validar que la persona existe y pertenece al usuario.
 	var exists int
 	if err := a.Store.Pool().QueryRow(r.Context(),

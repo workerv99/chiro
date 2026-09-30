@@ -61,6 +61,11 @@ func (a *App) handleCreateExpense(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &row) {
 		return
 	}
+	uid := auth.ContextUser(r.Context())
+	if err := a.checkLimits(r.Context(), uid, "expense"); err != nil {
+		writeErr(w, http.StatusForbidden, err.Error())
+		return
+	}
 	if row["expense_id"] == nil || row["expense_id"] == "" {
 		row["expense_id"] = svc.GenID("exp")
 	}

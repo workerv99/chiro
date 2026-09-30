@@ -40,6 +40,13 @@ func (a *App) mountResource(r chi.Router, res resource) {
 		if !readJSON(w, req, &row) {
 			return
 		}
+		if table == "account" {
+			uid := auth.ContextUser(req.Context())
+			if err := a.checkLimits(req.Context(), uid, "account"); err != nil {
+				writeErr(w, http.StatusForbidden, err.Error())
+				return
+			}
+		}
 		a.upsertRow(w, req, table, row)
 	})
 
