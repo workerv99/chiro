@@ -74,7 +74,20 @@ Frontend only (`web/src`). No backend changes, no visual redesign.
   - The dashboard month label button is 20px tall.
 - Pre-existing bug on main, not from this branch: `dashboard/+page.svelte:192` calls `grouped()` on a `$derived.by` value. The runtime error is `$.get(...) is not a function` and the list stays on "Loading...".
 
+## Follow-up tasks (the user approved them after the visual check)
+- [x] T6: Fix the dashboard `grouped()` call on a `$derived.by` value (`dashboard/+page.svelte:192`).
+- [x] T7: Bring the remaining controls to 44px:
+  - `Input` and native selects: h-10 to h-11.
+  - CookieBanner buttons.
+  - Config account-list buttons.
+  - The dashboard month label button.
+- Route: direct inline. These are mechanical class edits, already understood.
+
+- T6 done: commit f623127. T7 done: commit d134c28.
+- Checks after T7: check shows 0 errors, lint shows the same 28 baseline errors, build passes.
+- Playwright re-check at 375px: the dashboard list now loads with no console error, and no control under 44px remains on dashboard, loans, budgets, stats, config or in the ExpenseModal.
+
 ## Next step
-- Decide whether to fix the remaining gaps and the dashboard bug.
+- Push and PR are the user's call.
 - One leftover `text-[10px]` at `loans/[id]/+page.svelte:463`, out of scope.
 - Push and PR are the user's call.
