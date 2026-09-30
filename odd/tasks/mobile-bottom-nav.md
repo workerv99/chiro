@@ -51,5 +51,14 @@ Frontend only (`web/src`). The decisions below were approved by the user.
 - T3 done: dashboard/budgets/loans FABs got `sm:bottom-6` (mobile offset of 5rem already clears the 3.5rem bar by 1.5rem margin, verified by calc, no change needed there); CookieBanner raised to `bottom-[calc(4.5rem+safe-area)]` on mobile / `sm:bottom-[calc(1.5rem+safe-area)]` so it clears the bar; UndoToast's existing 6rem offset already clears the bar, left unchanged. Commit 226ce39f.
 - Verification (from `web/`): `npm run check` → 0 errors (baseline: 0). `npm run lint` → 28 errors, same files/lines/messages as the pre-existing baseline, no new errors. `npm run build` → succeeded. Playwright visual checks at 375px/1024px deferred to the parent per its instructions (dev server / Playwright not run here).
 
+- Parent Playwright check:
+  - 375px:
+    - The bottom bar shows 5 tabs at 75x56px, and `aria-current` is on Loans at /loans.
+    - The top nav is hidden and there is no horizontal overflow.
+    - The FAB bottom (732) sits above the bar top (755).
+    - Logout in Settings is 44px and not covered by the bar.
+  - 1024px: the top nav is visible, the bottom bar is `display:none`, and the FAB sits 24px from the bottom.
+- Pre-existing issue seen, out of scope: the config page mixes languages ("Plan Free 0/50 gastos", "Tus datos (GDPR)", "Exportar datos") while the UI locale is EN.
+
 ## Next step
-Parent to do visual verification at 375px and 1024px; otherwise the feature is complete and ready for review/PR.
+- Merge, push or PR is the user's call.
