@@ -35,9 +35,10 @@ Frontend only (`web/src`). No backend changes, no visual redesign.
   - `max-h-[92vh]` becomes `dvh` (config sheet).
   - The sticky nav header is `sticky`, not `fixed`, so it was left alone (no safe-area-inset-top needed).
 - [x] T4: Dialog behaves as a bottom sheet on mobile and a centered dialog from `sm:`, with `max-h-[85dvh] overflow-y-auto`. This reuses the config sheet pattern.
-- [ ] T5: Low-priority polish.
+- [x] T5: Low-priority polish.
   - Admin `text-[10px]` badges become `text-xs`.
-  - Truncated strings get a `title` attribute.
+  - Truncated strings get a `title` attribute (admin, config, dashboard, stats, loans/person).
+  - Note: `loans/[id]/+page.svelte:463` also has a `text-[10px]` hint but was left as-is — out of the audit's explicit scope (admin only) and that file carries unrelated pre-existing edits.
 
 ## Acceptance criteria
 - `npm run check`, `npm run lint` and `npm run build` pass. No new errors compared with the base.
@@ -55,6 +56,8 @@ Frontend only (`web/src`). No backend changes, no visual redesign.
 - T2 done: commit fecc8f4.
 - T3 done: commit b8a114f.
 - T4 done: commit b11d52c.
+- T5 done: commit fee8db1.
+- Verification: `npm run check` 0 errors/0 warnings; `npm run lint` 28 errors, identical to base (no new errors); `npm run build` succeeded.
 
 ## Next step
-T5.
+None. All tasks (T1-T5) and verification complete.
