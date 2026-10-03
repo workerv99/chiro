@@ -77,8 +77,8 @@ func Load(requireSecret bool) (Config, error) {
 	c := Config{
 		DatabaseURL:     url,
 		JWTSecret:       secret,
-		Port:            env("PORT", "8080"),
-		CORSOrigins:     split(env("CORS_ORIGINS", "http://localhost:5173,http://localhost:4173")),
+		Port:            env("PORT", "4300"),
+		CORSOrigins:     split(env("CORS_ORIGINS", "http://localhost:4100,http://localhost:4101")),
 		WebDist:         env("WEB_DIST", "../web/build"),
 		DBMaxConns:      int32(envInt("DB_MAX_CONNS", 10)),
 		DBMinConns:      int32(envInt("DB_MIN_CONNS", 1)),

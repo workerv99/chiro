@@ -47,7 +47,7 @@ docker compose up -d
 cd backend
 go run ./cmd/server
 
-# 3. Web (dev server en http://localhost:5173)
+# 3. Web (dev server en http://localhost:4100)
 cd web
 npm install
 npm run dev

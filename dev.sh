@@ -17,8 +17,8 @@ docker compose logs backend --tail=10
 
 echo ""
 echo "✅ Servicios iniciados:"
-echo "   - PostgreSQL: localhost:5432"
-echo "   - Backend API: http://localhost:8080"
+echo "   - PostgreSQL: localhost:4200"
+echo "   - Backend API: http://localhost:4300"
 echo ""
 echo "💡 Para iniciar el frontend (fuera de Docker):"
 echo "   cd web && npm run dev"

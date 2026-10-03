@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: chiro
       POSTGRES_DB: chiro
     ports:
-      - "5432:5432"
+      - "4200:5432"
     volumes:
       - chiro_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -24,13 +24,13 @@ services:
     container_name: chiro-backend
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "4300:4300"
     environment:
       DATABASE_URL: postgres://chiro:chiro@db:5432/chiro?sslmode=disable
       JWT_SECRET: dev-secret-local-1234
       REQUIRE_SECRET: "false"
-      PORT: "8080"
-      CORS_ORIGINS: http://localhost:5173,http://localhost:4173
+      PORT: "4300"
+      CORS_ORIGINS: http://localhost:4100,http://localhost:4101
       WEB_DIST: /app/web/build
     volumes:
       - ./backend:/src

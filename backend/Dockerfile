@@ -18,5 +18,5 @@ USER chiro
 COPY --from=build /bin/chiro /chiro
 COPY --from=web /src/web/build /web
 ENV WEB_DIST=/web
-EXPOSE 8080
+EXPOSE 4300
 ENTRYPOINT ["/chiro"]

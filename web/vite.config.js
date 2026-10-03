@@ -13,8 +13,14 @@ export default defineConfig({
     }
   },
   server: {
+    port: 4100,
+    strictPort: true,
     proxy: {
-      '/api': 'http://localhost:8080'
+      '/api': 'http://localhost:4300'
     }
+  },
+  preview: {
+    port: 4101,
+    strictPort: true
   }
 });
