@@ -41,3 +41,6 @@ pnpm-debug.log*
 .playwright-mcp/
 static_analysis_semgrep_*/
 playwright-*.txt
+
+# Local code intelligence index
+.codegraph/
