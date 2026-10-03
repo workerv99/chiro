@@ -28,6 +28,15 @@ export function toDisplay(iso) {
   return `${d}/${m}/${y}`;
 }
 
+// YYYY-MM-DD (or a full ISO timestamp) -> { year, month, day } as zero-padded
+// strings. Splits the string instead of using new Date(), which parses
+// date-only strings as UTC and shifts the day in negative-offset timezones.
+export function isoParts(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || '').slice(0, 10));
+  if (!m) return { year: '', month: '', day: '' };
+  return { year: m[1], month: m[2], day: m[3] };
+}
+
 // DD/MM/YYYY -> YYYY-MM-DD
 export function toISO(display) {
   if (!display) return '';

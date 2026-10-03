@@ -4,7 +4,7 @@
   import { i18n } from '$lib/i18n.svelte.js';
   import { api } from '$lib/api.svelte.js';
   import { payInstallment, cascadeInstallment, unpayInstallment, remove, updateLoan, updateInstallment } from '$lib/stores.svelte.js';
-  import { money, toDisplay, toISO, todayISO, parseDecimal } from '$lib/format.js';
+  import { money, toDisplay, toISO, todayISO, parseDecimal, isoParts } from '$lib/format.js';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
   import Button from '$lib/components/ui/button.svelte';
   import Card from '$lib/components/ui/card.svelte';
@@ -14,17 +14,20 @@
   import DialogHeader from '$lib/components/ui/dialog-header.svelte';
   import DialogTitle from '$lib/components/ui/dialog-title.svelte';
   import DialogFooter from '$lib/components/ui/dialog-footer.svelte';
-  import { ChevronLeft, Edit, FileText } from 'lucide-svelte';
+  import { ArrowLeft, Edit, FileText } from 'lucide-svelte';
 
-  const loanId = String(page.params.id);
+  const loanId = $derived(String(page.params.id));
   let loan = $state(null);
   let schedule = $state([]);
+  let payments = $state([]);
   let loading = $state(true);
   let payAmount = $state('');
   let payDate = $state(toDisplay(todayISO()));
   let confirmDel = $state(false);
   let confirmPay = $state(false);
   let pendingAction = $state(null);
+  let cascadeMsg = $state('');
+  let payErr = $state('');
   let showEdit = $state(false);
   let editForm = $state({
     description: '', amount: '', date: '', interest_rate: '0',
@@ -53,23 +56,28 @@
   let instErr = $state('');
 
   async function load() {
-    const [loans, s] = await Promise.all([api('/api/loans'), api(`/api/loans/${loanId}/installments`)]);
+    const [loans, s, p] = await Promise.all([
+      api('/api/loans'),
+      api(`/api/loans/${loanId}/installments`),
+      api(`/api/loans/${loanId}/payments`)
+    ]);
     loan = loans.find((l) => l.loan_id === loanId) || null;
     schedule = s;
+    payments = p;
     if (nextPending) payAmount = String(nextPending.remaining ?? nextPending.amount);
   }
 
   function openEdit() {
     if (!loan) return;
-    const d = new Date(loan.date);
-    editDay = String(d.getDate()).padStart(2, '0');
-    editMonth = String(d.getMonth() + 1).padStart(2, '0');
-    editYear = String(d.getFullYear());
+    const d = isoParts(loan.date);
+    editDay = d.day;
+    editMonth = d.month;
+    editYear = d.year;
     if (loan.first_due_date) {
-      const fd = new Date(loan.first_due_date);
-      editDueDay = String(fd.getDate()).padStart(2, '0');
-      editDueMonth = String(fd.getMonth() + 1).padStart(2, '0');
-      editDueYear = String(fd.getFullYear());
+      const fd = isoParts(loan.first_due_date);
+      editDueDay = fd.day;
+      editDueMonth = fd.month;
+      editDueYear = fd.year;
     } else { editDueDay = ''; editDueMonth = ''; editDueYear = ''; }
     editForm = {
       description: loan.description || '', amount: String(loan.amount),
@@ -105,15 +113,15 @@
 
   function openEditInstallment(inst) {
     editingInstallment = inst;
-    const d = new Date(inst.due_date);
-    instDay = String(d.getDate()).padStart(2, '0');
-    instMonth = String(d.getMonth() + 1).padStart(2, '0');
-    instYear = String(d.getFullYear());
+    const d = isoParts(inst.due_date);
+    instDay = d.day;
+    instMonth = d.month;
+    instYear = d.year;
     if (inst.paid_date) {
-      const pd = new Date(inst.paid_date);
-      instPaidDay = String(pd.getDate()).padStart(2, '0');
-      instPaidMonth = String(pd.getMonth() + 1).padStart(2, '0');
-      instPaidYear = String(pd.getFullYear());
+      const pd = isoParts(inst.paid_date);
+      instPaidDay = pd.day;
+      instPaidMonth = pd.month;
+      instPaidYear = pd.year;
     } else {
       instPaidDay = '';
       instPaidMonth = '';
@@ -166,44 +174,36 @@
     confirmPay = true;
   }
 
-  async function executePay() {
-    if (!pendingAction || pendingAction.type !== 'pay') return;
-    const target = nextPending;
-    if (!target) return;
-    confirmPay = false;
-    await cascadeInstallment(target.installment_id, { amount: pendingAction.amount, date: pendingAction.date });
-    pendingAction = null;
-    await load();
-  }
-
-  async function cascade() {
-    const target = nextPending;
-    if (!target) return;
-    const amt = parseFloat(payAmount);
-    if (!amt || amt <= 0) return;
-    pendingAction = { type: 'cascade', amount: amt, date: toISO(payDate) };
-    confirmPay = true;
-  }
-
-  async function executeCascade() {
-    if (!pendingAction || pendingAction.type !== 'cascade') return;
-    const target = nextPending;
-    if (!target) return;
-    confirmPay = false;
-    await cascadeInstallment(target.installment_id, { amount: pendingAction.amount, date: pendingAction.date });
-    pendingAction = null;
-    await load();
-  }
-
   async function executeAction() {
-    if (pendingAction?.type === 'pay') return executePay();
-    if (pendingAction?.type === 'cascade') return executeCascade();
+    if (!pendingAction) return;
+    const target = nextPending;
+    if (!target) return;
+    confirmPay = false;
+    payErr = '';
+    try {
+      const res = await cascadeInstallment(target.installment_id, { amount: pendingAction.amount, date: pendingAction.date });
+      if (res && res.applied_count) {
+        let msg = `Pago de $${res.total_applied.toFixed(2)} aplicado a ${res.applied_count} cuota(s)`;
+        if (res.excess > 0) {
+          msg += `. La cuota tenía $${res.starting_amount.toFixed(2)} pendientes y $${res.excess.toFixed(2)} se aplicó a las siguientes cuotas.`;
+        } else if (res.total_applied < res.starting_amount) {
+          msg += `. Quedan $${(res.starting_amount - res.total_applied).toFixed(2)} pendientes en esa cuota.`;
+        }
+        cascadeMsg = msg;
+        setTimeout(() => (cascadeMsg = ''), 8000);
+      }
+      await load();
+    } catch (e) {
+      payErr = e.message;
+    } finally {
+      pendingAction = null;
+    }
   }
 
   async function unpay() {
-    const last = [...schedule].reverse().find((x) => x.is_paid);
-    if (!last) return;
-    await unpayInstallment(last.installment_id);
+    // The backend reverts the loan's most recent payment; any installment id of the loan identifies it.
+    if (!schedule.length) return;
+    await unpayInstallment(schedule[0].installment_id);
     await load();
   }
 
@@ -223,19 +223,19 @@
     const accent = [91, 124, 246];
 
     doc.setFillColor(30, 41, 59);
-    doc.rect(0, 0, pw, 32, 'F');
+    doc.rect(0, 0, pw, 20, 'F');
     doc.setFillColor(91, 124, 246);
-    doc.rect(0, 32, pw, 2, 'F');
+    doc.rect(0, 20, pw, 1.5, 'F');
 
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(7);
+    doc.setFontSize(6);
     doc.setFont('helvetica', 'normal');
-    doc.text('CHIRO', m, 12);
-    doc.setFontSize(18);
+    doc.text('CHIRO', m, 8);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('REPORTE DE PRESTAMO', m, 24);
+    doc.text('REPORTE DE PRESTAMO', m, 17);
 
-    let y = 44;
+    let y = 30;
     doc.setTextColor(30, 41, 59);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
@@ -305,8 +305,8 @@
       const dueDate = toDisplay(s.due_date);
       const paidDate = s.paid_date ? toDisplay(s.paid_date) : '—';
       const amount = `$${s.amount.toFixed(2)}`;
-      const paidAmt = s.is_paid ? `$${(s.paid_amount || s.amount).toFixed(2)}` : '$0.00';
-      const status = s.is_paid ? 'Saldada' : 'Impaga';
+      const paidAmt = s.paid_amount > 0 ? `$${s.paid_amount.toFixed(2)}` : '$0.00';
+      const status = s.is_paid ? 'Saldada' : s.is_partial ? 'Parcial' : 'Impaga';
       let delay = '—';
       if (s.is_paid && s.paid_date && s.due_date) {
         const diff = Math.ceil((new Date(s.paid_date) - new Date(s.due_date)) / 864e5);
@@ -315,24 +315,32 @@
         const diff = Math.ceil((new Date() - new Date(s.due_date)) / 864e5);
         delay = diff > 0 ? `${diff} dia(s)` : 'Pendiente';
       }
-      return [s.number, dueDate, amount, paidDate, paidAmt, status, delay];
+      let detail = '';
+      const originalAmount = s.original_amount || s.amount;
+      if (s.paid_amount > originalAmount) {
+        detail = `Pago $${s.paid_amount.toFixed(2)} de $${originalAmount.toFixed(2)}.\nExcedente $${(s.paid_amount - originalAmount).toFixed(2)} -> sig. cuotas`;
+      } else if (s.is_partial && s.paid_amount > 0) {
+        detail = `Pago $${s.paid_amount.toFixed(2)} de $${originalAmount.toFixed(2)}.\nFaltan $${s.remaining.toFixed(2)}`;
+      }
+      return [s.number, dueDate, amount, paidDate, paidAmt, status, delay, detail];
     });
 
     autoTable(doc, {
       startY: y,
-      head: [['#', 'VENCIMIENTO', 'MONTO', 'PAGO', 'ABONADO', 'ESTADO', 'DIAS']],
+      head: [['#', 'VENCIMIENTO', 'MONTO', 'PAGO', 'ABONADO', 'ESTADO', 'DIAS', 'DETALLE']],
       body: tableData,
       theme: 'striped',
       tableWidth: 'auto',
       headStyles: { fillColor: accent, textColor: 255, fontStyle: 'bold', fontSize: 7 },
-      styles: { fontSize: 8, cellPadding: 3.5, textColor: [30, 41, 59], lineColor: [230, 230, 230], lineWidth: 0.3 },
+      styles: { fontSize: 8, cellPadding: 3.5, overflow: 'linebreak', textColor: [30, 41, 59], lineColor: [230, 230, 230], lineWidth: 0.3 },
       alternateRowStyles: { fillColor: [248, 250, 252] },
       columnStyles: {
         0: { halign: 'center', fontStyle: 'bold' },
         2: { halign: 'right' },
         4: { halign: 'right' },
         5: { halign: 'center', fontStyle: 'bold' },
-        6: { halign: 'center' }
+        6: { halign: 'center' },
+        7: { fontSize: 6.5, cellWidth: 48, overflow: 'linebreak' }
       },
       didParseCell: (data) => {
         if (data.section === 'body') {
@@ -340,6 +348,7 @@
           if (data.column.index === 5) {
             const val = row.raw[5];
             if (val === 'Saldada') data.cell.styles.textColor = [34, 197, 94];
+            else if (val === 'Parcial') data.cell.styles.textColor = [217, 119, 6];
             else data.cell.styles.textColor = [100, 116, 139];
           }
           if (data.column.index === 6) {
@@ -347,9 +356,45 @@
             if (val.includes('dia(s)')) data.cell.styles.textColor = [239, 68, 68];
             else if (val === 'A tiempo') data.cell.styles.textColor = [34, 197, 94];
           }
+          if (data.column.index === 7) {
+            const val = row.raw[7];
+            if (val) {
+              data.cell.styles.textColor = [217, 119, 6];
+              data.cell.styles.overflow = 'linebreak';
+            }
+          }
         }
       }
     });
+
+    if (payments.length > 0) {
+      const historyY = (doc.lastAutoTable?.finalY || y) + 10;
+      doc.setTextColor(30, 41, 59);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('HISTORIAL DE PAGOS', m, historyY);
+
+      const paymentData = payments.map((p) => [
+        toDisplay(p.date),
+        `$${p.amount.toFixed(2)}`,
+        p.allocations.map((a) => `Cuota ${a.installment_number}: $${a.amount.toFixed(2)}`).join('\n')
+      ]);
+      autoTable(doc, {
+        startY: historyY + 4,
+        head: [['FECHA', 'PAGO RECIBIDO', 'DISTRIBUCIÓN']],
+        body: paymentData,
+        theme: 'striped',
+        tableWidth: 'auto',
+        headStyles: { fillColor: accent, textColor: 255, fontStyle: 'bold', fontSize: 7 },
+        styles: { fontSize: 7.5, cellPadding: 3, overflow: 'linebreak', textColor: [30, 41, 59], lineColor: [230, 230, 230], lineWidth: 0.3 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: {
+          0: { cellWidth: 28 },
+          1: { halign: 'right', cellWidth: 32 },
+          2: { cellWidth: 75 }
+        }
+      });
+    }
 
     doc.save(`prestamo-${loan.person_name.replace(/\s+/g, '_')}-${loanId}.pdf`);
   }
@@ -360,7 +405,7 @@
 {#if loading || !loan}
   <p class="text-sm text-muted-foreground py-8 text-center">{i18n.t('common.loading')}</p>
 {:else}
-  <a class="text-sm text-muted-foreground hover:text-foreground font-semibold mb-2 inline-block" href={`/loans/person/${loan.person_id}`}>← {loan.person_name}</a>
+  <a class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground font-semibold mb-2" href={`/loans/person/${loan.person_id}`}><ArrowLeft size={16} /> {loan.person_name}</a>
   <h1 class="text-xl md:text-2xl font-bold mb-4">{loan.description || 'Préstamo'}</h1>
 
   <Card class="p-4 mb-4">
@@ -419,7 +464,7 @@
           <p class="text-[10px] text-muted-foreground text-center">El excedente se distribuye en las siguientes cuotas</p>
         </div>
       </details>
-      {#if paidCount > 0}
+      {#if payments.length > 0}
         <Button variant="ghost" class="w-full mt-3 text-sm text-muted-foreground" onclick={unpay}>Deshacer ultimo pago</Button>
       {/if}
     </Card>
@@ -428,6 +473,18 @@
       <p class="font-bold text-green-500 mb-1">Todas las cuotas pagadas</p>
       <p class="text-sm text-muted-foreground">{money(loan.total_paid)} de {money(loan.total_amount)}</p>
     </Card>
+  {/if}
+
+  {#if cascadeMsg}
+    <div class="mb-4 rounded-lg bg-green-500/10 border border-green-500/25 px-4 py-3">
+      <p class="text-sm font-semibold text-green-600 dark:text-green-400">{cascadeMsg}</p>
+    </div>
+  {/if}
+
+  {#if payErr}
+    <div class="mb-4 rounded-lg bg-destructive/10 border border-destructive/25 px-4 py-3">
+      <p class="text-sm font-semibold text-destructive">{payErr}</p>
+    </div>
   {/if}
 
   <Card class="overflow-hidden mb-4">
@@ -447,6 +504,11 @@
             Vence: {toDisplay(s.due_date)}
             {#if s.is_paid && s.paid_date}<span class="text-green-500 ml-1">Pagado: {toDisplay(s.paid_date)}</span>{/if}
           </p>
+          {#if s.is_partial && s.paid_amount > 0}
+            <p class="text-xs text-amber-500 mt-0.5">
+              Pagado {money(s.paid_amount)} de {money(s.amount)}. Faltan {money(s.remaining)}.
+            </p>
+          {/if}
         </div>
         <div class="text-right">
           <p class="text-sm font-bold">{money(s.amount)}</p>
