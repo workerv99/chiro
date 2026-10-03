@@ -67,3 +67,9 @@ export function pct(spent, limit) {
   if (!limit || limit <= 0) return 0;
   return Math.min(100, Math.round((spent / limit) * 100));
 }
+
+// Parses user-typed decimals; accepts both "12.5" and "12,5" (comma keypads).
+export function parseDecimal(value) {
+  const n = parseFloat(String(value ?? "").trim().replace(",", "."));
+  return Number.isFinite(n) ? n : NaN;
+}

@@ -4,7 +4,7 @@
   import { i18n } from '$lib/i18n.svelte.js';
   import { api } from '$lib/api.svelte.js';
   import { payInstallment, cascadeInstallment, unpayInstallment, remove, updateLoan, updateInstallment } from '$lib/stores.svelte.js';
-  import { money, toDisplay, toISO, todayISO } from '$lib/format.js';
+  import { money, toDisplay, toISO, todayISO, parseDecimal } from '$lib/format.js';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
   import Button from '$lib/components/ui/button.svelte';
   import Card from '$lib/components/ui/card.svelte';
@@ -56,7 +56,7 @@
     const [loans, s] = await Promise.all([api('/api/loans'), api(`/api/loans/${loanId}/installments`)]);
     loan = loans.find((l) => l.loan_id === loanId) || null;
     schedule = s;
-    if (nextPending) payAmount = String(nextPending.amount);
+    if (nextPending) payAmount = String(nextPending.remaining ?? nextPending.amount);
   }
 
   function openEdit() {
@@ -84,7 +84,7 @@
 
   async function saveEdit() {
     editErr = '';
-    const amt = parseFloat(editForm.amount);
+    const amt = parseDecimal(editForm.amount);
     if (!amt || amt <= 0) return (editErr = 'Monto invalido');
     if (!editDay || !editMonth || !editYear) return (editErr = 'Fecha requerida');
     const dateStr = `${editYear}-${editMonth}-${editDay}`;
@@ -93,10 +93,10 @@
     try {
       await updateLoan(loanId, {
         description: editForm.description.trim(), amount: amt, date: dateStr,
-        interest_rate: parseFloat(editForm.interest_rate) || 0,
+        interest_rate: parseDecimal(editForm.interest_rate) || 0,
         interest_type: editForm.interest_type, months: parseInt(editForm.months, 10) || 1,
         frequency: editForm.frequency, first_due_date: firstDueStr,
-        custom_installment: parseFloat(editForm.custom_installment) || 0
+        custom_installment: parseDecimal(editForm.custom_installment) || 0
       });
       showEdit = false;
       await load();
@@ -133,11 +133,11 @@
     instErr = '';
     if (!instDay || !instMonth || !instYear) return (instErr = 'Fecha de vencimiento requerida');
     const dueDateStr = `${instYear}-${instMonth}-${instDay}`;
-    const amt = parseFloat(installmentForm.amount);
+    const amt = parseDecimal(installmentForm.amount);
     if (!amt || amt <= 0) return (instErr = 'Monto inválido');
     let paidDateStr = null;
     if (instPaidDay && instPaidMonth && instPaidYear) paidDateStr = `${instPaidYear}-${instPaidMonth}-${instPaidDay}`;
-    const paidAmt = parseFloat(installmentForm.paid_amount) || 0;
+    const paidAmt = parseDecimal(installmentForm.paid_amount) || 0;
     try {
       await updateInstallment(editingInstallment.installment_id, {
         due_date: dueDateStr,
@@ -160,7 +160,7 @@
   async function pay(next) {
     const target = nextPending;
     if (!target) return;
-    const amt = next ? target.amount : parseFloat(payAmount);
+    const amt = next ? (target.remaining ?? target.amount) : parseDecimal(payAmount);
     if (!amt || amt <= 0) return;
     pendingAction = { type: 'pay', amount: amt, date: toISO(payDate) };
     confirmPay = true;
@@ -406,7 +406,7 @@
         <span class="text-sm text-muted-foreground font-semibold">Cuota #{nextPending.number}</span>
         <span class="text-sm text-muted-foreground">{toDisplay(nextPending.due_date)}</span>
       </div>
-      <p class="text-2xl font-extrabold mb-4">{money(nextPending.amount)}</p>
+      <p class="text-2xl font-extrabold mb-4">{money(nextPending.remaining ?? nextPending.amount)}</p>
       <Button class="w-full h-12" onclick={() => pay(true)}>Pagar cuota #{nextPending.number}</Button>
       <details class="mt-4">
         <summary class="cursor-pointer text-sm font-semibold text-muted-foreground py-2">Otro monto</summary>
