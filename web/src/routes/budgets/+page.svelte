@@ -2,7 +2,7 @@
   import { i18n } from '$lib/i18n.svelte.js';
   import { api } from '$lib/api.svelte.js';
   import { S, create, update, remove } from '$lib/stores.svelte.js';
-  import { money, pct } from '$lib/format.js';
+  import { money, pct, parseDecimal } from '$lib/format.js';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
   import Button from '$lib/components/ui/button.svelte';
   import Card from '$lib/components/ui/card.svelte';
@@ -60,7 +60,7 @@
 
   async function save() {
     err = '';
-    const amt = parseFloat(amount);
+    const amt = parseDecimal(amount);
     if (!amt || amt <= 0) return (err = i18n.t('common.required'));
     try {
       if (editing) await update('budgets', editing.budget_id, { amount: amt, category_id: catId });

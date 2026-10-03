@@ -2,7 +2,7 @@
   import { page } from '$app/state';
   import { i18n } from '$lib/i18n.svelte.js';
   import { S, create, createLoan } from '$lib/stores.svelte.js';
-  import { money, toDisplay, toISO, todayISO } from '$lib/format.js';
+  import { money, toDisplay, toISO, todayISO, parseDecimal } from '$lib/format.js';
   import Button from '$lib/components/ui/button.svelte';
   import Card from '$lib/components/ui/card.svelte';
   import Input from '$lib/components/ui/input.svelte';
@@ -73,19 +73,19 @@
 
   async function save() {
     err = '';
-    const p = parseFloat(amount);
+    const p = parseDecimal(amount);
     if (!personId) return (err = i18n.t('loans.personRequired'));
     if (!p || p <= 0) return (err = i18n.t('loans.amountRequired'));
     const n = parseInt(months, 10);
     if (!n || n <= 0) return (err = i18n.t('loans.installmentsRequired'));
-    const custom = parseFloat(customInstallment) || 0;
+    const custom = parseDecimal(customInstallment) || 0;
     try {
       await createLoan({
         person_id: personId,
         description: description.trim(),
         amount: p,
         date: toISO(startDate),
-        interest_rate: rate ? parseFloat(rate) : 0,
+        interest_rate: rate ? parseDecimal(rate) : 0,
         interest_type: interestType,
         months: n,
         frequency,

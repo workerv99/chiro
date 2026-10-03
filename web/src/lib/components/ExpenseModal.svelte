@@ -1,7 +1,7 @@
 <script>
   import { i18n } from '$lib/i18n.svelte.js';
   import { S, createExpense, updateExpense, createTransfer, deleteExpense, refreshMonth } from '$lib/stores.svelte.js';
-  import { toDisplay, toISO, todayISO } from '$lib/format.js';
+  import { toDisplay, toISO, todayISO, parseDecimal } from '$lib/format.js';
   import Dialog from '$lib/components/ui/dialog.svelte';
   import DialogHeader from '$lib/components/ui/dialog-header.svelte';
   import DialogTitle from '$lib/components/ui/dialog-title.svelte';
@@ -58,7 +58,7 @@
   async function save() {
     err = '';
     if (!description.trim()) return (err = i18n.t('expenses.descriptionRequired'));
-    const amt = parseFloat(amount);
+    const amt = parseDecimal(amount);
     if (!amt || amt <= 0) return (err = i18n.t('expenses.amountRequired'));
     const iso = toISO(date);
     if (!iso) return (err = i18n.t('expenses.dateRequired'));
