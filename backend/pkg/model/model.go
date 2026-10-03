@@ -64,18 +64,34 @@ type LoanWithPerson struct {
 
 // Installment es una cuota con su monto efectivo (arrastre de deuda vencida).
 type Installment struct {
-	InstallmentID string  `json:"installment_id"`
-	LoanID        string  `json:"loan_id"`
-	Number        int     `json:"number"`
-	DueDate       string  `json:"due_date"`
-	Amount        float64 `json:"amount"`
-	PaidDate      *string `json:"paid_date"`
-	PaidAmount    float64 `json:"paid_amount"`
-	Effective     float64 `json:"effective"`
-	IsOverdue     bool    `json:"is_overdue"`
-	IsPartial     bool    `json:"is_partial"`
-	IsPaid        bool    `json:"is_paid"`
-	Remaining     float64 `json:"remaining"`
+	InstallmentID  string  `json:"installment_id"`
+	LoanID         string  `json:"loan_id"`
+	Number         int     `json:"number"`
+	DueDate        string  `json:"due_date"`
+	Amount         float64 `json:"amount"`
+	PaidDate       *string `json:"paid_date"`
+	PaidAmount     float64 `json:"paid_amount"`
+	OriginalAmount float64 `json:"original_amount"`
+	Effective      float64 `json:"effective"`
+	IsOverdue      bool    `json:"is_overdue"`
+	IsPartial      bool    `json:"is_partial"`
+	IsPaid         bool    `json:"is_paid"`
+	Remaining      float64 `json:"remaining"`
+}
+
+// PaymentHistory registra el monto original y cómo se distribuyó entre cuotas.
+type PaymentHistory struct {
+	PaymentID             string              `json:"payment_id"`
+	StartingInstallmentID string              `json:"starting_installment_id"`
+	Amount                float64             `json:"amount"`
+	Date                  string              `json:"date"`
+	Allocations           []PaymentAllocation `json:"allocations"`
+}
+
+type PaymentAllocation struct {
+	InstallmentID     string  `json:"installment_id"`
+	InstallmentNumber int     `json:"installment_number"`
+	Amount            float64 `json:"amount"`
 }
 
 // BudgetWithProgress es un presupuesto con el gasto de la categoría.

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -475,25 +476,78 @@ func (a *App) handleLoanInstallments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	effective := svc.ComputeEffectiveAmounts(insts, svc.Today())
-	out := make([]model.Installment, len(effective))
-	for i, inst := range effective {
+	out := make([]model.Installment, len(insts))
+	for i, inst := range insts {
 		isOverdue := inst.DueDate < svc.Today()
 		fullyPaid := inst.PaidAmount >= inst.Amount
 		out[i] = model.Installment{
-			InstallmentID: inst.InstallmentID,
-			LoanID:        inst.LoanID,
-			Number:        inst.Number,
-			DueDate:       inst.DueDate,
-			Amount:        inst.Amount,
-			PaidDate:      inst.PaidDate,
-			PaidAmount:    inst.PaidAmount,
-			Effective:     svc.Round2(inst.Amount - inst.PaidAmount),
-			IsOverdue:     isOverdue,
-			IsPartial:     inst.PaidAmount > 0 && !fullyPaid,
-			IsPaid:        fullyPaid,
-			Remaining:     max(0, svc.Round2(inst.Amount-inst.PaidAmount)),
+			InstallmentID:  inst.InstallmentID,
+			LoanID:         inst.LoanID,
+			Number:         inst.Number,
+			DueDate:        inst.DueDate,
+			Amount:         inst.Amount,
+			PaidDate:       inst.PaidDate,
+			PaidAmount:     inst.PaidAmount,
+			OriginalAmount: inst.Amount,
+			Effective:      svc.Round2(inst.Amount - inst.PaidAmount),
+			IsOverdue:      isOverdue,
+			IsPartial:      inst.PaidAmount > 0 && !fullyPaid,
+			IsPaid:         fullyPaid,
+			Remaining:      max(0, svc.Round2(inst.Amount-inst.PaidAmount)),
 		}
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// handleLoanPayments devuelve los pagos originales y su distribución por cuota.
+func (a *App) handleLoanPayments(w http.ResponseWriter, r *http.Request) {
+	uid := auth.ContextUser(r.Context())
+	loanID := chi.URLParam(r, "id")
+	rows, err := a.Store.Pool().Query(r.Context(),
+		`SELECT h.payment_id, h.starting_installment_id, h.amount,
+		        to_char(h.date, 'YYYY-MM-DD'), a.installment_id,
+		        a.installment_number, a.amount
+		 FROM payment_history h
+		 LEFT JOIN payment_history_allocation a
+		   ON a.user_id=h.user_id AND a.payment_id=h.payment_id
+		 WHERE h.user_id=$1 AND h.loan_id=$2 AND h.deleted=0
+		 ORDER BY h.date ASC, h.created_at ASC, a.installment_number ASC`, uid, loanID)
+	if err != nil {
+		writeServerError(w, r, "error interno del servidor", err)
+		return
+	}
+	defer rows.Close()
+
+	byID := make(map[string]int)
+	out := make([]model.PaymentHistory, 0)
+	for rows.Next() {
+		var paymentID, startingID, date string
+		var amount float64
+		var allocationID *string
+		var allocationNumber *int
+		var allocationAmount *float64
+		if err := rows.Scan(&paymentID, &startingID, &amount, &date, &allocationID, &allocationNumber, &allocationAmount); err != nil {
+			writeServerError(w, r, "error interno del servidor", err)
+			return
+		}
+		idx, exists := byID[paymentID]
+		if !exists {
+			idx = len(out)
+			byID[paymentID] = idx
+			out = append(out, model.PaymentHistory{
+				PaymentID: paymentID, StartingInstallmentID: startingID,
+				Amount: amount, Date: date, Allocations: []model.PaymentAllocation{},
+			})
+		}
+		if allocationID != nil && allocationNumber != nil && allocationAmount != nil {
+			out[idx].Allocations = append(out[idx].Allocations, model.PaymentAllocation{
+				InstallmentID: *allocationID, InstallmentNumber: *allocationNumber, Amount: *allocationAmount,
+			})
+		}
+	}
+	if err := rows.Err(); err != nil {
+		writeServerError(w, r, "error interno del servidor", err)
+		return
 	}
 	writeJSON(w, http.StatusOK, out)
 }
@@ -583,16 +637,26 @@ func (a *App) installmentAction(w http.ResponseWriter, r *http.Request, kind str
 		}
 	}
 	var err error
+	var cascadeResult *svc.CascadeResult
 	switch kind {
 	case "pay":
 		err = svc.PayInstallment(r.Context(), a.Store, uid, id, amount, date)
 	case "cascade":
-		err = svc.PayInstallmentCascade(r.Context(), a.Store, uid, id, amount, date)
+		cascadeResult, err = svc.PayInstallmentCascade(r.Context(), a.Store, uid, id, amount, date)
 	case "unpay":
-		err = svc.UnpayInstallment(r.Context(), a.Store, uid, id)
+		err = svc.UnpayLastPayment(r.Context(), a.Store, uid, id)
 	}
 	if err != nil {
+		var ve *svc.ValidationError
+		if errors.As(err, &ve) {
+			writeErr(w, http.StatusBadRequest, ve.Error())
+			return
+		}
 		writeServerError(w, r, "error interno del servidor", err)
+		return
+	}
+	if cascadeResult != nil {
+		writeJSON(w, http.StatusOK, cascadeResult)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
@@ -627,7 +691,7 @@ type validationErr struct{ msg string }
 
 func (e *validationErr) Error() string { return e.msg }
 
-func errRequired(field string) error  { return &validationErr{msg: field + " requerido"} }
+func errRequired(field string) error { return &validationErr{msg: field + " requerido"} }
 func errTooLong(field string, n int) error {
 	return &validationErr{msg: field + " demasiado largo (máximo " + strconv.Itoa(n) + " caracteres)"}
 }

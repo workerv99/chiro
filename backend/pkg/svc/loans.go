@@ -70,24 +70,42 @@ func PayInstallment(ctx context.Context, st *store.Store, userID string, install
 		return UnpayInstallment(ctx, st, userID, installmentID)
 	}
 	return st.ExecAll(ctx, func(tx pgx.Tx) error {
+		var loanID string
+		var number int
+		if err := tx.QueryRow(ctx,
+			`SELECT loan_id, number FROM installment WHERE user_id=$1 AND installment_id=$2 AND deleted=0`,
+			userID, installmentID).Scan(&loanID, &number); err != nil {
+			return err
+		}
 		if _, err := tx.Exec(ctx,
 			`UPDATE installment SET paid_amount=$3, paid_date=$4, updated_at=$5
 			 WHERE user_id=$1 AND installment_id=$2 AND deleted=0`,
 			userID, installmentID, Round2(paidAmount), paidDate, time.Now().UnixMilli()); err != nil {
 			return err
 		}
-		loanID, err := loanIDOf(ctx, tx, userID, installmentID)
-		if err != nil {
+		if err := insertPaymentHistory(ctx, tx, userID, loanID, installmentID, paidAmount, paidDate,
+			GenID("payhist"), []paymentAllocation{{id: installmentID, number: number, amount: Round2(paidAmount)}}); err != nil {
 			return err
 		}
 		return recomputeLoanPaid(ctx, tx, userID, loanID, time.Now().UnixMilli())
 	})
 }
 
+// CascadeResult resume lo que se aplicó al distribuir un pago en cascada.
+type CascadeResult struct {
+	InstallmentsAffected int     `json:"installments_affected"`
+	TotalApplied         float64 `json:"total_applied"`
+	StartingAmount       float64 `json:"starting_amount"`
+	Excess               float64 `json:"excess"`
+	AppliedCount         int     `json:"applied_count"`
+	PaymentID            string  `json:"payment_id"`
+}
+
 // PayInstallmentCascade aplica un abono empezando en una cuota y volcando el
 // excedente a las siguientes, sin pisar lo ya pagado.
-func PayInstallmentCascade(ctx context.Context, st *store.Store, userID string, installmentID string, amount float64, paidDate string) error {
-	return st.ExecAll(ctx, func(tx pgx.Tx) error {
+func PayInstallmentCascade(ctx context.Context, st *store.Store, userID string, installmentID string, amount float64, paidDate string) (*CascadeResult, error) {
+	var res CascadeResult
+	err := st.ExecAll(ctx, func(tx pgx.Tx) error {
 		var loanID string
 		var num int
 		if err := tx.QueryRow(ctx,
@@ -97,21 +115,16 @@ func PayInstallmentCascade(ctx context.Context, st *store.Store, userID string, 
 		}
 
 		rows, err := tx.Query(ctx,
-			`SELECT installment_id, amount, paid_amount FROM installment
+			`SELECT installment_id, number, amount, paid_amount FROM installment
 			 WHERE user_id=$1 AND loan_id=$2 AND number >= $3 AND deleted=0 ORDER BY number ASC`,
 			userID, loanID, num)
 		if err != nil {
 			return err
 		}
-		type ins struct {
-			id   string
-			amt  float64
-			paid float64
-		}
-		var list []ins
+		var list []CascadeInstallment
 		for rows.Next() {
-			var i ins
-			if err := rows.Scan(&i.id, &i.amt, &i.paid); err != nil {
+			var i CascadeInstallment
+			if err := rows.Scan(&i.ID, &i.Number, &i.Amount, &i.Paid); err != nil {
 				rows.Close()
 				return err
 			}
@@ -123,43 +136,228 @@ func PayInstallmentCascade(ctx context.Context, st *store.Store, userID string, 
 		}
 		rows.Close()
 
-		remaining := amount
-		ts := time.Now().UnixMilli()
+		allocs, startingRemaining, excess, err := AllocateCascade(list, amount)
+		if err != nil {
+			return err
+		}
+		res.StartingAmount = startingRemaining
+		res.Excess = excess
+
+		paidByID := make(map[string]float64, len(list))
 		for _, i := range list {
-			if remaining <= 0 {
-				break
-			}
-			space := Round2(i.amt - i.paid)
-			if space <= 0 {
-				continue
-			}
-			give := min(remaining, space)
-			newPaid := Round2(i.paid + give)
+			paidByID[i.ID] = i.Paid
+		}
+
+		ts := time.Now().UnixMilli()
+		allocations := make([]paymentAllocation, 0, len(allocs))
+		var totalApplied float64
+		for _, a := range allocs {
+			newPaid := Round2(paidByID[a.ID] + a.Amount)
 			if _, err := tx.Exec(ctx,
 				`UPDATE installment SET paid_amount=$3, paid_date=$4, updated_at=$5 WHERE user_id=$1 AND installment_id=$2`,
-				userID, i.id, newPaid, paidDate, ts); err != nil {
+				userID, a.ID, newPaid, paidDate, ts); err != nil {
 				return err
 			}
-			remaining = Round2(remaining - give)
+			totalApplied = Round2(totalApplied + a.Amount)
+			allocations = append(allocations, paymentAllocation{id: a.ID, number: a.Number, amount: a.Amount})
+		}
+		res.AppliedCount = len(allocs)
+		res.InstallmentsAffected = res.AppliedCount
+		res.TotalApplied = totalApplied
+		res.PaymentID = GenID("payhist")
+		if err := insertPaymentHistory(ctx, tx, userID, loanID, installmentID, totalApplied, paidDate, res.PaymentID, allocations); err != nil {
+			return err
 		}
 		return recomputeLoanPaid(ctx, tx, userID, loanID, ts)
 	})
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
-// UnpayInstallment revierte el pago de una cuota.
+type paymentAllocation struct {
+	id     string
+	number int
+	amount float64
+}
+
+func insertPaymentHistory(ctx context.Context, tx pgx.Tx, userID, loanID, startingID string, amount float64, date, paymentID string, allocations []paymentAllocation) error {
+	ts := time.Now().UnixMilli()
+	if _, err := tx.Exec(ctx,
+		`INSERT INTO payment_history (user_id, payment_id, loan_id, starting_installment_id, amount, date, created_at)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+		userID, paymentID, loanID, startingID, Round2(amount), date, ts); err != nil {
+		return err
+	}
+	for _, allocation := range allocations {
+		if _, err := tx.Exec(ctx,
+			`INSERT INTO payment_history_allocation (user_id, payment_id, installment_id, installment_number, amount)
+			 VALUES ($1,$2,$3,$4,$5)`,
+			userID, paymentID, allocation.id, allocation.number, Round2(allocation.amount)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// UnpayInstallment revierte el pago de una cuota. Un mismo pago puede haber
+// asignado montos a varias cuotas (abono en cascada): sólo se revierte la
+// asignación de esta cuota, restando su monto del total del pago; el pago
+// sólo se marca como borrado cuando ya no le queda ninguna asignación. Nunca
+// se toca created_at (no hay updated_at en payment_history).
 func UnpayInstallment(ctx context.Context, st *store.Store, userID string, installmentID string) error {
 	return st.ExecAll(ctx, func(tx pgx.Tx) error {
+		loanID, err := loanIDOf(ctx, tx, userID, installmentID)
+		if err != nil {
+			return err
+		}
+
+		rows, err := tx.Query(ctx,
+			`SELECT payment_id, amount FROM payment_history_allocation
+			 WHERE user_id=$1 AND installment_id=$2`, userID, installmentID)
+		if err != nil {
+			return err
+		}
+		type alloc struct {
+			paymentID string
+			amount    float64
+		}
+		var allocs []alloc
+		for rows.Next() {
+			var a alloc
+			if err := rows.Scan(&a.paymentID, &a.amount); err != nil {
+				rows.Close()
+				return err
+			}
+			allocs = append(allocs, a)
+		}
+		if err := rows.Err(); err != nil {
+			rows.Close()
+			return err
+		}
+		rows.Close()
+
+		for _, a := range allocs {
+			var current float64
+			if err := tx.QueryRow(ctx,
+				`SELECT amount FROM payment_history WHERE user_id=$1 AND payment_id=$2`,
+				userID, a.paymentID).Scan(&current); err != nil {
+				return err
+			}
+			newAmount := max(0, Round2(current-a.amount))
+			if _, err := tx.Exec(ctx,
+				`UPDATE payment_history SET amount=$3 WHERE user_id=$1 AND payment_id=$2`,
+				userID, a.paymentID, newAmount); err != nil {
+				return err
+			}
+			if _, err := tx.Exec(ctx,
+				`DELETE FROM payment_history_allocation WHERE user_id=$1 AND payment_id=$2 AND installment_id=$3`,
+				userID, a.paymentID, installmentID); err != nil {
+				return err
+			}
+			if _, err := tx.Exec(ctx,
+				`UPDATE payment_history SET deleted=1
+				 WHERE user_id=$1 AND payment_id=$2 AND deleted=0
+				   AND NOT EXISTS (
+				     SELECT 1 FROM payment_history_allocation
+				     WHERE user_id=$1 AND payment_id=$2
+				   )`,
+				userID, a.paymentID); err != nil {
+				return err
+			}
+		}
+
 		if _, err := tx.Exec(ctx,
 			`UPDATE installment SET paid_amount=0, paid_date=NULL, updated_at=$3 WHERE user_id=$1 AND installment_id=$2`,
 			userID, installmentID, time.Now().UnixMilli()); err != nil {
 			return err
 		}
+		return recomputeLoanPaid(ctx, tx, userID, loanID, time.Now().UnixMilli())
+	})
+}
+
+// UnpayLastPayment revierte el pago más reciente del préstamo al que pertenece
+// la cuota dada: resta cada asignación de ese pago a su cuota, limpia paid_date
+// donde la cuota queda sin pagos y elimina el pago del historial. Si el
+// préstamo no tiene historial (datos anteriores), revierte sólo la cuota dada.
+func UnpayLastPayment(ctx context.Context, st *store.Store, userID string, installmentID string) error {
+	return st.ExecAll(ctx, func(tx pgx.Tx) error {
 		loanID, err := loanIDOf(ctx, tx, userID, installmentID)
 		if err != nil {
 			return err
 		}
-		return recomputeLoanPaid(ctx, tx, userID, loanID, time.Now().UnixMilli())
+		var paymentID string
+		err = tx.QueryRow(ctx,
+			`SELECT payment_id FROM payment_history
+			 WHERE user_id=$1 AND loan_id=$2 AND deleted=0
+			 ORDER BY date DESC, created_at DESC LIMIT 1`, userID, loanID).Scan(&paymentID)
+		if err == pgx.ErrNoRows {
+			return unpayInstallmentTx(ctx, tx, userID, loanID, installmentID)
+		}
+		if err != nil {
+			return err
+		}
+
+		rows, err := tx.Query(ctx,
+			`SELECT installment_id, amount FROM payment_history_allocation
+			 WHERE user_id=$1 AND payment_id=$2`, userID, paymentID)
+		if err != nil {
+			return err
+		}
+		var allocs []CascadeAllocation
+		for rows.Next() {
+			var a CascadeAllocation
+			if err := rows.Scan(&a.ID, &a.Amount); err != nil {
+				rows.Close()
+				return err
+			}
+			allocs = append(allocs, a)
+		}
+		if err := rows.Err(); err != nil {
+			rows.Close()
+			return err
+		}
+		rows.Close()
+
+		ts := time.Now().UnixMilli()
+		for _, a := range allocs {
+			var paid float64
+			if err := tx.QueryRow(ctx,
+				`SELECT paid_amount FROM installment WHERE user_id=$1 AND installment_id=$2`,
+				userID, a.ID).Scan(&paid); err != nil {
+				return err
+			}
+			newPaid, clearDate := ReversePaid(paid, a.Amount)
+			q := `UPDATE installment SET paid_amount=$3, updated_at=$4 WHERE user_id=$1 AND installment_id=$2`
+			if clearDate {
+				q = `UPDATE installment SET paid_amount=$3, updated_at=$4, paid_date=NULL WHERE user_id=$1 AND installment_id=$2`
+			}
+			if _, err := tx.Exec(ctx, q, userID, a.ID, newPaid, ts); err != nil {
+				return err
+			}
+		}
+		if _, err := tx.Exec(ctx,
+			`UPDATE payment_history SET deleted=1 WHERE user_id=$1 AND payment_id=$2`, userID, paymentID); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(ctx,
+			`DELETE FROM payment_history_allocation WHERE user_id=$1 AND payment_id=$2`, userID, paymentID); err != nil {
+			return err
+		}
+		return recomputeLoanPaid(ctx, tx, userID, loanID, ts)
 	})
+}
+
+// unpayInstallmentTx pone la cuota en cero sin tocar el historial.
+func unpayInstallmentTx(ctx context.Context, tx pgx.Tx, userID, loanID, installmentID string) error {
+	ts := time.Now().UnixMilli()
+	if _, err := tx.Exec(ctx,
+		`UPDATE installment SET paid_amount=0, paid_date=NULL, updated_at=$3 WHERE user_id=$1 AND installment_id=$2`,
+		userID, installmentID, ts); err != nil {
+		return err
+	}
+	return recomputeLoanPaid(ctx, tx, userID, loanID, ts)
 }
 
 // ── Internos ──────────────────────────────────────────────────────────────────

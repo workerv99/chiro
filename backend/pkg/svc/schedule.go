@@ -133,27 +133,6 @@ type InstallmentIn struct {
 	PaidAmount    float64 `json:"paid_amount"`
 }
 
-// ComputeEffectiveAmounts aplica el arrastre de deuda vencida parcialmente pagada.
-// Port de utils/repo/installments.ts computeEffectiveAmounts.
-func ComputeEffectiveAmounts(installments []InstallmentIn, today string) []InstallmentIn {
-	carry := 0.0
-	for i := range installments {
-		inst := &installments[i]
-		effective := Round2(inst.Amount + carry)
-		isOverdue := inst.DueDate < today
-		fullyPaid := inst.PaidAmount >= inst.Amount
-		hasPartial := inst.PaidAmount > 0 && !fullyPaid
-		remaining := math.Max(0, Round2(effective-inst.PaidAmount))
-		if isOverdue && hasPartial {
-			carry = remaining
-		} else {
-			carry = 0
-		}
-		inst.Amount = effective
-	}
-	return installments
-}
-
 // InstallmentID genera el id determinista de una cuota (ins_<loan>_<número>).
 func InstallmentID(loanID string, number int) string {
 	return "ins_" + loanID + "_" + strconv.Itoa(number)
