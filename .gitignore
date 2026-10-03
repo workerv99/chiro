@@ -44,3 +44,4 @@ playwright-*.txt
 
 # Local code intelligence index
 .codegraph/
+.atl/
