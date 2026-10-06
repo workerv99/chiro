@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import { i18n } from '$lib/i18n.svelte.js';
   import { S, logout, create, update, remove, payBill, skipBill, dueBills, activatePro, fetchSubscription, deleteAccount, exportData } from '$lib/stores.svelte.js';
-  import { toDisplay, todayISO, money } from '$lib/format.js';
+  import { toDisplay, todayISO, money, deviceLabel, isMobileAgent } from '$lib/format.js';
   import UndoToast from '$lib/components/UndoToast.svelte';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
   import Button from '$lib/components/ui/button.svelte';
@@ -11,7 +11,9 @@
   import Label from '$lib/components/ui/label.svelte';
   import Badge from '$lib/components/ui/badge.svelte';
   import ThemeSwitch from '$lib/components/ThemeSwitch.svelte';
-  import { Check, Plus, Shield, LogOut } from 'lucide-svelte';
+  import { Check, Plus, Shield, LogOut, Smartphone, Monitor } from 'lucide-svelte';
+  import { onMount } from 'svelte';
+  import { api } from '$lib/api.svelte.js';
 
   let section = $state('accounts');
   let showForm = $state(false);
@@ -24,6 +26,49 @@
   let confirmDeleteAccount = $state(false);
 
   let form = $state(emptyForm());
+
+  let sessions = $state([]);
+  let sessionsLoading = $state(true);
+  let sessionsError = $state(false);
+  let confirmRevoke = $state(null);
+  let revokeErr = $state('');
+
+  async function loadSessions() {
+    sessionsLoading = true;
+    sessionsError = false;
+    try {
+      sessions = (await api('/api/auth/sessions')) ?? [];
+    } catch {
+      sessionsError = true;
+    } finally {
+      sessionsLoading = false;
+    }
+  }
+
+  async function doRevoke() {
+    const target = confirmRevoke;
+    confirmRevoke = null;
+    if (!target) return;
+    revokeErr = '';
+    try {
+      await api('/api/auth/sessions/' + encodeURIComponent(target.session_id), { method: 'DELETE' });
+      sessions = sessions.filter((x) => x.session_id !== target.session_id);
+    } catch (e) {
+      revokeErr = e.message;
+    }
+  }
+
+  function sessionName(x) {
+    return deviceLabel(x.user_agent) || i18n.t('config.unknownDevice');
+  }
+
+  function lastUsedLabel(iso) {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleString(i18n.lang === 'en' ? 'en' : 'es', { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
+  onMount(loadSessions);
 
   async function handleUpgrade() {
     try {
@@ -317,6 +362,41 @@
 {/if}
 
 <Card class="p-4 mt-4">
+  <h3 class="font-bold">{i18n.t('config.devices')}</h3>
+  <p class="text-sm text-muted-foreground mb-3">{i18n.t('config.devicesHint')}</p>
+  {#if sessionsLoading}
+    <p class="text-sm text-muted-foreground">{i18n.t('common.loading')}</p>
+  {:else if sessionsError}
+    <p class="text-sm text-destructive mb-2">{i18n.t('config.devicesError')}</p>
+    <Button variant="outline" size="sm" onclick={loadSessions}>{i18n.t('config.retry')}</Button>
+  {:else}
+    <ul class="divide-y">
+      {#each sessions as x (x.session_id)}
+        {@const Icon = isMobileAgent(x.user_agent) ? Smartphone : Monitor}
+        <li class="flex items-center gap-3 py-3 min-h-11">
+          <Icon size={20} class="shrink-0 text-muted-foreground" aria-hidden="true" />
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-sm font-medium truncate">{sessionName(x)}</span>
+              {#if x.current}<Badge variant="secondary">{i18n.t('config.thisDevice')}</Badge>{/if}
+            </div>
+            <p class="text-xs text-muted-foreground break-words">
+              {#if x.ip_address}{x.ip_address} · {/if}{i18n.t('config.lastUsed')}: {lastUsedLabel(x.last_used_at)}
+            </p>
+          </div>
+          {#if !x.current}
+            <Button variant="outline" size="sm" onclick={() => (confirmRevoke = x)}>{i18n.t('config.revoke')}</Button>
+          {/if}
+        </li>
+      {:else}
+        <li class="text-sm text-muted-foreground py-2">{i18n.t('config.devicesEmpty')}</li>
+      {/each}
+    </ul>
+    {#if revokeErr}<p class="text-sm text-destructive mt-2">{revokeErr}</p>{/if}
+  {/if}
+</Card>
+
+<Card class="p-4 mt-4">
   <h3 class="font-bold mb-2">{i18n.t('config.session')}</h3>
   {#if S.user}
     <p class="text-sm text-muted-foreground mb-3">{i18n.t('config.loggedAs')}: {S.user.name} ({S.user.email})</p>
@@ -352,6 +432,18 @@
     danger
     onConfirm={doDelete}
     onCancel={() => (confirmDel = null)}
+  />
+{/if}
+
+{#if confirmRevoke}
+  <ConfirmSheet
+    bind:open={() => confirmRevoke !== null, (v) => confirmRevoke = v ? confirmRevoke : null}
+    title={i18n.t('config.revokeTitle')}
+    message={i18n.t('config.revokeConfirm') + ': ' + sessionName(confirmRevoke)}
+    confirmLabel={i18n.t('config.revoke')}
+    danger
+    onConfirm={doRevoke}
+    onCancel={() => (confirmRevoke = null)}
   />
 {/if}
 
