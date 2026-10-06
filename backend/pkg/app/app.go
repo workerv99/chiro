@@ -10,6 +10,9 @@ import (
 type App struct {
 	Store *store.Store
 	Auth  *auth.Manager
+
+	// trustProxy se fija en Handler(cfg); controla clientIP.
+	trustProxy bool
 }
 
 func New(st *store.Store, authMgr *auth.Manager) *App {

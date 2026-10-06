@@ -12,6 +12,7 @@ import (
 
 // Handler construye el router HTTP completo de la API.
 func (a *App) Handler(cfg config.Config) http.Handler {
+	a.trustProxy = cfg.TrustedProxies
 	r := chi.NewRouter()
 	r.Use(chimw.Recoverer)
 	r.Use(CORS(cfg.CORSOrigins))
@@ -35,6 +36,9 @@ func (a *App) Handler(cfg config.Config) http.Handler {
 		pr.Use(a.Auth.Middleware)
 		pr.Use(a.requireActive)
 		pr.Get("/api/auth/me", a.handleMe)
+		pr.Post("/api/auth/logout", a.handleLogout)
+		pr.Get("/api/auth/sessions", a.handleListSessions)
+		pr.Delete("/api/auth/sessions/{id}", a.handleRevokeSession)
 		pr.Post("/api/auth/send-verification", a.handleSendVerification)
 
 		// ── Administración (solo rol admin) ────────────────────────────────────

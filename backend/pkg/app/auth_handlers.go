@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -71,7 +72,12 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// Semilla por defecto (port de SEED del proyecto original): cuentas y categorías.
 	seedDefaults(r.Context(), a, uid)
 
-	token, err := a.Auth.Issue(uid, req.Email, "user", "")
+	sid, err := a.createSession(r, uid)
+	if err != nil {
+		writeServerError(w, r, "error al crear la sesión", err)
+		return
+	}
+	token, err := a.Auth.Issue(uid, req.Email, "user", sid)
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, "error al firmar token")
 		return
@@ -107,7 +113,12 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 	if role == "" {
 		role = "user"
 	}
-	token, err := a.Auth.Issue(uid, email, role, "")
+	sid, err := a.createSession(r, uid)
+	if err != nil {
+		writeServerError(w, r, "error al crear la sesión", err)
+		return
+	}
+	token, err := a.Auth.Issue(uid, email, role, sid)
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, "error al firmar token")
 		return
@@ -150,11 +161,6 @@ func (a *App) handleRefresh(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	newToken, err := a.Auth.Issue(claims.Subject, claims.Email, claims.Role, claims.SessionID)
-	if err != nil {
-		writeErr(w, http.StatusInternalServerError, "error al firmar token")
-		return
-	}
 	var name, role, status string
 	err = a.Store.Pool().QueryRow(r.Context(),
 		`SELECT name, role, status FROM users WHERE user_id=$1`, claims.Subject).Scan(&name, &role, &status)
@@ -168,6 +174,20 @@ func (a *App) handleRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 	if role == "" {
 		role = "user"
+	}
+	sid, err := a.refreshSession(r, claims.Subject, claims.SessionID)
+	if errors.Is(err, errSessionInvalid) {
+		writeErr(w, http.StatusUnauthorized, "sesión revocada, inicia sesión de nuevo")
+		return
+	}
+	if err != nil {
+		writeServerError(w, r, "error al renovar la sesión", err)
+		return
+	}
+	newToken, err := a.Auth.Issue(claims.Subject, claims.Email, role, sid)
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, "error al firmar token")
+		return
 	}
 	writeJSON(w, http.StatusOK, model.AuthResponse{
 		Token: newToken,

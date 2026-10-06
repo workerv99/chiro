@@ -23,7 +23,7 @@ Stop users being logged out every 24h and give them per-device session control (
 
 ## Tasks
 - [x] T1 Migration 007 + auth.Manager `sid` claim (Issue/Parse/ParseClaims return sid) with Go unit tests. Route: delegated writer (backend).
-- [ ] T2 Session store + handlers (create on login/register, refresh w/ revoke check, list, revoke, logout) + middleware revoke check. Route: delegated writer (backend).
+- [x] T2 Session store + handlers (create on login/register, refresh w/ revoke check, list, revoke, logout) + middleware revoke check. Route: delegated writer (backend).
 - [ ] T3 Web: silent refresh in `api()`, startup refresh, server logout. Route: delegated writer (frontend).
 - [ ] T4 Web: Devices card in Config + i18n es/en. Route: delegated writer (frontend).
 
@@ -31,10 +31,11 @@ Stop users being logged out every 24h and give them per-device session control (
 Strategy: ask-on-risk. Branch: `feat/device-sessions`. Forecast ~450-550 authored lines; slice into 2 PRs if it exceeds ~400 (backend T1-T2, web T3-T4).
 
 ## Progress
-- Mapping done (delegated explorer). No source writes yet.
+- Mapping done. T1 (05355f6) and T2 done (backend). Next: T3/T4 web.
 
 ## Verification evidence
 - T1 RED: `go test ./pkg/auth` failed to compile (Issue arity, Parse 3 returns, no Claims.SessionID). GREEN after impl: `ok chiro/pkg/auth`. `go build ./...` and `go vet ./...` clean. Migration 007 is not exercised by tests (no DB test infra).
+- T2 RED: `go test ./pkg/app` failed to compile (truncateUserAgent, shouldTouchSession, sessionIsCurrent undefined). GREEN after impl; `go test ./...`, `go vet ./...`, `go build ./...` clean. Not covered (needs DB): SQL in session create/list/revoke/logout/refresh and the requireActive JOIN query; handlers verified by compilation only.
 
 ## Next step
-Dispatch backend writer for T1-T2.
+Dispatch frontend writer for T3.

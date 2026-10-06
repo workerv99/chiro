@@ -66,16 +66,35 @@ func securityHeaders(next http.Handler) http.Handler {
 	})
 }
 
-// requireActive rechaza cuentas deshabilitadas. Verifica el estado en la DB
-// en cada petición: un disable aplica aunque el JWT siga vigente.
+// requireActive rechaza cuentas deshabilitadas y sesiones revocadas. Verifica
+// el estado en la DB en cada petición (una sola consulta): un disable o una
+// revocación aplican aunque el JWT siga vigente. Los tokens legacy sin sid
+// se aceptan hasta que expiran.
 func (a *App) requireActive(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		uid := auth.ContextUser(r.Context())
+		sid := auth.ContextSID(r.Context())
 		var status string
+		var sessOK bool
+		var lastUsed *time.Time
 		err := a.Store.Pool().QueryRow(r.Context(),
-			`SELECT status FROM users WHERE user_id=$1`, auth.ContextUser(r.Context())).Scan(&status)
+			`SELECT u.status, s.session_id IS NOT NULL AND s.revoked_at IS NULL, s.last_used_at
+			   FROM users u
+			   LEFT JOIN sessions s ON s.session_id=$2 AND s.user_id=u.user_id
+			  WHERE u.user_id=$1`, uid, sid).Scan(&status, &sessOK, &lastUsed)
 		if err != nil || status != "active" {
 			writeErr(w, http.StatusForbidden, "cuenta deshabilitada")
 			return
+		}
+		if sid != "" {
+			if !sessOK {
+				writeErr(w, http.StatusUnauthorized, "sesión revocada")
+				return
+			}
+			if lastUsed != nil && shouldTouchSession(*lastUsed, time.Now()) {
+				_, _ = a.Store.Pool().Exec(r.Context(),
+					`UPDATE sessions SET last_used_at=now() WHERE session_id=$1`, sid)
+			}
 		}
 		next.ServeHTTP(w, r)
 	})
