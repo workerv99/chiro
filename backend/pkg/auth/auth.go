@@ -20,6 +20,8 @@ const userKey ctxKey = "chiro_user"
 type Claims struct {
 	Email string `json:"email"`
 	Role  string `json:"role"`
+	// SessionID identifica la sesión de dispositivo; vacío en tokens anteriores a las sesiones.
+	SessionID string `json:"sid,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -27,6 +29,7 @@ type Claims struct {
 type ctxUser struct {
 	id   string
 	role string
+	sid  string
 }
 
 // Manager firma y valida JWTs.
@@ -54,11 +57,12 @@ func CheckPassword(hash, pw string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(pw)) == nil
 }
 
-// Issue firma un token para un usuario.
-func (m *Manager) Issue(userID, email, role string) (string, error) {
+// Issue firma un token para un usuario y su sesión (sid puede ser vacío).
+func (m *Manager) Issue(userID, email, role, sid string) (string, error) {
 	claims := Claims{
-		Email: email,
-		Role:  role,
+		Email:     email,
+		Role:      role,
+		SessionID: sid,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   userID,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -68,8 +72,8 @@ func (m *Manager) Issue(userID, email, role string) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(m.secret)
 }
 
-// Parse valida un token y devuelve el user_id y el rol.
-func (m *Manager) Parse(tokenStr string) (id, role string, err error) {
+// Parse valida un token y devuelve el user_id, el rol y el sid (vacío en tokens legacy).
+func (m *Manager) Parse(tokenStr string) (id, role, sid string, err error) {
 	tok, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("método de firma inesperado")
@@ -77,16 +81,16 @@ func (m *Manager) Parse(tokenStr string) (id, role string, err error) {
 		return m.secret, nil
 	})
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 	claims, ok := tok.Claims.(*Claims)
 	if !ok || !tok.Valid {
-		return "", "", errors.New("token inválido")
+		return "", "", "", errors.New("token inválido")
 	}
 	if claims.Role == "" {
 		claims.Role = "user"
 	}
-	return claims.Subject, claims.Role, nil
+	return claims.Subject, claims.Role, claims.SessionID, nil
 }
 
 // ParseClaims extrae claims de un token sin validar expiración (para refresh).
@@ -124,6 +128,14 @@ func ContextRole(ctx context.Context) string {
 	return ""
 }
 
+// ContextSID devuelve el sid del token guardado por Middleware ("" si es legacy).
+func ContextSID(ctx context.Context) string {
+	if v, ok := ctx.Value(userKey).(*ctxUser); ok {
+		return v.sid
+	}
+	return ""
+}
+
 // Middleware exige un Bearer token válido.
 func (m *Manager) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -132,12 +144,12 @@ func (m *Manager) Middleware(next http.Handler) http.Handler {
 			http.Error(w, `{"error":"no autorizado"}`, http.StatusUnauthorized)
 			return
 		}
-		uid, role, err := m.Parse(strings.TrimPrefix(authz, "Bearer "))
+		uid, role, sid, err := m.Parse(strings.TrimPrefix(authz, "Bearer "))
 		if err != nil || uid == "" {
 			http.Error(w, `{"error":"sesión inválida"}`, http.StatusUnauthorized)
 			return
 		}
-		ctx := context.WithValue(r.Context(), userKey, &ctxUser{id: uid, role: role})
+		ctx := context.WithValue(r.Context(), userKey, &ctxUser{id: uid, role: role, sid: sid})
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

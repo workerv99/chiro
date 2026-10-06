@@ -63,7 +63,11 @@ export const messages = {
       nextDate: 'Próxima fecha', frequency: 'Frecuencia', day: 'Día',
       dueBills: 'Facturas por pagar', noDueBills: 'Nada pendiente', editItem: 'Editar',
       deleteConfirm: '¿Eliminar?', empty: 'Sin elementos', session: 'Sesión', loggedAs: 'Conectado como',
-      theme: 'Tema', themeDescription: 'Elige cómo quieres ver la aplicación.', themeLight: 'Claro', themeDark: 'Oscuro', themeSystem: 'Sistema'
+      theme: 'Tema', themeDescription: 'Elige cómo quieres ver la aplicación.', themeLight: 'Claro', themeDark: 'Oscuro', themeSystem: 'Sistema',
+      devices: 'Dispositivos', devicesHint: 'Sesiones activas en tu cuenta.', thisDevice: 'Este dispositivo',
+      unknownDevice: 'Dispositivo desconocido', lastUsed: 'Último uso', revoke: 'Cerrar sesión',
+      revokeTitle: 'Cerrar sesión en este dispositivo', revokeConfirm: 'Se cerrará la sesión en',
+      devicesEmpty: 'No hay otras sesiones activas', devicesError: 'No se pudieron cargar los dispositivos', retry: 'Reintentar'
     },
     onboard: {
       title: 'Empieza en 3 pasos',
@@ -140,7 +144,11 @@ export const messages = {
       nextDate: 'Next date', frequency: 'Frequency', day: 'Day',
       dueBills: 'Bills due', noDueBills: 'Nothing due', editItem: 'Edit',
       deleteConfirm: 'Delete?', empty: 'Nothing here yet', session: 'Session', loggedAs: 'Signed in as',
-      theme: 'Theme', themeDescription: 'Choose how you want to view the app.', themeLight: 'Light', themeDark: 'Dark', themeSystem: 'System'
+      theme: 'Theme', themeDescription: 'Choose how you want to view the app.', themeLight: 'Light', themeDark: 'Dark', themeSystem: 'System',
+      devices: 'Devices', devicesHint: 'Active sessions on your account.', thisDevice: 'This device',
+      unknownDevice: 'Unknown device', lastUsed: 'Last used', revoke: 'Sign out',
+      revokeTitle: 'Sign out of this device', revokeConfirm: 'This will sign out',
+      devicesEmpty: 'No other active sessions', devicesError: 'Could not load devices', retry: 'Retry'
     },
     onboard: {
       title: 'Start in 3 steps',

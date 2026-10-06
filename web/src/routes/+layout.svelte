@@ -4,7 +4,7 @@
   import { goto } from '$app/navigation';
   import { i18n } from '$lib/i18n.svelte.js';
   import { S, me, fetchAll, logout, loadMonth, fetchSubscription } from '$lib/stores.svelte.js';
-  import { A, loadToken } from '$lib/api.svelte.js';
+  import { A, loadToken, refreshToken } from '$lib/api.svelte.js';
   import CookieBanner from '$lib/components/CookieBanner.svelte';
   import { initTheme } from '$lib/theme.svelte.js';
   import { Receipt, ChartPie, PiggyBank, HandCoins, Settings } from 'lucide-svelte';
@@ -28,6 +28,8 @@
       return;
     }
     (async () => {
+      // Proactive refresh: keeps the session alive past the 24h token TTL.
+      await refreshToken();
       const u = await me();
       if (!u) {
         goto('/login');
