@@ -82,6 +82,14 @@ export async function register(name, email, password, termsAccepted, privacyAcce
 }
 
 export function logout() {
+  // Best-effort server-side revocation; local state is cleared regardless.
+  if (A.token) {
+    fetch(BASE + '/api/auth/logout', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + A.token },
+      keepalive: true
+    }).catch(() => {});
+  }
   setToken('');
   S.user = null;
   for (const k of Object.keys(S.db)) S.db[k] = [];
