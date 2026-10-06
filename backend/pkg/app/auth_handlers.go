@@ -71,7 +71,7 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// Semilla por defecto (port de SEED del proyecto original): cuentas y categorías.
 	seedDefaults(r.Context(), a, uid)
 
-	token, err := a.Auth.Issue(uid, req.Email, "user")
+	token, err := a.Auth.Issue(uid, req.Email, "user", "")
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, "error al firmar token")
 		return
@@ -107,7 +107,7 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 	if role == "" {
 		role = "user"
 	}
-	token, err := a.Auth.Issue(uid, email, role)
+	token, err := a.Auth.Issue(uid, email, role, "")
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, "error al firmar token")
 		return
@@ -150,7 +150,7 @@ func (a *App) handleRefresh(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	newToken, err := a.Auth.Issue(claims.Subject, claims.Email, claims.Role)
+	newToken, err := a.Auth.Issue(claims.Subject, claims.Email, claims.Role, claims.SessionID)
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, "error al firmar token")
 		return
