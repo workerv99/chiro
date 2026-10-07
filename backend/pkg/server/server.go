@@ -164,25 +164,39 @@ func isTransient(err error) bool {
 }
 
 // buildPool crea un pgxpool con tuning según la URL (directa o pooler Supabase).
-// Detecta ?pgbouncer=true para activar el modo compatible con transaction
-// pooling (prepared statements por conexión en vez de por statement).
 func buildPool(ctx context.Context, cfg config.Config) (*pgxpool.Pool, error) {
 	pcfg, err := pgxpool.ParseConfig(cfg.DatabaseURL)
 	if err != nil {
 		return nil, err
 	}
+	applyPoolTuning(pcfg, cfg)
+	return pgxpool.NewWithConfig(ctx, pcfg)
+}
+
+// applyPoolTuning ajusta el pool según la configuración y el modo del pooler.
+//
+// DB_MAX_IDLE_SECS importa sobre todo en session mode (pooler en 5432): ahí una
+// conexión del cliente reserva una sesión real de Postgres durante toda su vida,
+// así que una instancia sin tráfico sigue consumiendo una de las pocas sesiones
+// disponibles hasta que pgx la libera (30 min por defecto). Bajarlo permite que
+// una instancia ociosa suelte la sesión rápido. En transaction mode (6543) las
+// conexiones ociosas no cuestan nada porque el pooler las multiplexa, y un valor
+// bajo solo agrega churn.
+func applyPoolTuning(pcfg *pgxpool.Config, cfg config.Config) {
 	if cfg.DBMaxConns > 0 {
 		pcfg.MaxConns = cfg.DBMaxConns
 	}
 	if cfg.DBMinConns > 0 {
 		pcfg.MinConns = cfg.DBMinConns
 	}
+	if cfg.DBMaxIdleSecs > 0 {
+		pcfg.MaxConnIdleTime = time.Duration(cfg.DBMaxIdleSecs) * time.Second
+	}
 	// Pooler Supabase / PgBouncer en transaction mode: deshabilita prepared
 	// statements nombrados (no son compatibles con el proxy de conexión).
 	if containsQueryParam(cfg.DatabaseURL, "pgbouncer=true") {
 		pcfg.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 	}
-	return pgxpool.NewWithConfig(ctx, pcfg)
 }
 
 func containsQueryParam(url, want string) bool {

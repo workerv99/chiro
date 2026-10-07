@@ -16,10 +16,11 @@ type Config struct {
 	WebDist         string
 	DBMaxConns      int32
 	DBMinConns      int32
-	JWT_TTL_Hours   int    // TTL del access token (horas, default 24)
-	RequireSecret   bool   // si true, JWT_SECRET debe ser seguro
-	TrustedProxies  bool   // si true, se confía en X-Forwarded-For para IP cliente
-	RateLimitPerMin int     // requests/min por IP para endpoints sensibles
+	JWT_TTL_Hours   int  // TTL del access token (horas, default 24)
+	RequireSecret   bool // si true, JWT_SECRET debe ser seguro
+	TrustedProxies  bool // si true, se confía en X-Forwarded-For para IP cliente
+	RateLimitPerMin int  // requests/min por IP para endpoints sensibles
+	DBMaxIdleSecs   int  // MaxConnIdleTime en segundos; 0 = default de pgx (30 min)
 }
 
 // PlanLimits define los límites por plan.
@@ -65,6 +66,7 @@ func CORSOriginsFromEnv() []string {
 // DATABASE_URL acepta la URL completa de Postgres, incluyendo:
 //   - Supabase directo:  postgresql://postgres.[ref]:[pw]@db.[ref].supabase.co:5432/postgres?sslmode=require
 //   - Supabase pooler:   postgresql://postgres.[ref]:[pw]@aws-0-[region].pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true
+//
 // pgxpool parsea la URL y respeta sslmode/connect_timeout/etc.
 func Load(requireSecret bool) (Config, error) {
 	if envBool("REQUIRE_SECRET", requireSecret) {
@@ -97,6 +99,7 @@ func Load(requireSecret bool) (Config, error) {
 		RequireSecret:   requireSecret,
 		TrustedProxies:  envBool("TRUSTED_PROXIES", true),
 		RateLimitPerMin: envInt("RATE_LIMIT_PER_MIN", 20),
+		DBMaxIdleSecs:   envInt("DB_MAX_IDLE_SECS", 0),
 	}
 	return c, nil
 }
