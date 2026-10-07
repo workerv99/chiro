@@ -26,6 +26,18 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Los probes se responden ANTES de inicializar. Si vivieran detrás, no
+	// podrían reportar el estado de la inicialización que son justamente
+	// responsables de verificar.
+	switch r.URL.Path {
+	case server.HealthPath:
+		server.HealthHandler().ServeHTTP(w, r)
+		return
+	case server.ReadyPath:
+		server.ReadyHandler().ServeHTTP(w, r)
+		return
+	}
+
 	h, err := serverHandler()
 	if err != nil {
 		// El error real (hostnames de DB, usuario, pool_size) se queda en el log:

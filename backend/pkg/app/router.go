@@ -19,9 +19,9 @@ func (a *App) Handler(cfg config.Config) http.Handler {
 	r.Use(securityHeaders)
 	r.Use(rateLimit(cfg))
 
-	r.Get("/api/health", func(w http.ResponseWriter, _ *http.Request) {
-		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
-	})
+	// /api/health y /api/ready se responden en el borde (server.WithProbes y
+	// api/index.go), fuera de este router: solo se llega aquí con la DB ya
+	// inicializada, así que un router no puede reportar un fallo de init.
 
 	// ── Público ────────────────────────────────────────────────────────────────
 	r.Post("/api/auth/register", a.handleRegister)
