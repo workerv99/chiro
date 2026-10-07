@@ -11,38 +11,60 @@ import (
 	"chiro/pkg/config"
 )
 
-// CORS permite los orígenes configurados (o todos en desarrollo).
-func CORS(origins []string) func(http.Handler) http.Handler {
-	allowAll := false
-	set := map[string]bool{}
+// originSet precalcula la política de orígenes para no recorrer la lista en
+// cada request.
+type originSet struct {
+	allowAll bool
+	allowed  map[string]bool
+}
+
+func newOriginSet(origins []string) originSet {
+	s := originSet{allowed: make(map[string]bool, len(origins))}
 	for _, o := range origins {
 		if o == "*" {
-			allowAll = true
+			s.allowAll = true
 		}
-		set[o] = true
+		s.allowed[o] = true
 	}
+	return s
+}
+
+// headers escribe las cabeceras CORS de la petición. Si el origen no está
+// permitido no se envía Access-Control-Allow-Origin y el navegador bloquea la
+// respuesta, que es el comportamiento correcto.
+func (o originSet) headers(w http.ResponseWriter, r *http.Request) {
+	origin := r.Header.Get("Origin")
+	if origin == "" {
+		return
+	}
+	if o.allowAll || o.allowed[origin] {
+		if o.allowAll {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Vary", "Origin")
+		}
+	}
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+	w.Header().Set("Access-Control-Max-Age", "86400")
+}
+
+// SetCORS aplica las cabeceras CORS fuera del middleware. Existe para que las
+// respuestas que se emiten ANTES de que exista un handler completo —por ejemplo
+// un fallo de inicialización en api/index.go— lleven las mismas cabeceras. Sin
+// esto el navegador reporta el error como fallo de CORS y oculta la causa real.
+func SetCORS(w http.ResponseWriter, r *http.Request, origins []string) {
+	newOriginSet(origins).headers(w, r)
+}
+
+// CORS permite los orígenes configurados (o todos en desarrollo).
+func CORS(origins []string) func(http.Handler) http.Handler {
+	set := newOriginSet(origins)
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			origin := r.Header.Get("Origin")
-			if origin != "" {
-				allowed := allowAll || set[origin]
-				if allowAll && !allowed {
-					// origen * con auth es superficie: rechazar
-					allowed = false
-				}
-				if allowed {
-					if allowAll {
-						w.Header().Set("Access-Control-Allow-Origin", "*")
-					} else {
-						w.Header().Set("Access-Control-Allow-Origin", origin)
-						w.Header().Set("Vary", "Origin")
-					}
-				}
-				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
-				w.Header().Set("Access-Control-Max-Age", "86400")
-			}
+			set.headers(w, r)
 			if r.Method == http.MethodOptions {
 				w.WriteHeader(http.StatusNoContent)
 				return

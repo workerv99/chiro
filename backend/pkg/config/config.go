@@ -46,6 +46,17 @@ var ProLimits = PlanLimits{
 
 const devJWTSecret = "dev-only-secret-change-me"
 
+// DefaultCORSOrigins son los orígenes por defecto (solo desarrollo local).
+const DefaultCORSOrigins = "http://localhost:4100,http://localhost:4101"
+
+// CORSOriginsFromEnv lee únicamente CORS_ORIGINS, sin validar nada más y sin
+// poder fallar. Existe para que api/index.go pueda aplicar cabeceras CORS incluso
+// cuando config.Load falla: si la respuesta de error no las lleva, el navegador
+// la reporta como error de CORS y oculta el fallo real de inicialización.
+func CORSOriginsFromEnv() []string {
+	return split(env("CORS_ORIGINS", DefaultCORSOrigins))
+}
+
 // Load lee la configuración del entorno. requireSecret=true falla si JWT_SECRET
 // es el default o está vacío: en producción un secreto débil permite forjar
 // tokens. Las herramientas de migración / admin-create / import-sqlite pasan
@@ -78,7 +89,7 @@ func Load(requireSecret bool) (Config, error) {
 		DatabaseURL:     url,
 		JWTSecret:       secret,
 		Port:            env("PORT", "4300"),
-		CORSOrigins:     split(env("CORS_ORIGINS", "http://localhost:4100,http://localhost:4101")),
+		CORSOrigins:     CORSOriginsFromEnv(),
 		WebDist:         env("WEB_DIST", "../web/build"),
 		DBMaxConns:      int32(envInt("DB_MAX_CONNS", 10)),
 		DBMinConns:      int32(envInt("DB_MIN_CONNS", 1)),
