@@ -7,7 +7,7 @@
   import { A, loadToken, refreshToken } from '$lib/api.svelte.js';
   import CookieBanner from '$lib/components/CookieBanner.svelte';
   import { initTheme } from '$lib/theme.svelte.js';
-  import { Receipt, ChartPie, PiggyBank, HandCoins, Settings } from 'lucide-svelte';
+  import { Receipt, ChartPie, PiggyBank, HandCoins, Settings, LogOut } from 'lucide-svelte';
 
   let { children } = $props();
   let ready = $state(false);
@@ -51,16 +51,19 @@
     page.url.pathname === '/' ||
     page.url.pathname.startsWith('/legal')
   );
+  // `match` lists every path prefix that belongs to a tab, so nested routes
+  // (a lender's panel, an expense detail) keep their parent tab highlighted.
   const routes = $derived([
-    { href: '/dashboard', label: i18n.t('tabs.expenses'), icon: Receipt },
-    { href: '/stats', label: i18n.t('tabs.stats'), icon: ChartPie },
-    { href: '/budgets', label: i18n.t('tabs.budgets'), icon: PiggyBank },
-    { href: '/loans', label: i18n.t('tabs.loans'), icon: HandCoins },
-    { href: '/config', label: i18n.t('tabs.config'), icon: Settings }
+    { href: '/dashboard', match: ['/dashboard', '/expense'], label: i18n.t('tabs.expenses'), icon: Receipt },
+    { href: '/stats', match: ['/stats'], label: i18n.t('tabs.stats'), icon: ChartPie },
+    { href: '/budgets', match: ['/budgets'], label: i18n.t('tabs.budgets'), icon: PiggyBank },
+    { href: '/loans', match: ['/loans'], label: i18n.t('tabs.loans'), icon: HandCoins },
+    { href: '/config', match: ['/config'], label: i18n.t('tabs.config'), icon: Settings }
   ]);
 
-  function isActive(href) {
-    return page.url.pathname === href || page.url.pathname.startsWith(href + '/');
+  function isActive(match) {
+    const path = page.url.pathname;
+    return match.some((m) => path === m || path.startsWith(m + '/'));
   }
 </script>
 
@@ -72,32 +75,40 @@
   {@render children?.()}
   <CookieBanner />
 {:else if S.user}
-  <nav class="hidden sm:flex sticky top-0 z-20 items-center gap-1 px-3 py-2 bg-background/80 backdrop-blur-xl border-b border-border">
-    <div class="flex items-center gap-2 mr-3">
-      <div class="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 text-primary font-bold text-xs flex items-center justify-center">C</div>
-      <span class="font-bold text-sm hidden sm:block">Chiro</span>
-    </div>
-    {#each routes as r (r.href)}
-      <a
-        href={r.href}
-        class="flex-1 sm:flex-none sm:min-w-[80px] flex items-center justify-center h-11 rounded-full text-xs font-semibold transition-colors {page.url.pathname === r.href ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}"
-        aria-current={page.url.pathname === r.href ? 'page' : undefined}
-      >
-        {r.label}
+  <nav
+    class="hidden sm:block sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border"
+    aria-label={i18n.t('common.mainNav')}
+  >
+    <div class="mx-auto flex max-w-[760px] items-center gap-1 px-4 py-2">
+      <a href="/dashboard" class="mr-2 flex h-11 items-center gap-2 rounded-lg md:mr-3" aria-label="Chiro">
+        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">C</span>
+        <span class="hidden text-sm font-bold md:inline">Chiro</span>
       </a>
-    {/each}
-    {#if S.user?.role === 'admin'}
-      <a
-        href="/admin"
-        class="flex-1 sm:flex-none sm:min-w-[80px] flex items-center justify-center h-11 rounded-full text-xs font-semibold transition-colors {page.url.pathname === '/admin' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}"
-        aria-current={page.url.pathname === '/admin' ? 'page' : undefined}
+      {#each routes as r (r.href)}
+        <a
+          href={r.href}
+          class="flex h-11 items-center justify-center rounded-full px-2 text-sm font-medium transition-colors md:px-3 {isActive(r.match) ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}"
+          aria-current={isActive(r.match) ? 'page' : undefined}
+        >
+          {r.label}
+        </a>
+      {/each}
+      {#if S.user?.role === 'admin'}
+        <a
+          href="/admin"
+          class="flex h-11 items-center justify-center rounded-full px-2 text-sm font-medium transition-colors md:px-3 {isActive(['/admin']) ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}"
+          aria-current={isActive(['/admin']) ? 'page' : undefined}
+        >
+          Admin
+        </a>
+      {/if}
+      <button
+        class="ml-auto flex h-11 items-center justify-center gap-2 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        aria-label={i18n.t('common.logout')}
+        onclick={() => { logout(); goto('/login'); }}
       >
-        Admin
-      </a>
-    {/if}
-    <div class="flex-1 sm:flex-none sm:ml-auto">
-      <button class="w-full sm:w-auto flex items-center justify-center h-11 px-3 rounded-full text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" onclick={() => { logout(); goto('/login'); }}>
-        {i18n.t('common.logout')}
+        <LogOut class="h-4 w-4" />
+        <span class="hidden md:inline">{i18n.t('common.logout')}</span>
       </button>
     </div>
   </nav>
@@ -108,11 +119,13 @@
     {#each routes as r (r.href)}
       <a
         href={r.href}
-        class="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-14 text-[11px] font-medium transition-colors {isActive(r.href) ? 'text-primary' : 'text-muted-foreground'}"
-        aria-current={isActive(r.href) ? 'page' : undefined}
+        class="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-14 text-xs transition-colors {isActive(r.match) ? 'font-semibold text-primary' : 'font-medium text-muted-foreground'}"
+        aria-current={isActive(r.match) ? 'page' : undefined}
       >
-        <r.icon class="h-5 w-5" />
-        <span>{r.label}</span>
+        <span class="flex h-7 w-14 items-center justify-center rounded-full transition-colors {isActive(r.match) ? 'bg-primary/10' : ''}">
+          <r.icon class="h-5 w-5" />
+        </span>
+        <span class="tracking-tight">{r.label}</span>
       </a>
     {/each}
   </nav>
