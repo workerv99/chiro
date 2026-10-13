@@ -48,9 +48,7 @@
 <div class="min-h-dvh flex items-center justify-center p-4">
   <Card class="w-full max-w-sm p-8">
     <div class="text-center mb-6">
-      <div class="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 text-primary font-black text-xl mx-auto mb-3 flex items-center justify-center">
-        C
-      </div>
+      <p class="text-2xl font-bold tracking-tight mb-3">Chiro</p>
       <h1 class="text-xl font-bold">{mode === 'login' ? i18n.t('auth.loginTitle') : 'Crear cuenta'}</h1>
       <p class="text-sm text-muted-foreground mt-1">{i18n.t('auth.loginSub')}</p>
     </div>
