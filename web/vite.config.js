@@ -22,5 +22,9 @@ export default defineConfig({
   preview: {
     port: 4101,
     strictPort: true
+  },
+  test: {
+    environment: 'node',
+    include: ['src/**/*.test.js']
   }
 });
