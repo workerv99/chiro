@@ -80,10 +80,7 @@
     aria-label={i18n.t('common.mainNav')}
   >
     <div class="mx-auto flex max-w-[760px] items-center gap-1 px-4 py-2">
-      <a href="/dashboard" class="mr-2 flex h-11 items-center gap-2 rounded-lg md:mr-3" aria-label="Chiro">
-        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">C</span>
-        <span class="hidden text-sm font-bold md:inline">Chiro</span>
-      </a>
+      <a href="/dashboard" class="mr-2 flex h-11 items-center rounded-lg px-1 text-base font-bold tracking-tight md:mr-3">Chiro</a>
       {#each routes as r (r.href)}
         <a
           href={r.href}
