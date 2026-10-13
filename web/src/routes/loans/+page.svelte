@@ -2,105 +2,33 @@
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { i18n } from '$lib/i18n.svelte.js';
-  import { S, create, createLoan } from '$lib/stores.svelte.js';
-  import { money, toDisplay, toISO, todayISO, parseDecimal, nextLoanTitle } from '$lib/format.js';
+  import { S } from '$lib/stores.svelte.js';
+  import { money } from '$lib/format.js';
   import Button from '$lib/components/ui/button.svelte';
   import Card from '$lib/components/ui/card.svelte';
-  import Input from '$lib/components/ui/input.svelte';
-  import Label from '$lib/components/ui/label.svelte';
-  import Dialog from '$lib/components/ui/dialog.svelte';
-  import DialogHeader from '$lib/components/ui/dialog-header.svelte';
-  import DialogTitle from '$lib/components/ui/dialog-title.svelte';
-  import DialogFooter from '$lib/components/ui/dialog-footer.svelte';
+  import LoanFormDialog from '$lib/components/loan-form-dialog.svelte';
   import { Plus } from 'lucide-svelte';
 
   let showForm = $state(false);
-  let personId = $state('');
-  let amount = $state('');
-  let rate = $state('');
-  let interestType = $state('simple');
-  let months = $state('12');
-  let frequency = $state('monthly');
-  let startDate = $state(toDisplay(todayISO()));
-  let dueDate = $state('');
-  let description = $state('');
-  let customInstallment = $state('');
-  let showPersonForm = $state(false);
-  let personName = $state('');
-  let personNotes = $state('');
-  let err = $state('');
+  let initialPersonId = $state('');
 
-  const autoTitle = $derived(nextLoanTitle(S.db.loans, i18n.t('loans.loan')));
-
-  function openNew(initialPersonId = '') {
-    personId = initialPersonId;
-    amount = '';
-    rate = '';
-    interestType = 'simple';
-    months = '12';
-    frequency = 'monthly';
-    startDate = toDisplay(todayISO());
-    dueDate = '';
-    description = '';
-    customInstallment = '';
-    showPersonForm = false;
-    personName = '';
-    personNotes = '';
-    err = '';
+  function openNew() {
+    initialPersonId = '';
     showForm = true;
   }
 
-  function openPersonForm() {
-    personName = '';
-    personNotes = '';
-    err = '';
-    showPersonForm = true;
-  }
-
-  async function savePerson() {
-    err = '';
-    if (!personName.trim()) return (err = i18n.t('common.required'));
-    try {
-      const person = await create('persons', { name: personName.trim(), notes: personNotes.trim() || null });
-      personId = person.person_id;
-      showPersonForm = false;
-    } catch (e) {
-      err = e.message;
-    }
-  }
-
+  // Deep link: /loans?new=1&person=<id> opens the dialog with that lender preselected.
   $effect(() => {
     const params = page.url.searchParams;
-    if (params.get('new') === '1') openNew(params.get('person') || '');
+    if (params.get('new') === '1') {
+      initialPersonId = params.get('person') || '';
+      showForm = true;
+    }
   });
 
-  async function save() {
-    err = '';
-    const p = parseDecimal(amount);
-    if (!personId) return (err = i18n.t('loans.personRequired'));
-    if (!p || p <= 0) return (err = i18n.t('loans.amountRequired'));
-    const n = parseInt(months, 10);
-    if (!n || n <= 0) return (err = i18n.t('loans.installmentsRequired'));
-    const custom = parseDecimal(customInstallment) || 0;
-    try {
-      await createLoan({
-        person_id: personId,
-        description: description.trim() || autoTitle,
-        amount: p,
-        date: toISO(startDate),
-        interest_rate: rate ? parseDecimal(rate) : 0,
-        interest_type: interestType,
-        months: n,
-        frequency,
-        first_due_date: dueDate ? toISO(dueDate) : null,
-        custom_installment: custom
-      });
-      showForm = false;
-      // Land on the lender's panel, not the main loans list.
-      await goto(`/loans/person/${personId}`);
-    } catch (e) {
-      err = e.message;
-    }
+  // Land on the lender's panel, not the main loans list.
+  async function onSaved(personId) {
+    await goto(`/loans/person/${personId}`);
   }
 
   const totalLoans = $derived(S.db.loans.reduce((sum, l) => sum + l.total_amount, 0));
@@ -173,110 +101,4 @@
   <Plus class="h-6 w-6" />
 </Button>
 
-<Dialog bind:open={showForm}>
-  <DialogHeader>
-    <DialogTitle>{i18n.t('loans.newLoan')}</DialogTitle>
-  </DialogHeader>
-
-  <div class="space-y-4">
-    <div class="space-y-2">
-      <Label for="loan-person">{i18n.t('loans.person')}</Label>
-      <select id="loan-person" bind:value={personId} class="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base">
-        <option value="">—</option>
-        {#each S.db.persons as p (p.person_id)}
-          <option value={p.person_id}>{p.name}</option>
-        {/each}
-      </select>
-      <Button type="button" variant="outline" size="sm" onclick={openPersonForm}>
-        <Plus size={16} /> Nuevo prestamista
-      </Button>
-    </div>
-
-    {#if showPersonForm}
-      <Card class="p-3 space-y-3 border-primary/40">
-        <p class="text-sm font-semibold">Nuevo prestamista</p>
-        <div class="space-y-2">
-          <Label for="new-person-name">Nombre</Label>
-          <Input id="new-person-name" bind:value={personName} autofocus />
-        </div>
-        <div class="space-y-2">
-          <Label for="new-person-notes">Notas (opcional)</Label>
-          <Input id="new-person-notes" bind:value={personNotes} />
-        </div>
-        <div class="flex justify-end gap-2">
-          <Button type="button" variant="ghost" size="sm" onclick={() => (showPersonForm = false)}>Cancelar</Button>
-          <Button type="button" size="sm" onclick={savePerson}>Guardar prestamista</Button>
-        </div>
-      </Card>
-    {/if}
-
-    <div class="space-y-2">
-      <Label for="loan-desc">{i18n.t('loans.description')}</Label>
-      <Input id="loan-desc" bind:value={description} placeholder={autoTitle} />
-    </div>
-
-    <div class="grid grid-cols-2 gap-4">
-      <div class="space-y-2">
-        <Label for="loan-amount">{i18n.t('loans.principal')}</Label>
-        <Input id="loan-amount" bind:value={amount} inputmode="decimal" />
-      </div>
-      <div class="space-y-2">
-        <Label for="loan-months">{i18n.t('loans.installments')}</Label>
-        <Input id="loan-months" bind:value={months} inputmode="numeric" />
-      </div>
-    </div>
-
-    <div class="space-y-2">
-      <Label for="loan-custom">Cuota personalizada (opcional)</Label>
-      <Input id="loan-custom" bind:value={customInstallment} inputmode="decimal" placeholder="Dejar vacío para cuota igual" />
-      <p class="text-xs text-muted-foreground">Si definís un monto, el sistema calcula cuántas cuotas caben y el resto va en la última.</p>
-    </div>
-
-    <div class="space-y-2">
-      <Label for="loan-freq">{i18n.t('loans.frequency')}</Label>
-      <select id="loan-freq" bind:value={frequency} class="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base">
-        <option value="weekly">{i18n.t('loans.weekly')}</option>
-        <option value="biweekly">{i18n.t('loans.biweekly')}</option>
-        <option value="monthly">{i18n.t('loans.monthly')}</option>
-      </select>
-    </div>
-
-    <details class="group">
-      <summary class="cursor-pointer text-sm font-semibold text-muted-foreground py-2">{i18n.t('common.moreOptions')}</summary>
-      <div class="space-y-4 pt-2">
-        <div class="grid grid-cols-2 gap-4">
-          <div class="space-y-2">
-            <Label for="loan-rate">{i18n.t('loans.rate')}</Label>
-            <Input id="loan-rate" bind:value={rate} inputmode="decimal" placeholder="0" />
-          </div>
-          <div class="space-y-2">
-            <Label for="loan-interest">{i18n.t('loans.interest')}</Label>
-            <select id="loan-interest" bind:value={interestType} class="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base">
-              <option value="simple">{i18n.t('loans.interestSimple')}</option>
-              <option value="compound">{i18n.t('loans.interestCompound')}</option>
-            </select>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="space-y-2">
-            <Label for="loan-start">{i18n.t('loans.startDate')}</Label>
-            <Input id="loan-start" bind:value={startDate} placeholder={i18n.t('expenses.datePlaceholder')} />
-          </div>
-          <div class="space-y-2">
-            <Label for="loan-due">{i18n.t('loans.dueDate')}</Label>
-            <Input id="loan-due" bind:value={dueDate} placeholder={i18n.t('expenses.datePlaceholder')} />
-          </div>
-        </div>
-      </div>
-    </details>
-
-    {#if err}
-      <p class="text-sm text-destructive">{err}</p>
-    {/if}
-  </div>
-
-  <DialogFooter>
-    <Button variant="outline" onclick={() => (showForm = false)}>{i18n.t('common.cancel')}</Button>
-    <Button onclick={save}>{i18n.t('common.save')}</Button>
-  </DialogFooter>
-</Dialog>
+<LoanFormDialog bind:open={showForm} {initialPersonId} {onSaved} />

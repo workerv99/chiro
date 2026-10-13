@@ -5,12 +5,14 @@
   import { money, toDisplay, sortLoansByDate } from '$lib/format.js';
   import Button from '$lib/components/ui/button.svelte';
   import Card from '$lib/components/ui/card.svelte';
+  import LoanFormDialog from '$lib/components/loan-form-dialog.svelte';
   import { ArrowLeft, Check, Plus } from 'lucide-svelte';
 
   const personId = $derived(String(page.params.id));
 
   const person = $derived(S.db.persons.find(p => p.person_id === personId));
   let sortDir = $state('desc');
+  let showForm = $state(false);
   const loans = $derived(sortLoansByDate(S.db.loans.filter(l => l.person_id === personId), sortDir));
   const totalRemaining = $derived(loans.reduce((sum, l) => sum + (l.total_amount - l.total_paid), 0));
   const totalPaid = $derived(loans.reduce((sum, l) => sum + l.total_paid, 0));
@@ -26,9 +28,7 @@
 <a class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground font-semibold mb-2" href="/loans"><ArrowLeft size={16} /> {i18n.t('tabs.loans')}</a>
 <div class="flex items-center justify-between gap-3 mb-4">
   <h1 class="text-xl md:text-2xl font-bold">{person?.name || '—'}</h1>
-  <a href={`/loans?new=1&person=${personId}`}>
-    <Button size="sm"><Plus size={16} /> {i18n.t('loans.newLoan')}</Button>
-  </a>
+  <Button size="sm" onclick={() => (showForm = true)}><Plus size={16} /> {i18n.t('loans.newLoan')}</Button>
 </div>
 
 <div class="grid grid-cols-3 gap-2 mb-4">
@@ -49,9 +49,7 @@
 {#if loans.length === 0}
   <Card class="flex flex-col items-center gap-3 py-8">
     <p class="text-sm text-muted-foreground">{i18n.t('loans.noLoansForPerson')}</p>
-    <a href={`/loans?new=1&person=${personId}`}>
-      <Button><Plus size={16} /> {i18n.t('loans.newLoan')}</Button>
-    </a>
+    <Button onclick={() => (showForm = true)}><Plus size={16} /> {i18n.t('loans.newLoan')}</Button>
   </Card>
 {:else}
   <select
@@ -83,3 +81,5 @@
     {/each}
   </Card>
 {/if}
+
+<LoanFormDialog bind:open={showForm} lockedPersonId={personId} />
