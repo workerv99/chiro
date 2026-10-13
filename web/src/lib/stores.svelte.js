@@ -45,7 +45,8 @@ const PK = {
   budgets: 'budget_id',
   piggy: 'piggy_bank_id',
   bills: 'bill_id',
-  tags: 'tag_id'
+  tags: 'tag_id',
+  loans: 'loan_id'
 };
 
 export async function login(email, password) {

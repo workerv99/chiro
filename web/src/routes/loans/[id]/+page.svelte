@@ -209,8 +209,10 @@
 
   async function doDelete() {
     confirmDel = false;
+    // Read the lender before removing: the loan may be gone from state afterwards.
+    const personId = loan?.person_id;
     await remove('loans', loanId);
-    goto('/loans');
+    goto(personId ? `/loans/person/${personId}` : '/loans');
   }
 
   async function generatePDF() {
