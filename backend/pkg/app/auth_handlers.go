@@ -3,9 +3,12 @@ package app
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 
 	"chiro/pkg/auth"
 	"chiro/pkg/model"
@@ -88,6 +91,17 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// loginLookupFailure traduce un error de la consulta de usuario a la respuesta
+// HTTP. Solo "usuario inexistente" es un 401: cualquier otro fallo (pool
+// agotado, DB caída, timeout) es del servicio, y presentarlo como credenciales
+// incorrectas hace que el usuario cambie su contraseña en vez de reintentar.
+func loginLookupFailure(err error) (int, string) {
+	if errors.Is(err, pgx.ErrNoRows) {
+		return http.StatusUnauthorized, "email o contraseña incorrectos"
+	}
+	return http.StatusServiceUnavailable, "servicio no disponible, reintenta en unos segundos"
+}
+
 func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var req loginReq
 	if !readJSON(w, r, &req) {
@@ -99,7 +113,11 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 		`SELECT user_id, name, password_hash, role, status FROM users WHERE email=$1`, email).
 		Scan(&uid, &name, &hash, &role, &status)
 	if err != nil {
-		writeErr(w, http.StatusUnauthorized, "email o contraseña incorrectos")
+		status, msg := loginLookupFailure(err)
+		if status != http.StatusUnauthorized {
+			log.Printf("chiro error [%s %s]: login lookup: %v", r.Method, r.URL.Path, err)
+		}
+		writeErr(w, status, msg)
 		return
 	}
 	if !auth.CheckPassword(hash, req.Password) {
