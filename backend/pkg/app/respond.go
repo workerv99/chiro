@@ -19,10 +19,16 @@ func writeErr(w http.ResponseWriter, status int, msg string) {
 	writeJSON(w, status, map[string]string{"error": msg})
 }
 
+// logRequestError registra el error real de una petición con un formato único.
+// Los detalles internos solo van al log, nunca al cliente.
+func logRequestError(r *http.Request, err error) {
+	log.Printf("chiro error [%s %s]: %v", r.Method, r.URL.Path, err)
+}
+
 // writeServerError loguea el error real (para debugging) y devuelve un
 // mensaje genérico al cliente para no filtrar información interna.
 func writeServerError(w http.ResponseWriter, r *http.Request, msg string, err error) {
-	log.Printf("chiro error [%s %s]: %v", r.Method, r.URL.Path, err)
+	logRequestError(r, err)
 	writeErr(w, http.StatusInternalServerError, msg)
 }
 

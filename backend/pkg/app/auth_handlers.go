@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 	"errors"
-	"log"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -115,7 +115,7 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		status, msg := loginLookupFailure(err)
 		if status != http.StatusUnauthorized {
-			log.Printf("chiro error [%s %s]: login lookup: %v", r.Method, r.URL.Path, err)
+			logRequestError(r, fmt.Errorf("login lookup: %w", err))
 		}
 		writeErr(w, status, msg)
 		return
