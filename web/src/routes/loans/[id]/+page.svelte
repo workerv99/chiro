@@ -24,6 +24,7 @@
   let payAmount = $state('');
   let payDate = $state(toDisplay(todayISO()));
   let confirmDel = $state(false);
+  let deleteErr = $state('');
   let confirmPay = $state(false);
   let pendingAction = $state(null);
   let cascadeMsg = $state('');
@@ -209,9 +210,16 @@
 
   async function doDelete() {
     confirmDel = false;
+    deleteErr = '';
     // Read the lender before removing: the loan may be gone from state afterwards.
     const personId = loan?.person_id;
-    await remove('loans', loanId);
+    try {
+      await remove('loans', loanId);
+    } catch (e) {
+      // The loan still exists: stay here and say so instead of navigating away.
+      deleteErr = e.message || 'No se pudo eliminar el préstamo';
+      return;
+    }
     goto(personId ? `/loans/person/${personId}` : '/loans');
   }
 
@@ -528,6 +536,7 @@
     {/each}
   </Card>
 
+  {#if deleteErr}<p class="mb-2 text-sm font-semibold text-destructive" role="alert">{deleteErr}</p>{/if}
   <Button variant="destructive" class="w-full mb-8" onclick={() => (confirmDel = true)}>Eliminar préstamo</Button>
 {/if}
 
