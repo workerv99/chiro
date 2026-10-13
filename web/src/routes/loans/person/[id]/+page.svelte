@@ -6,7 +6,8 @@
   import Button from '$lib/components/ui/button.svelte';
   import Card from '$lib/components/ui/card.svelte';
   import LoanFormDialog from '$lib/components/loan-form-dialog.svelte';
-  import { ArrowLeft, Check, Plus } from 'lucide-svelte';
+  import { Check, Plus } from 'lucide-svelte';
+  import BackLink from '$lib/components/back-link.svelte';
 
   const personId = $derived(String(page.params.id));
 
@@ -25,7 +26,7 @@
 
 <svelte:head><title>{person?.name || i18n.t('loans.title')} · Chiro</title></svelte:head>
 
-<a class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground font-semibold mb-2" href="/loans"><ArrowLeft size={16} /> {i18n.t('tabs.loans')}</a>
+<BackLink href="/loans">{i18n.t('tabs.loans')}</BackLink>
 <div class="flex items-center justify-between gap-3 mb-4">
   <h1 class="text-xl md:text-2xl font-bold">{person?.name || '—'}</h1>
   <Button size="sm" onclick={() => (showForm = true)}><Plus size={16} /> {i18n.t('loans.newLoan')}</Button>

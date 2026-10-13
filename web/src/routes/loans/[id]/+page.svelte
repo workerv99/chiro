@@ -14,7 +14,8 @@
   import DialogHeader from '$lib/components/ui/dialog-header.svelte';
   import DialogTitle from '$lib/components/ui/dialog-title.svelte';
   import DialogFooter from '$lib/components/ui/dialog-footer.svelte';
-  import { ArrowLeft, Edit, FileText } from 'lucide-svelte';
+  import { Edit, FileText } from 'lucide-svelte';
+  import BackLink from '$lib/components/back-link.svelte';
 
   const loanId = $derived(String(page.params.id));
   let loan = $state(null);
@@ -415,7 +416,7 @@
 {#if loading || !loan}
   <p class="text-sm text-muted-foreground py-8 text-center">{i18n.t('common.loading')}</p>
 {:else}
-  <a class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground font-semibold mb-2" href={`/loans/person/${loan.person_id}`}><ArrowLeft size={16} /> {loan.person_name}</a>
+  <BackLink href={`/loans/person/${loan.person_id}`}>{loan.person_name}</BackLink>
   <h1 class="text-xl md:text-2xl font-bold mb-4">{loan.description || 'Préstamo'}</h1>
 
   <Card class="p-4 mb-4">
