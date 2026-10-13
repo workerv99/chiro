@@ -2,7 +2,7 @@
   import { page } from '$app/state';
   import { i18n } from '$lib/i18n.svelte.js';
   import { S } from '$lib/stores.svelte.js';
-  import { money } from '$lib/format.js';
+  import { money, toDisplay, sortLoansByDate } from '$lib/format.js';
   import Button from '$lib/components/ui/button.svelte';
   import Card from '$lib/components/ui/card.svelte';
   import { ArrowLeft, Check, Plus } from 'lucide-svelte';
@@ -10,7 +10,8 @@
   const personId = $derived(String(page.params.id));
 
   const person = $derived(S.db.persons.find(p => p.person_id === personId));
-  const loans = $derived(S.db.loans.filter(l => l.person_id === personId));
+  let sortDir = $state('desc');
+  const loans = $derived(sortLoansByDate(S.db.loans.filter(l => l.person_id === personId), sortDir));
   const totalRemaining = $derived(loans.reduce((sum, l) => sum + (l.total_amount - l.total_paid), 0));
   const totalPaid = $derived(loans.reduce((sum, l) => sum + l.total_paid, 0));
   const paidCount = $derived(loans.filter(l => l.is_paid).length);
@@ -53,6 +54,14 @@
     </a>
   </Card>
 {:else}
+  <select
+    bind:value={sortDir}
+    aria-label={i18n.t('loans.sortLabel')}
+    class="flex h-11 w-full sm:w-64 rounded-md border border-input bg-background px-3 py-2 text-base mb-3"
+  >
+    <option value="desc">{i18n.t('loans.sortNewest')}</option>
+    <option value="asc">{i18n.t('loans.sortOldest')}</option>
+  </select>
   <Card class="overflow-hidden">
     {#each loans as l (l.loan_id)}
       {@const loanRemaining = l.total_amount - l.total_paid}
@@ -61,7 +70,7 @@
         <div class="flex-1 min-w-0">
           <p class="text-sm font-semibold truncate" title={l.description || i18n.t('loans.loan')}>{l.description || i18n.t('loans.loan')}</p>
           <p class="text-xs text-muted-foreground">
-            {i18n.t('loans.installments')}: {l.months || '?'}
+            {l.date ? toDisplay(l.date) + ' · ' : ''}{i18n.t('loans.installments')}: {l.months || '?'}
           </p>
         </div>
         <div class="text-right">

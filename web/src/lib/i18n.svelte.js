@@ -30,7 +30,8 @@ export const messages = {
       exceeded: 'Excedido', empty: 'Sin presupuestos', deleteConfirm: '¿Eliminar presupuesto?'
     },
     loans: {
-      title: 'Préstamos', newLoan: 'Nuevo préstamo',
+      title: 'Préstamos', loan: 'Préstamo', newLoan: 'Nuevo préstamo',
+      sortLabel: 'Ordenar por fecha', sortNewest: 'Más recientes primero', sortOldest: 'Más antiguos primero',
       person: 'Persona', personRequired: 'Elige la persona', principal: 'Capital', rate: 'Tasa %',
       interestSimple: 'Interés simple', interestCompound: 'Interés compuesto',
       installments: 'Cuotas', installmentsRequired: 'Indica el número de cuotas', frequency: 'Frecuencia',
@@ -111,7 +112,8 @@ export const messages = {
       exceeded: 'Exceeded', empty: 'No budgets yet', deleteConfirm: 'Delete budget?'
     },
     loans: {
-      title: 'Loans', newLoan: 'New loan',
+      title: 'Loans', loan: 'Loan', newLoan: 'New loan',
+      sortLabel: 'Sort by date', sortNewest: 'Newest first', sortOldest: 'Oldest first',
       person: 'Person', personRequired: 'Pick a person', principal: 'Principal', rate: 'Rate %',
       interestSimple: 'Simple interest', interestCompound: 'Compound interest',
       installments: 'Installments', installmentsRequired: 'Number of installments required', frequency: 'Frequency',

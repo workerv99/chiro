@@ -1,8 +1,9 @@
 <script>
   import { page } from '$app/state';
+  import { goto } from '$app/navigation';
   import { i18n } from '$lib/i18n.svelte.js';
   import { S, create, createLoan } from '$lib/stores.svelte.js';
-  import { money, toDisplay, toISO, todayISO, parseDecimal } from '$lib/format.js';
+  import { money, toDisplay, toISO, todayISO, parseDecimal, nextLoanTitle } from '$lib/format.js';
   import Button from '$lib/components/ui/button.svelte';
   import Card from '$lib/components/ui/card.svelte';
   import Input from '$lib/components/ui/input.svelte';
@@ -28,6 +29,8 @@
   let personName = $state('');
   let personNotes = $state('');
   let err = $state('');
+
+  const autoTitle = $derived(nextLoanTitle(S.db.loans, i18n.t('loans.loan')));
 
   function openNew(initialPersonId = '') {
     personId = initialPersonId;
@@ -82,7 +85,7 @@
     try {
       await createLoan({
         person_id: personId,
-        description: description.trim(),
+        description: description.trim() || autoTitle,
         amount: p,
         date: toISO(startDate),
         interest_rate: rate ? parseDecimal(rate) : 0,
@@ -93,6 +96,8 @@
         custom_installment: custom
       });
       showForm = false;
+      // Land on the lender's panel, not the main loans list.
+      await goto(`/loans/person/${personId}`);
     } catch (e) {
       err = e.message;
     }
@@ -205,6 +210,11 @@
       </Card>
     {/if}
 
+    <div class="space-y-2">
+      <Label for="loan-desc">{i18n.t('loans.description')}</Label>
+      <Input id="loan-desc" bind:value={description} placeholder={autoTitle} />
+    </div>
+
     <div class="grid grid-cols-2 gap-4">
       <div class="space-y-2">
         <Label for="loan-amount">{i18n.t('loans.principal')}</Label>
@@ -234,10 +244,6 @@
     <details class="group">
       <summary class="cursor-pointer text-sm font-semibold text-muted-foreground py-2">{i18n.t('common.moreOptions')}</summary>
       <div class="space-y-4 pt-2">
-        <div class="space-y-2">
-          <Label for="loan-desc">{i18n.t('loans.description')}</Label>
-          <Input id="loan-desc" bind:value={description} />
-        </div>
         <div class="grid grid-cols-2 gap-4">
           <div class="space-y-2">
             <Label for="loan-rate">{i18n.t('loans.rate')}</Label>

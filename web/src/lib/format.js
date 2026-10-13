@@ -78,6 +78,29 @@ export function pct(spent, limit) {
 }
 
 // Parses user-typed decimals; accepts both "12.5" and "12,5" (comma keypads).
+// Default name for a new loan: "<label> #N". N continues past both the loan count
+// and the highest auto number already used, so deleting a loan never reissues one.
+export function nextLoanTitle(loans, label) {
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp('^' + escaped + ' #(\\d+)$');
+  let highest = loans.length;
+  for (const l of loans) {
+    const m = re.exec(l.description || '');
+    if (m) highest = Math.max(highest, Number(m[1]));
+  }
+  return `${label} #${highest + 1}`;
+}
+
+// Returns a copy of `loans` ordered by execution (start) date. 'desc' puts the
+// most recent first. Ties fall back to loan_id so the order is stable.
+export function sortLoansByDate(loans, dir = 'desc') {
+  const sign = dir === 'asc' ? 1 : -1;
+  return [...loans].sort((a, b) => {
+    const byDate = String(a.date || '').localeCompare(String(b.date || ''));
+    return sign * (byDate || String(a.loan_id).localeCompare(String(b.loan_id)));
+  });
+}
+
 export function parseDecimal(value) {
   const n = parseFloat(String(value ?? "").trim().replace(",", "."));
   return Number.isFinite(n) ? n : NaN;
