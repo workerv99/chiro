@@ -243,6 +243,10 @@ export async function unpayInstallment(id) {
   return api(`/api/installments/${id}/unpay`, { method: 'POST' });
 }
 
+export async function editPayment(loanId, paymentId, { amount, date }) {
+  return api(`/api/loans/${loanId}/payments/${paymentId}`, { method: 'PUT', body: { amount, date } });
+}
+
 export async function updateInstallment(id, row) {
   return api(`/api/installments/${id}`, { method: 'PUT', body: row });
 }

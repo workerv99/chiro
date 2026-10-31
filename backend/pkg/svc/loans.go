@@ -2,6 +2,7 @@ package svc
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -199,6 +200,146 @@ func insertPaymentHistory(ctx context.Context, tx pgx.Tx, userID, loanID, starti
 		}
 	}
 	return nil
+}
+
+// ErrPaymentNotFound indica que el pago no existe, fue borrado o no pertenece
+// al usuario/préstamo indicado.
+var ErrPaymentNotFound = errors.New("pago no encontrado")
+
+// EditPayment cambia el monto y la fecha de un pago concreto: revierte sus
+// asignaciones, lo vuelve a repartir en cascada desde su cuota inicial (los
+// demás pagos no se tocan) y recalcula el préstamo, todo en una transacción.
+func EditPayment(ctx context.Context, st *store.Store, userID, loanID, paymentID string, amount float64, date string) error {
+	if amount <= 0 {
+		return &ValidationError{Msg: "el monto debe ser mayor a 0"}
+	}
+	if date == "" {
+		return &ValidationError{Msg: "fecha requerida"}
+	}
+	if err := ValidateDate(date); err != nil {
+		return &ValidationError{Msg: err.Error()}
+	}
+	return st.ExecAll(ctx, func(tx pgx.Tx) error {
+		var startingID string
+		err := tx.QueryRow(ctx,
+			`SELECT starting_installment_id FROM payment_history
+			 WHERE user_id=$1 AND payment_id=$2 AND loan_id=$3 AND deleted=0 FOR UPDATE`,
+			userID, paymentID, loanID).Scan(&startingID)
+		if err == pgx.ErrNoRows {
+			return ErrPaymentNotFound
+		}
+		if err != nil {
+			return err
+		}
+
+		old, err := queryAllocations(ctx, tx, userID, paymentID)
+		if err != nil {
+			return err
+		}
+		all, err := queryLoanInstallments(ctx, tx, userID, loanID)
+		if err != nil {
+			return err
+		}
+		reversed, allocs, err := ReallocatePayment(all, old, startingID, amount)
+		if err != nil {
+			return err
+		}
+
+		newPaid := make(map[string]float64, len(reversed))
+		for _, i := range reversed {
+			newPaid[i.ID] = i.Paid
+		}
+		newAlloc := make(map[string]bool, len(allocs))
+		allocations := make([]paymentAllocation, 0, len(allocs))
+		var total float64
+		for _, a := range allocs {
+			newPaid[a.ID] = Round2(newPaid[a.ID] + a.Amount)
+			newAlloc[a.ID] = true
+			total = Round2(total + a.Amount)
+			allocations = append(allocations, paymentAllocation{id: a.ID, number: a.Number, amount: a.Amount})
+		}
+
+		ts := time.Now().UnixMilli()
+		for _, i := range all {
+			paid := newPaid[i.ID]
+			switch {
+			case paid <= 0:
+				_, err = tx.Exec(ctx,
+					`UPDATE installment SET paid_amount=0, paid_date=NULL, updated_at=$3 WHERE user_id=$1 AND installment_id=$2`,
+					userID, i.ID, ts)
+			case newAlloc[i.ID]:
+				_, err = tx.Exec(ctx,
+					`UPDATE installment SET paid_amount=$3, paid_date=$4, updated_at=$5 WHERE user_id=$1 AND installment_id=$2`,
+					userID, i.ID, paid, date, ts)
+			case paid != i.Paid:
+				_, err = tx.Exec(ctx,
+					`UPDATE installment SET paid_amount=$3, updated_at=$4 WHERE user_id=$1 AND installment_id=$2`,
+					userID, i.ID, paid, ts)
+			default:
+				continue
+			}
+			if err != nil {
+				return err
+			}
+		}
+
+		if _, err := tx.Exec(ctx,
+			`DELETE FROM payment_history_allocation WHERE user_id=$1 AND payment_id=$2`, userID, paymentID); err != nil {
+			return err
+		}
+		for _, a := range allocations {
+			if _, err := tx.Exec(ctx,
+				`INSERT INTO payment_history_allocation (user_id, payment_id, installment_id, installment_number, amount)
+				 VALUES ($1,$2,$3,$4,$5)`,
+				userID, paymentID, a.id, a.number, a.amount); err != nil {
+				return err
+			}
+		}
+		if _, err := tx.Exec(ctx,
+			`UPDATE payment_history SET amount=$3, date=$4 WHERE user_id=$1 AND payment_id=$2`,
+			userID, paymentID, total, date); err != nil {
+			return err
+		}
+		return recomputeLoanPaid(ctx, tx, userID, loanID, ts)
+	})
+}
+
+func queryAllocations(ctx context.Context, tx pgx.Tx, userID, paymentID string) ([]CascadeAllocation, error) {
+	rows, err := tx.Query(ctx,
+		`SELECT installment_id, installment_number, amount FROM payment_history_allocation
+		 WHERE user_id=$1 AND payment_id=$2`, userID, paymentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []CascadeAllocation
+	for rows.Next() {
+		var a CascadeAllocation
+		if err := rows.Scan(&a.ID, &a.Number, &a.Amount); err != nil {
+			return nil, err
+		}
+		out = append(out, a)
+	}
+	return out, rows.Err()
+}
+
+func queryLoanInstallments(ctx context.Context, tx pgx.Tx, userID, loanID string) ([]CascadeInstallment, error) {
+	rows, err := tx.Query(ctx,
+		`SELECT installment_id, number, amount, paid_amount FROM installment
+		 WHERE user_id=$1 AND loan_id=$2 AND deleted=0 ORDER BY number ASC`, userID, loanID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []CascadeInstallment
+	for rows.Next() {
+		var i CascadeInstallment
+		if err := rows.Scan(&i.ID, &i.Number, &i.Amount, &i.Paid); err != nil {
+			return nil, err
+		}
+		out = append(out, i)
+	}
+	return out, rows.Err()
 }
 
 // UnpayInstallment revierte el pago de una cuota. Un mismo pago puede haber

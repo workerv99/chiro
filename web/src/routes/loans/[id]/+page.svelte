@@ -3,7 +3,7 @@
   import { goto } from '$app/navigation';
   import { i18n } from '$lib/i18n.svelte.js';
   import { api } from '$lib/api.svelte.js';
-  import { payInstallment, cascadeInstallment, unpayInstallment, remove, updateLoan, updateInstallment } from '$lib/stores.svelte.js';
+  import { payInstallment, cascadeInstallment, unpayInstallment, remove, updateLoan, updateInstallment, editPayment } from '$lib/stores.svelte.js';
   import { money, toDisplay, toISO, todayISO, parseDecimal, isoParts } from '$lib/format.js';
   import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
   import Button from '$lib/components/ui/button.svelte';
@@ -56,6 +56,33 @@
   let instPaidMonth = $state('');
   let instPaidYear = $state('');
   let instErr = $state('');
+
+  let showEditPayment = $state(false);
+  let editingPayment = $state(null);
+  let paymentAmount = $state('');
+  let paymentDate = $state('');
+  let paymentErr = $state('');
+
+  function openEditPayment(p) {
+    editingPayment = p;
+    paymentAmount = String(p.amount);
+    paymentDate = toDisplay(p.date);
+    paymentErr = '';
+    showEditPayment = true;
+  }
+
+  async function savePayment() {
+    paymentErr = '';
+    const amt = parseDecimal(paymentAmount);
+    if (!amt || amt <= 0) return (paymentErr = 'Monto inválido');
+    const iso = toISO(paymentDate);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return (paymentErr = 'Fecha inválida (usa DD/MM/YYYY)');
+    try {
+      await editPayment(loanId, editingPayment.payment_id, { amount: amt, date: iso });
+      showEditPayment = false;
+      await load();
+    } catch (e) { paymentErr = e.message; }
+  }
 
   async function load() {
     const [loans, s, p] = await Promise.all([
@@ -537,6 +564,26 @@
     {/each}
   </Card>
 
+  {#if payments.length > 0}
+    <Card class="overflow-hidden mb-4">
+      <h3 class="font-bold p-4 pb-0">Pagos realizados</h3>
+      {#each payments as p (p.payment_id)}
+        <div class="flex items-center gap-3 px-4 py-3 border-t first:border-t-0">
+          <div class="flex-1">
+            <p class="text-sm font-semibold">{toDisplay(p.date)}</p>
+            {#if p.allocations.length > 0}
+              <p class="text-xs text-muted-foreground">Cuotas: {p.allocations.map((a) => `#${a.installment_number}`).join(', ')}</p>
+            {/if}
+          </div>
+          <p class="text-sm font-bold">{money(p.amount)}</p>
+          <button class="inline-flex items-center justify-center min-h-11 min-w-11 hover:bg-muted rounded" aria-label="Editar pago" onclick={() => openEditPayment(p)}>
+            <Edit class="h-4 w-4 text-muted-foreground" />
+          </button>
+        </div>
+      {/each}
+    </Card>
+  {/if}
+
   {#if deleteErr}<p class="mb-2 text-sm font-semibold text-destructive" role="alert">{deleteErr}</p>{/if}
   <Button variant="destructive" class="w-full mb-8" onclick={() => (confirmDel = true)}>Eliminar préstamo</Button>
 {/if}
@@ -625,5 +672,18 @@
   <DialogFooter>
     <Button variant="outline" onclick={() => (showEditInstallment = false)}>Cancelar</Button>
     <Button onclick={saveInstallment}>Guardar</Button>
+  </DialogFooter>
+</Dialog>
+
+<Dialog bind:open={showEditPayment}>
+  <DialogHeader><DialogTitle>Editar pago</DialogTitle></DialogHeader>
+  <div class="space-y-4">
+    <div class="space-y-2"><Label>Monto</Label><Input bind:value={paymentAmount} inputmode="decimal" /></div>
+    <div class="space-y-2"><Label>Fecha</Label><Input bind:value={paymentDate} placeholder="DD/MM/YYYY" /></div>
+    {#if paymentErr}<p class="text-sm text-destructive">{paymentErr}</p>{/if}
+  </div>
+  <DialogFooter>
+    <Button variant="outline" onclick={() => (showEditPayment = false)}>Cancelar</Button>
+    <Button onclick={savePayment}>Guardar</Button>
   </DialogFooter>
 </Dialog>

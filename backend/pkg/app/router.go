@@ -87,6 +87,7 @@ func (a *App) Handler(cfg config.Config) http.Handler {
 		pr.Delete("/api/loans/{id}", a.handleDeleteLoan)
 		pr.Get("/api/loans/{id}/installments", a.handleLoanInstallments)
 		pr.Get("/api/loans/{id}/payments", a.handleLoanPayments)
+		pr.Put("/api/loans/{id}/payments/{paymentId}", a.handleEditPayment)
 		pr.Post("/api/loans/migrate", a.handleMigrateLoans)
 
 		pr.Post("/api/installments/{id}/pay", a.handlePayInstallment)
