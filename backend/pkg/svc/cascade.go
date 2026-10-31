@@ -78,6 +78,45 @@ func AllocateCascade(installments []CascadeInstallment, amount float64) (allocs 
 	return allocs, startingRemaining, excess, nil
 }
 
+// ReallocatePayment recalcula un pago ya registrado con un monto nuevo: quita
+// las asignaciones `old` de `all` (todas las cuotas vigentes del préstamo,
+// ordenadas por número) y reparte `amount` en cascada desde la cuota inicial
+// del pago sin tocar lo que otros pagos dejaron en las demás cuotas. Si la
+// cuota inicial ya no existe, arranca en la primera cuota que el pago había
+// cubierto. No modifica `all`; devuelve las cuotas ya revertidas y las nuevas
+// asignaciones.
+func ReallocatePayment(all []CascadeInstallment, old []CascadeAllocation, startingID string, amount float64) (reversed []CascadeInstallment, allocs []CascadeAllocation, err error) {
+	reversed = make([]CascadeInstallment, len(all))
+	copy(reversed, all)
+	oldByID := make(map[string]float64, len(old))
+	for _, a := range old {
+		oldByID[a.ID] += a.Amount
+	}
+	start := -1
+	for i := range reversed {
+		if amt, ok := oldByID[reversed[i].ID]; ok {
+			reversed[i].Paid, _ = ReversePaid(reversed[i].Paid, amt)
+			if start < 0 {
+				start = i
+			}
+		}
+	}
+	for i := range reversed {
+		if reversed[i].ID == startingID {
+			start = i
+			break
+		}
+	}
+	if start < 0 {
+		return nil, nil, &ValidationError{Msg: "la cuota inicial del pago ya no existe"}
+	}
+	allocs, _, _, err = AllocateCascade(reversed[start:], amount)
+	if err != nil {
+		return nil, nil, err
+	}
+	return reversed, allocs, nil
+}
+
 // ReversePaid resta `alloc` del monto pagado de una cuota al revertir un pago.
 // Devuelve el nuevo paid_amount (nunca negativo) y si hay que limpiar paid_date
 // (cuando la cuota queda sin nada pagado).

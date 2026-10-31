@@ -552,6 +552,29 @@ func (a *App) handleLoanPayments(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
+// handleEditPayment cambia el monto y la fecha de un pago ya registrado.
+func (a *App) handleEditPayment(w http.ResponseWriter, r *http.Request) {
+	uid := auth.ContextUser(r.Context())
+	var req payReq
+	if !readJSON(w, r, &req) {
+		return
+	}
+	err := svc.EditPayment(r.Context(), a.Store, uid, chi.URLParam(r, "id"), chi.URLParam(r, "paymentId"), req.Amount, req.Date)
+	if err != nil {
+		var ve *svc.ValidationError
+		switch {
+		case errors.As(err, &ve):
+			writeErr(w, http.StatusBadRequest, ve.Error())
+		case errors.Is(err, svc.ErrPaymentNotFound):
+			writeErr(w, http.StatusNotFound, err.Error())
+		default:
+			writeServerError(w, r, "error interno del servidor", err)
+		}
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}
+
 type payReq struct {
 	Amount float64 `json:"amount"`
 	Date   string  `json:"date"`
