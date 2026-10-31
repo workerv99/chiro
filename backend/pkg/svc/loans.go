@@ -326,7 +326,7 @@ func queryAllocations(ctx context.Context, tx pgx.Tx, userID, paymentID string) 
 func queryLoanInstallments(ctx context.Context, tx pgx.Tx, userID, loanID string) ([]CascadeInstallment, error) {
 	rows, err := tx.Query(ctx,
 		`SELECT installment_id, number, amount, paid_amount FROM installment
-		 WHERE user_id=$1 AND loan_id=$2 AND deleted=0 ORDER BY number ASC`, userID, loanID)
+		 WHERE user_id=$1 AND loan_id=$2 AND deleted=0 ORDER BY number ASC FOR UPDATE`, userID, loanID)
 	if err != nil {
 		return nil, err
 	}
