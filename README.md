@@ -19,8 +19,8 @@ SaaS de control de gastos personales. SPA (SvelteKit + adapter-static) con backe
 
 | Plan | Precio | Límites |
 |------|--------|---------|
-| Free | $0/mes | 50 gastos, 3 cuentas, 10 préstamos |
-| Pro | $4.99/mes | Ilimitado |
+| Free | $0 | 50 gastos/mes, 3 cuentas, 10 préstamos |
+| Pro | $29/año | 2.000 gastos/mes, 25 cuentas, 500 préstamos |
 
 ## Estructura
 

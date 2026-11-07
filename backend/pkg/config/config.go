@@ -39,10 +39,10 @@ var FreeLimits = PlanLimits{
 }
 
 var ProLimits = PlanLimits{
-	MaxExpensesPerMonth: -1, // ilimitado
-	MaxAccounts:         -1,
-	MaxLoans:            -1,
-	MaxCategories:       -1,
+	MaxExpensesPerMonth: 2000,
+	MaxAccounts:         25,
+	MaxLoans:            500,
+	MaxCategories:       100,
 }
 
 const devJWTSecret = "dev-only-secret-change-me"

@@ -224,7 +224,7 @@
       <h3 class="font-bold">Plan {S.subscription.plan === 'pro' ? 'Pro' : 'Free'}</h3>
       <p class="text-xs text-muted-foreground">
         {#if S.subscription.plan === 'pro'}
-          Gastos ilimitados, cuentas ilimitadas, préstamos ilimitados
+          {S.subscription.usage?.expenses_this_month || 0}/2000 gastos · {S.subscription.usage?.total_accounts || 0}/25 cuentas · {S.subscription.usage?.total_loans || 0}/500 préstamos
         {:else}
           {S.subscription.usage?.expenses_this_month || 0}/50 gastos · {S.subscription.usage?.total_accounts || 0}/3 cuentas · {S.subscription.usage?.total_loans || 0}/10 préstamos
         {/if}
@@ -471,12 +471,12 @@
     >
       <h2 class="text-lg font-bold mb-4">Actualizar a Pro</h2>
       <div class="text-center py-4">
-        <p class="text-2xl md:text-3xl font-extrabold text-primary mb-2">$4.99/mes</p>
-        <p class="text-sm text-muted-foreground mb-6">Gastos, cuentas y préstamos ilimitados</p>
+        <p class="text-2xl md:text-3xl font-extrabold text-primary mb-2">$29/año</p>
+        <p class="text-sm text-muted-foreground mb-6">Más gastos, cuentas y préstamos para tu día a día</p>
         <ul class="text-sm text-left space-y-2 mb-6">
-          <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> Gastos ilimitados por mes</li>
-          <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> Cuentas ilimitadas</li>
-          <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> Préstamos ilimitados</li>
+          <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> 2.000 gastos por mes</li>
+          <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> 25 cuentas</li>
+          <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> 500 préstamos</li>
           <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> Reportes PDF</li>
           <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> Soporte prioritario</li>
         </ul>

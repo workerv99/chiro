@@ -37,7 +37,7 @@
 
     <h2>4. Planes y Pagos</h2>
     <p><strong>Plan Free:</strong> Funcionalidades básicas con límites de uso (50 gastos/mes, 3 cuentas, 10 préstamos).</p>
-    <p><strong>Plan Pro:</strong> $4.99/mes con uso ilimitado. La suscripción se renueva automáticamente salvo cancelación.</p>
+    <p><strong>Plan Pro:</strong> $29/año con límites ampliados (2.000 gastos por mes, 25 cuentas y 500 préstamos). La suscripción se renueva automáticamente salvo cancelación.</p>
     <p><strong>Política de reembolsos:</strong> Los reembolsos se procesan dentro de los primeros 14 días después del pago. Después de este período, no se realizan reembolsos parciales.</p>
     <p><strong>Cambios de precio:</strong> Nos reservamos el derecho de modificar los precios con 30 días de aviso previo por email.</p>
     <p><strong>Impuestos:</strong> Usted es responsable de todos los impuestos aplicables, incluyendo el IVA según la legislación ecuatoriana.</p>

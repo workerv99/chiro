@@ -1,6 +1,9 @@
 package svc
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestCheckLimit(t *testing.T) {
 	tests := []struct {
@@ -27,5 +30,24 @@ func TestCheckLimit(t *testing.T) {
 				t.Errorf("CheckLimit(%q, %d, %d): err=%v, wantErr=%v", tt.resource, tt.limit, tt.current, err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestCheckLimitMessageIsPlanNeutral(t *testing.T) {
+	for _, resource := range []string{"expense", "account", "loan"} {
+		err := CheckLimit(resource, 2000, 2000)
+		if err == nil {
+			t.Fatalf("%s: expected an error at the limit", resource)
+		}
+		msg := err.Error()
+		if strings.Contains(msg, "ilimitad") {
+			t.Errorf("%s: message promises unlimited usage: %q", resource, msg)
+		}
+		if strings.Contains(msg, "Actualiza a Pro") {
+			t.Errorf("%s: message tells a Pro user to upgrade to Pro: %q", resource, msg)
+		}
+		if !strings.Contains(msg, "2000") {
+			t.Errorf("%s: message should include the limit: %q", resource, msg)
+		}
 	}
 }
