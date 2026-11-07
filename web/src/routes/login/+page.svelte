@@ -53,11 +53,6 @@
       <p class="text-sm text-muted-foreground mt-1">{i18n.t('auth.loginSub')}</p>
     </div>
 
-    <div class="flex gap-2 justify-center mb-6">
-      <Button variant={i18n.lang === 'es' ? 'default' : 'outline'} size="sm" onclick={() => i18n.setLang('es')}>ES</Button>
-      <Button variant={i18n.lang === 'en' ? 'default' : 'outline'} size="sm" onclick={() => i18n.setLang('en')}>EN</Button>
-    </div>
-
     <form onsubmit={(e) => { e.preventDefault(); submit(); }} class="space-y-4">
       {#if mode === 'register'}
         <div class="space-y-2">
