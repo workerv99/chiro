@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import AdBanner from '../../components/AdBanner';
 import Dropdown from '../../components/Dropdown';
-import Loader from '../../components/Loader';
+import ExpensesSkeleton from '../../components/skeletons/ExpensesSkeleton';
 import { Account, Bill, Category, Expense, LoanWithPerson, MonthSummary, Tag, useExpenses } from '../../utils/context';
 import { useI18n } from '../../utils/i18n';
 import { CONTENT_MAX_W, useLayout } from '../../utils/responsive';
@@ -157,7 +157,7 @@ export default function HomeScreen() {
     return (
       <View style={s.container}>
         <StatusBar barStyle="light-content" backgroundColor={C.bg} />
-        <Loader label={t.common.loading} />
+        <ExpensesSkeleton label={t.common.loading} />
       </View>
     );
   }

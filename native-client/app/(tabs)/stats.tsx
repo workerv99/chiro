@@ -4,7 +4,7 @@
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Loader from '../../components/Loader';
+import StatsSkeleton from '../../components/skeletons/StatsSkeleton';
 import { AccountWithBalance, CategoryBreakdown, MonthRow, useExpenses } from '../../utils/context';
 import { useI18n } from '../../utils/i18n';
 import { CONTENT_MAX_W, useLayout } from '../../utils/responsive';
@@ -79,7 +79,7 @@ export default function StatsScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: C.bg }}>
         <StatusBar barStyle="light-content" backgroundColor={C.bg} />
-        <Loader label={t.common.loading} />
+        <StatsSkeleton label={t.common.loading} />
       </View>
     );
   }
