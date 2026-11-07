@@ -35,8 +35,8 @@
     },
     {
       name: 'Pro',
-      price: '$4.99',
-      period: '/mes',
+      price: '$29',
+      period: '/año',
       features: ['Gastos ilimitados', 'Cuentas ilimitadas', 'Préstamos ilimitados', 'Reportes PDF', 'Soporte prioritario', 'Exportar datos'],
       cta: 'Suscribirse',
       primary: true
