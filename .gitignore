@@ -46,3 +46,10 @@ playwright-*.txt
 # Local code intelligence index
 .codegraph/
 .atl/
+
+# native-client
+native-client/node_modules/
+native-client/dist/
+native-client/electron-build/
+native-client/google-services.json
+native-client/.env
