@@ -16,7 +16,7 @@ import {
   View,
 } from 'react-native';
 import Dropdown from '../../components/Dropdown';
-import Loader from '../../components/Loader';
+import BudgetsSkeleton from '../../components/skeletons/BudgetsSkeleton';
 import { BudgetWithProgress, Category, PiggyBank, useExpenses } from '../../utils/context';
 import { useI18n } from '../../utils/i18n';
 import { CONTENT_MAX_W, FORM_MAX_W, useLayout } from '../../utils/responsive';
@@ -176,7 +176,7 @@ export default function BudgetsScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: C.bg }}>
         <StatusBar barStyle="light-content" backgroundColor={C.bg} />
-        <Loader label={t.common.loading} />
+        <BudgetsSkeleton label={t.common.loading} />
       </View>
     );
   }

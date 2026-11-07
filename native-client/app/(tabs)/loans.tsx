@@ -5,7 +5,7 @@ import {
   Alert, FlatList, Modal, Platform, Pressable,
   StatusBar, StyleSheet, Text, TextInput, View,
 } from 'react-native';
-import Loader from '../../components/Loader';
+import LoansSkeleton from '../../components/skeletons/LoansSkeleton';
 import { PersonWithTotal, useExpenses } from '../../utils/context';
 import { useI18n } from '../../utils/i18n';
 import { CONTENT_MAX_W, FORM_MAX_W, useLayout } from '../../utils/responsive';
@@ -53,7 +53,7 @@ export default function LoansScreen() {
     return (
       <View style={s.container}>
         <StatusBar barStyle="light-content" backgroundColor={C.bg} />
-        <Loader label={t.common.loading} />
+        <LoansSkeleton label={t.common.loading} />
       </View>
     );
   }
