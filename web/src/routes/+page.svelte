@@ -53,7 +53,7 @@
   <div class="min-h-dvh">
     <nav class="flex items-center justify-between px-6 py-4 border-b">
       <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 text-primary font-bold text-sm flex items-center justify-center">C</div>
+        <img src="/logo.svg" alt="" class="w-8 h-8" />
         <span class="font-bold text-lg">Chiro</span>
       </div>
       <div class="flex items-center gap-6">
