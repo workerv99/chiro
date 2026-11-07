@@ -99,13 +99,13 @@ components:
 
 Chiro is a ledger you carry in a pocket. The amount is the loudest thing on any screen; everything around it stays quiet so a balance, an installment or a total reads at a glance. The system is monochrome and flat: near-black ink on white (or the reverse in dark mode), hairline borders, one solid button per screen, and color reserved for the state of money (paid, pending, overdue).
 
-Density is moderate and mobile first. Controls are 44px tall, content sits in a single centered column no wider than 760px, and the phone gets a bottom tab bar while larger screens get a top bar. The system is built from the shadcn zinc palette, so it is coherent and predictable, but it carries no brand color yet; identity today comes from restraint and from numbers set bold, not from a signature hue.
+Density is moderate and mobile first. Controls are 44px tall, content sits in a single centered column no wider than 760px, and the phone gets a bottom tab bar while larger screens get a top bar. The system is built from the shadcn zinc palette, so it is coherent and predictable, and its action color is the brand blue; identity still comes mostly from restraint and from numbers set bold.
 
 This system explicitly rejects the default shadcn template look with no brand, cold corporate banking (navy and gold), neon fintech (gradients, glows and saturated color on dark), and the overloaded dashboard with many cards and charts competing before the content.
 
 **Key Characteristics:**
 - Flat surfaces separated by 1px hairlines; shadow only on what floats.
-- Near-black graphite as the single action color; no secondary brand accent.
+- Brand blue (`#5B7CF6`, see `brand/`) is the single action and emphasis color; no secondary brand accent. Light mode uses `227 90% 60%` so white text passes AA (4.8:1); dark mode uses the exact brand blue with dark text.
 - Color means state: green paid, amber pending, red overdue, slate idle.
 - System sans typography, with weight and size carrying the hierarchy.
 - 44px minimum touch height on every control.
