@@ -53,3 +53,7 @@ native-client/dist/
 native-client/electron-build/
 native-client/google-services.json
 native-client/.env
+native-client/*.jks
+native-client/android/
+native-client/release/
+native-client/.expo/
