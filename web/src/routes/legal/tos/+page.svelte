@@ -1,16 +1,14 @@
-<script>
-  import { i18n } from '$lib/i18n.svelte.js';
-  import BackLink from '$lib/components/back-link.svelte';
+<script lang="ts">
+  import LegalPage from '$lib/components/legal-page.svelte';
 </script>
 
 <svelte:head><title>Términos de Servicio · Chiro</title></svelte:head>
 
-<div class="max-w-3xl mx-auto px-4 py-8">
-  <BackLink href="/" class="mb-3">Volver</BackLink>
-  <h1 class="text-xl md:text-2xl font-bold mb-2">Términos de Servicio</h1>
-  <p class="text-xs text-muted-foreground mb-8">Última actualización: 5 de agosto de 2026</p>
-
-  <div class="prose prose-sm max-w-none">
+<LegalPage
+  title="Términos de Servicio"
+  updated="7 de noviembre de 2026"
+  summary="Las reglas para usar Chiro: qué incluye cada plan, cómo funcionan los pagos y cuáles son las responsabilidades de cada parte."
+>
     <h2>1. Aceptación de los Términos</h2>
     <p>Al acceder o usar Chiro ("el Servicio"), usted acepta estar sujeto a estos Términos de Servicio ("Términos"). Si no está de acuerdo con estos Términos, no use el Servicio. Estos Términos constituyen un acuerdo legal entre usted y Chiro.</p>
     <p>Al crear una cuenta, usted confirma que tiene al menos 18 años de edad o la edad mayoría legal en su jurisdicción.</p>
@@ -80,7 +78,7 @@
     </ul>
 
     <h2>9. Disponibilidad del Servicio</h2>
-    <p>No garantizamos disponibilidad continua del Servicio. Podemos suspTemporalmente el Servicio para mantenimiento, actualizaciones o por razones fuera de nuestro control. No seremos responsables por interrupciones del servicio.</p>
+    <p>No garantizamos disponibilidad continua del Servicio. Podemos suspender temporalmente el Servicio para mantenimiento, actualizaciones o por razones fuera de nuestro control. No seremos responsables por interrupciones del servicio.</p>
 
     <h2>10. Terminación</h2>
     <p><strong>Por usted:</strong> Puede cancelar su cuenta en cualquier momento desde la configuración. La cancelación es efectiva inmediatamente y no genera reembolso del período actual.</p>
@@ -112,5 +110,4 @@
     <h2>15. Contacto</h2>
     <p>Para consultas sobre estos Términos:</p>
     <p>Email: legal@chiro.app<br />Dirección: Guayaquil, Ecuador</p>
-  </div>
-</div>
+</LegalPage>

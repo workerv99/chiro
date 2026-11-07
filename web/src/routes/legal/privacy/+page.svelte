@@ -1,16 +1,14 @@
-<script>
-  import { i18n } from '$lib/i18n.svelte.js';
-  import BackLink from '$lib/components/back-link.svelte';
+<script lang="ts">
+  import LegalPage from '$lib/components/legal-page.svelte';
 </script>
 
 <svelte:head><title>Política de Privacidad · Chiro</title></svelte:head>
 
-<div class="max-w-3xl mx-auto px-4 py-8">
-  <BackLink href="/" class="mb-3">Volver</BackLink>
-  <h1 class="text-xl md:text-2xl font-bold mb-2">Política de Privacidad</h1>
-  <p class="text-xs text-muted-foreground mb-8">Última actualización: 5 de agosto de 2026</p>
-
-  <div class="prose prose-sm max-w-none">
+<LegalPage
+  title="Política de Privacidad"
+  updated="5 de agosto de 2026"
+  summary="Qué datos guardamos, para qué los usamos, con quién se comparten y cómo puedes ejercer tus derechos sobre ellos."
+>
     <h2>1. Información que Recopilamos</h2>
     <p><strong>Información de cuenta:</strong> Nombre, dirección de email y contraseña (almacenada de forma hasheada).</p>
     <p><strong>Datos financieros:</strong> Ingresos, gastos, categorías, presupuestos, préstamos, cuotas, cuentas y transacciones que usted registra voluntariamente.</p>
@@ -171,5 +169,4 @@
     <h2>17. Contacto</h2>
     <p>Para consultas sobre privacidad:</p>
     <p>Email: privacidad@chiro.app<br />DPO: dpo@chiro.app<br />Dirección: Guayaquil, Ecuador</p>
-  </div>
-</div>
+</LegalPage>
