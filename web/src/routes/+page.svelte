@@ -51,15 +51,15 @@
 
 {#if ready}
   <div class="min-h-dvh">
-    <nav class="flex items-center justify-between px-6 py-4 border-b">
-      <div class="flex items-center gap-2">
+    <nav class="flex items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b">
+      <div class="flex items-center gap-2 shrink-0">
         <img src="/logo.svg" alt="" class="w-8 h-8" />
         <span class="font-bold text-lg">Chiro</span>
       </div>
-      <div class="flex items-center gap-6">
-        <a href="#features" class="text-sm text-muted-foreground hover:text-foreground">Características</a>
+      <div class="flex items-center gap-3 sm:gap-6">
+        <a href="#features" class="hidden sm:inline text-sm text-muted-foreground hover:text-foreground">Características</a>
         <a href="#pricing" class="text-sm text-muted-foreground hover:text-foreground">Precios</a>
-        <a href="/login" class="inline-flex items-center justify-center h-11 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90">Iniciar sesión</a>
+        <a href="/login" class="inline-flex items-center justify-center shrink-0 whitespace-nowrap h-11 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90">Iniciar sesión</a>
       </div>
     </nav>
 
@@ -69,7 +69,7 @@
         <span class="text-primary">sin complicaciones</span>
       </h1>
       <p class="text-lg text-muted-foreground mb-8">Gastos, presupuestos y préstamos en una sola app. Gratis para empezar.</p>
-      <div class="flex gap-4 justify-center">
+      <div class="flex flex-wrap gap-4 justify-center">
         <a href="/login"><Button size="lg">Empezar gratis</Button></a>
         <a href="#features"><Button variant="outline" size="lg">Ver características</Button></a>
       </div>
