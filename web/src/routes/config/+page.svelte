@@ -477,6 +477,7 @@
           <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> 2.000 gastos por mes</li>
           <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> 25 cuentas</li>
           <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> 500 préstamos</li>
+          <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> Sincronización en la nube</li>
           <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> Reportes PDF</li>
           <li class="flex items-center gap-2"><Check size={16} class="text-green-500 shrink-0" /> Soporte prioritario</li>
         </ul>

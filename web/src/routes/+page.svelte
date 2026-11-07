@@ -37,7 +37,7 @@
       name: 'Pro',
       price: '$29',
       period: '/año',
-      features: ['2.000 gastos/mes', '25 cuentas', '500 préstamos', 'Reportes PDF', 'Soporte prioritario', 'Exportar datos'],
+      features: ['2.000 gastos/mes', '25 cuentas', '500 préstamos', 'Sincronización en la nube', 'Reportes PDF', 'Soporte prioritario', 'Exportar datos'],
       cta: 'Suscribirse',
       primary: true
     }
