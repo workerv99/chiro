@@ -1,6 +1,6 @@
 {
-  "appId": "com.segasto.app",
-  "productName": "Segasto",
+  "appId": "com.luserv.chiro",
+  "productName": "Chiro",
 "directories": {
     "output": "release",
     "buildResources": "assets"

@@ -316,7 +316,7 @@ function createWindow(): void {
 }
 
 process.on('uncaughtException', (err) => {
-  dialog.showErrorBox('Error al iniciar Segasto', err.stack || err.message);
+  dialog.showErrorBox('Error al iniciar Chiro', err.stack || err.message);
   app.quit();
 });
 
@@ -345,7 +345,7 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 }).catch((err: Error) => {
-  dialog.showErrorBox('Error al iniciar Segasto', err.stack || err.message);
+  dialog.showErrorBox('Error al iniciar Chiro', err.stack || err.message);
   app.quit();
 });
 
