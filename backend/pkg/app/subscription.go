@@ -2,7 +2,10 @@ package app
 
 import (
 	"context"
+	"errors"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 
 	"chiro/pkg/config"
 	"chiro/pkg/svc"
@@ -61,4 +64,21 @@ func (a *App) checkLimits(ctx context.Context, uid, resource string) error {
 		return err
 	}
 	return svc.CheckLimit(resource, limit, count)
+}
+
+// hasActivePro indica si el usuario tiene una suscripción Pro activa y vigente.
+// Sin fila de suscripción o ante error de lectura devuelve (false, err).
+func (a *App) hasActivePro(ctx context.Context, uid string) (bool, error) {
+	var plan, status string
+	var expires *time.Time
+	err := a.Store.Pool().QueryRow(ctx,
+		`SELECT COALESCE(plan, 'free'), COALESCE(status, 'active'), expires_at FROM subscription WHERE user_id=$1`,
+		uid).Scan(&plan, &status, &expires)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return svc.IsProActive(plan, status, expires, time.Now()), nil
 }

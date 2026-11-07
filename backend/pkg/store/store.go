@@ -71,7 +71,8 @@ func checkTable(t string) (Tabla, error) {
 }
 
 // Normalize devuelve la fila con valores por defecto para el servidor:
-// user_id, deleted=0 y updated_at si faltan.
+// user_id (SIEMPRE el autenticado, nunca el que envía el cliente), deleted=0
+// y updated_at si faltan.
 func Normalize(row map[string]any, userID string) map[string]any {
 	out := make(map[string]any, len(row)+2)
 	for k, v := range row {
@@ -80,9 +81,7 @@ func Normalize(row map[string]any, userID string) map[string]any {
 		}
 		out[k] = v
 	}
-	if _, ok := out["user_id"]; !ok {
-		out["user_id"] = userID
-	}
+	out["user_id"] = userID
 	if _, ok := out["deleted"]; !ok {
 		out["deleted"] = 0
 	}
@@ -225,23 +224,23 @@ func (s *Store) ListDeleted(ctx context.Context, table string, userID string) ([
 	return queryRows(ctx, s.pool, sql, userID)
 }
 
-// ListChanged devuelve filas (vivas o borradas) con updated_at mayor a since.
+// ListChanged devuelve filas (vivas o borradas) con updated_at mayor o igual a since.
 func (s *Store) ListChanged(ctx context.Context, table string, userID string, since int64) ([]map[string]any, error) {
 	t, err := checkTable(table)
 	if err != nil {
 		return nil, err
 	}
-	sql := fmt.Sprintf(`SELECT * FROM "%s" WHERE "user_id" = $1 AND "updated_at" > $2 ORDER BY "updated_at" ASC`, t.Table)
+	sql := fmt.Sprintf(`SELECT * FROM "%s" WHERE "user_id" = $1 AND "updated_at" >= $2 ORDER BY "updated_at" ASC`, t.Table)
 	return queryRows(ctx, s.pool, sql, userID, since)
 }
 
-// ListChangedLimit es como ListChanged pero con un limite por tabla (paginación).
+// ListChangedLimit es como ListChanged pero con un limite por tabla (paginación). Es inclusivo (>= since); ver svc.NextSince.
 func (s *Store) ListChangedLimit(ctx context.Context, table string, userID string, since int64, limit int) ([]map[string]any, error) {
 	t, err := checkTable(table)
 	if err != nil {
 		return nil, err
 	}
-	sql := fmt.Sprintf(`SELECT * FROM "%s" WHERE "user_id" = $1 AND "updated_at" > $2 ORDER BY "updated_at" ASC LIMIT $3`, t.Table)
+	sql := fmt.Sprintf(`SELECT * FROM "%s" WHERE "user_id" = $1 AND "updated_at" >= $2 ORDER BY "updated_at" ASC LIMIT $3`, t.Table)
 	return queryRows(ctx, s.pool, sql, userID, since, limit)
 }
 
