@@ -105,7 +105,7 @@ This system explicitly rejects the default shadcn template look with no brand, c
 
 **Key Characteristics:**
 - Flat surfaces separated by 1px hairlines; shadow only on what floats.
-- Brand blue (`#5B7CF6`, see `brand/`) is the single action and emphasis color; no secondary brand accent. Light mode uses `227 90% 60%` so white text passes AA (4.8:1); dark mode uses the exact brand blue with dark text.
+- Brand blue (`#2F5BE0`, from the symbol in `brand/`) is the single action and emphasis color; no secondary brand accent. Light mode uses it exactly (`225 74% 53%`, white text 5.7:1); dark mode lifts it to `225 74% 64%` so both the text and the dark label on buttons stay above AA.
 - Color means state: green paid, amber pending, red overdue, slate idle.
 - System sans typography, with weight and size carrying the hierarchy.
 - 44px minimum touch height on every control.
